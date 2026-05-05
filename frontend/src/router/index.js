@@ -1,36 +1,45 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import AppLayout from '../layouts/AppLayout.vue'
 
 const routes = [
-    {
-        path: '/',
-        name: 'home',
-        component: HomeView
-    },
+    // Public route — no layout
     {
         path: '/login',
         name: 'login',
         component: () => import('../views/LoginView.vue')
     },
+
+    // Protected routes — wrapped in AppLayout (sidebar + topbar)
     {
-        path: '/floors',
-        name: 'floors',
-        component: () => import('../views/FloorsView.vue')
-    },
-    {
-        path: '/rooms',
-        name: 'rooms',
-        component: () => import('../views/RoomsView.vue')
-    },
-    {
-        path: '/cabinets',
-        name: 'cabinets',
-        component: () => import('../views/CabinetsView.vue')
-    },
-    {
-        path: '/cabinet-slots',
-        name: 'cabinet-slots',
-        component: () => import('../views/CabinetSlotsView.vue')
+        path: '/',
+        component: AppLayout,
+        children: [
+            {
+                path: '',
+                name: 'home',
+                component: () => import('../views/HomeView.vue')
+            },
+            {
+                path: 'floors',
+                name: 'floors',
+                component: () => import('../views/FloorsView.vue')
+            },
+            {
+                path: 'rooms',
+                name: 'rooms',
+                component: () => import('../views/RoomsView.vue')
+            },
+            {
+                path: 'cabinets',
+                name: 'cabinets',
+                component: () => import('../views/CabinetsView.vue')
+            },
+            {
+                path: 'cabinet-slots',
+                name: 'cabinet-slots',
+                component: () => import('../views/CabinetSlotsView.vue')
+            },
+        ]
     }
 ]
 
@@ -39,10 +48,11 @@ const router = createRouter({
     routes
 })
 
+// Navigation guard — redirect to login if not authenticated
 router.beforeEach((to, from, next) => {
-    const publicPages = ['/login']
+    const publicPages  = ['/login']
     const authRequired = !publicPages.includes(to.path)
-    const loggedIn = localStorage.getItem('token')
+    const loggedIn     = localStorage.getItem('token')
 
     if (authRequired && !loggedIn) {
         return next('/login')

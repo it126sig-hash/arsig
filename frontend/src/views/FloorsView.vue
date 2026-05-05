@@ -57,7 +57,7 @@
           <template #body="slotProps">
             <img
               v-if="slotProps.data.floor_plan_image"
-              :src="apiBase + '/storage/' + slotProps.data.floor_plan_image"
+              :src="appBase + '/storage/' + slotProps.data.floor_plan_image"
               alt="Floor Plan"
               class="w-14 h-14 object-cover rounded-lg shadow-sm border border-slate-200"
             />
@@ -163,6 +163,7 @@ const locationStore = useLocationStore()
 const toast         = useToast()
 const confirm       = useConfirm()
 const apiBase       = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const appBase       = apiBase.replace(/\/api\/v1\/?$/, '')
 
 // State
 const floorDialog  = ref(false)
