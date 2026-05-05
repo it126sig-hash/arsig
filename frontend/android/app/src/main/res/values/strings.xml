@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ARSIG</string>
+    <string name="title_activity_main">ARSIG</string>
+    <string name="package_name">com.arsig.app</string>
+    <string name="custom_url_scheme">com.arsig.app</string>
+</resources>
