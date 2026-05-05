@@ -7,6 +7,9 @@ import 'primeicons/primeicons.css'
 import App from './App.vue'
 import router from './router'
 
+import ToastService from 'primevue/toastservice'
+import ConfirmationService from 'primevue/confirmationservice'
+
 const app = createApp(App)
 
 app.use(createPinia())
@@ -19,6 +22,8 @@ app.use(PrimeVue, {
         }
     }
 })
+app.use(ToastService)
+app.use(ConfirmationService)
 
 app.mount('#app')
 
