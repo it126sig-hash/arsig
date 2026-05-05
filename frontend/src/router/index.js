@@ -11,6 +11,26 @@ const routes = [
         path: '/login',
         name: 'login',
         component: () => import('../views/LoginView.vue')
+    },
+    {
+        path: '/floors',
+        name: 'floors',
+        component: () => import('../views/FloorsView.vue')
+    },
+    {
+        path: '/rooms',
+        name: 'rooms',
+        component: () => import('../views/RoomsView.vue')
+    },
+    {
+        path: '/cabinets',
+        name: 'cabinets',
+        component: () => import('../views/CabinetsView.vue')
+    },
+    {
+        path: '/cabinet-slots',
+        name: 'cabinet-slots',
+        component: () => import('../views/CabinetSlotsView.vue')
     }
 ]
 
