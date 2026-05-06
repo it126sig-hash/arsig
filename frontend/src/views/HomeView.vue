@@ -121,9 +121,17 @@
         <DataTable :value="archives" responsiveLayout="scroll" class="p-datatable-sm" :rowClass="getRowClass">
           <Column field="name" header="Nama Dokumen">
             <template #body="{ data }">
-              <div class="flex flex-col" :class="{ 'opacity-50': isMuted(data) }">
-                <span class="font-bold text-slate-800">{{ data.name }}</span>
-                <span class="text-xs text-slate-500">{{ data.file_number }}</span>
+              <div class="flex items-start gap-3" :class="{ 'opacity-50': isMuted(data) }">
+                <div class="mt-1">
+                  <i :class="[getFileIcon(data.file_type), getFileColor(data.file_type), 'text-xl']"></i>
+                </div>
+                <div class="flex flex-col">
+                  <span class="font-bold text-slate-800">{{ data.name }}</span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-500">{{ data.file_number }}</span>
+                    <span v-if="data.file_type" class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold uppercase">{{ data.file_type }}</span>
+                  </div>
+                </div>
               </div>
             </template>
           </Column>
@@ -182,9 +190,17 @@
           :class="{ 'bg-slate-50 border-dashed': isMuted(archive) }"
         >
           <div class="flex justify-between items-start mb-3">
-            <div class="flex flex-col" :class="{ 'opacity-50': isMuted(archive) }">
-              <span class="font-bold text-slate-800">{{ archive.name }}</span>
-              <span class="text-xs text-slate-500">{{ archive.file_number }}</span>
+            <div class="flex items-start gap-3" :class="{ 'opacity-50': isMuted(archive) }">
+              <div class="mt-1">
+                <i :class="[getFileIcon(archive.file_type), getFileColor(archive.file_type), 'text-2xl']"></i>
+              </div>
+              <div class="flex flex-col">
+                <span class="font-bold text-slate-800">{{ archive.name }}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-slate-500">{{ archive.file_number }}</span>
+                  <span v-if="archive.file_type" class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold uppercase">{{ archive.file_type }}</span>
+                </div>
+              </div>
             </div>
             <Tag :value="archive.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(archive.privacy_type)" :class="{ 'opacity-50': isMuted(archive) }" />
           </div>
@@ -261,7 +277,13 @@
           </div>
           <div class="flex flex-col gap-1">
             <label class="text-xs text-slate-400 uppercase font-bold tracking-wider">Tipe Arsip</label>
-            <div class="capitalize">{{ selectedArchive.archive_type }}</div>
+            <div class="flex items-center gap-2">
+              <span class="capitalize">{{ selectedArchive.archive_type }}</span>
+              <span v-if="selectedArchive.file_type" class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold uppercase">
+                <i :class="[getFileIcon(selectedArchive.file_type), getFileColor(selectedArchive.file_type), 'mr-1']"></i>
+                {{ selectedArchive.file_type }}
+              </span>
+            </div>
           </div>
         </div>
         
@@ -571,6 +593,26 @@ const viewDetail = (archive) => {
 const viewLocation = (archive) => {
   selectedArchive.value = archive
   locationDialog.value = true
+}
+
+const getFileIcon = (type) => {
+  if (!type) return 'pi pi-file'
+  const t = type.toLowerCase()
+  if (t === 'pdf') return 'pi pi-file-pdf'
+  if (['doc', 'docx'].includes(t)) return 'pi pi-file-word'
+  if (['xls', 'xlsx', 'csv'].includes(t)) return 'pi pi-file-excel'
+  if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(t)) return 'pi pi-image'
+  return 'pi pi-file'
+}
+
+const getFileColor = (type) => {
+  if (!type) return 'text-slate-400'
+  const t = type.toLowerCase()
+  if (t === 'pdf') return 'text-red-500'
+  if (['doc', 'docx'].includes(t)) return 'text-blue-500'
+  if (['xls', 'xlsx', 'csv'].includes(t)) return 'text-green-500'
+  if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(t)) return 'text-orange-500'
+  return 'text-slate-400'
 }
 
 const downloadArchive = async (archive) => {
