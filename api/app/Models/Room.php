@@ -12,6 +12,7 @@ class Room extends Model
     protected $fillable = [
         'floor_id',
         'name',
+        'keterangan',
         'points',
         'needs_coordinate_review',
     ];

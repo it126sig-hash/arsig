@@ -13,6 +13,7 @@ class RoomResource extends JsonResource
             'id' => $this->id,
             'floor_id' => $this->floor_id,
             'name' => $this->name,
+            'keterangan' => $this->keterangan,
             'points' => $this->points,
             'needs_coordinate_review' => $this->needs_coordinate_review,
             'floor' => new FloorResource($this->whenLoaded('floor')),

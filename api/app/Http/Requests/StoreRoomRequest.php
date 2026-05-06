@@ -16,6 +16,7 @@ class StoreRoomRequest extends FormRequest
         return [
             'floor_id' => 'required|exists:floors,id',
             'name' => 'required|string|max:255',
+            'keterangan' => 'nullable|string|max:1000',
             'points' => 'required|array',
             'needs_coordinate_review' => 'boolean',
         ];
