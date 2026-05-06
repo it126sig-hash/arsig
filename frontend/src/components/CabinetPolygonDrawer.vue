@@ -217,8 +217,17 @@ const imgDisplayWidth = ref(800)
 const imgDisplayHeight = ref(450)
 
 const flatPoints = computed(() => {
-  return points.value.flatMap(p => [p.x, p.y])
+  return points.value.flatMap(p => {
+    // If it's normalized (0-1), scale it to current display size for rendering
+    if (Math.abs(p.x) <= 1.2 && Math.abs(p.y) <= 1.2) {
+      return [p.x * imgDisplayWidth.value, p.y * imgDisplayHeight.value]
+    }
+    // If it's old absolute format (made with 450px reference)
+    const scaleFactor = imgDisplayHeight.value / 450
+    return [p.x * scaleFactor, p.y * scaleFactor]
+  })
 })
+
 
 // Convert screen position to image coordinates
 const screenToImage = (screenX, screenY) => {
@@ -367,9 +376,16 @@ const handleStageClick = (e) => {
 
   const imgPoint = screenToImage(pointerPos.x, pointerPos.y)
 
-  points.value = [...points.value, imgPoint]
+  // Normalize for storage (0-1)
+  const normalizedPoint = {
+    x: imgPoint.x / imgDisplayWidth.value,
+    y: imgPoint.y / imgDisplayHeight.value
+  }
+
+  points.value = [...points.value, normalizedPoint]
   emit('update:points', [...points.value])
 }
+
 
 const isDraggingPoint = ref(false)
 
@@ -385,13 +401,16 @@ const handlePointDragStart = (e) => {
 const handlePointDrag = (e, index) => {
   if (!isDraggingPoint.value) return
   const newPoints = [...points.value]
+  
+  // Normalize for storage
   newPoints[index] = {
-    x: Math.round(e.target.x()),
-    y: Math.round(e.target.y())
+    x: Math.round(e.target.x()) / imgDisplayWidth.value,
+    y: Math.round(e.target.y()) / imgDisplayHeight.value
   }
   points.value = newPoints
   emit('update:points', [...points.value])
 }
+
 
 const handlePointDragEnd = () => {
   // Use setTimeout so the click event (which fires right after dragend) still sees isDraggingPoint=true

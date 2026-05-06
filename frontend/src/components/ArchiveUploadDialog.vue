@@ -117,15 +117,22 @@
                 <!-- Floor Plan Image -->
                 <div v-if="selectedFloor?.floor_plan_image" class="col-span-12 md:col-span-6 flex flex-col gap-1">
                     <label class="text-xs font-medium text-slate-500 italic">Denah Lantai</label>
-                    <div class="border rounded overflow-hidden bg-white flex items-center justify-center p-2 h-48">
-                        <img :src="getFullImageUrl(selectedFloor.floor_plan_image)" alt="Floor Plan" class="max-w-full max-h-full object-contain" />
+                    <div class="h-80">
+                        <FloorPlanViewer 
+                            :imageUrl="getFullImageUrl(selectedFloor.floor_plan_image)" 
+                            :roomPolygon="roomPoints"
+                            :cabinetPolygon="cabinetPoints"
+                        />
+
                     </div>
+
                 </div>
+
 
                 <!-- Cabinet Visual -->
                 <div v-if="selectedCabinet" class="col-span-12 md:col-span-6 flex flex-col gap-1">
                     <label class="text-xs font-medium text-slate-500 italic">Visual Kabinet</label>
-                    <div class="border rounded bg-white p-4 h-48 overflow-auto">
+                    <div class="border rounded bg-white p-4 h-80 overflow-auto">
                         <CabinetDoorGrid 
                             :doorCount="selectedCabinet.door_count || 1" 
                             :slots="slots" 
@@ -134,6 +141,7 @@
                         />
                     </div>
                 </div>
+
             </div>
 
             <!-- File Upload -->
@@ -209,6 +217,8 @@ import FileUpload from 'primevue/fileupload'
 import Chips from 'primevue/chips'
 import Button from 'primevue/button'
 import CabinetDoorGrid from '@/components/CabinetDoorGrid.vue'
+import FloorPlanViewer from '@/components/FloorPlanViewer.vue'
+
 
 const props = defineProps({
     visible: Boolean,
@@ -271,7 +281,27 @@ const form = reactive({
 })
 
 const selectedFloor = computed(() => floors.value.find(f => f.id === form.floor_id))
+const selectedRoom = computed(() => rooms.value.find(r => r.id === form.room_id))
 const selectedCabinet = computed(() => cabinets.value.find(c => c.id === form.cabinet_id))
+
+const roomPoints = computed(() => {
+    if (form.room_id && selectedRoom.value?.points) {
+        const pts = selectedRoom.value.points
+        return typeof pts === 'string' ? JSON.parse(pts) : pts
+    }
+    return []
+})
+
+const cabinetPoints = computed(() => {
+    if (form.cabinet_id && selectedCabinet.value?.points) {
+        const pts = selectedCabinet.value.points
+        return typeof pts === 'string' ? JSON.parse(pts) : pts
+    }
+    return []
+})
+
+
+
 
 onMounted(async () => {
     loadInitialData()
