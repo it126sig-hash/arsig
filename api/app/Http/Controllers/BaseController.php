@@ -5,8 +5,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 abstract class BaseController extends Controller
 {
+    use AuthorizesRequests;
+
     protected function successResponse(mixed $data = null, string $message = 'Success.', int $code = 200): JsonResponse
     {
         return response()->json([
