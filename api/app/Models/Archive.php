@@ -15,6 +15,7 @@ class Archive extends Model
         'company_id',
         'category_id',
         'name',
+        'keterangan',
         'file_number',
         'archive_type',
         'privacy_type',
@@ -25,6 +26,10 @@ class Archive extends Model
         'issue_date',
         'expire_date',
         'reminder_date',
+        'floor_id',
+        'room_id',
+        'cabinet_id',
+        'cabinet_slot_id',
         'created_by',
     ];
 
@@ -52,5 +57,40 @@ class Archive extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function accessDepartments(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Department::class, 'archive_department_access');
+    }
+
+    public function accessUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'archive_user_access');
+    }
+
+    public function floor(): BelongsTo
+    {
+        return $this->belongsTo(Floor::class);
+    }
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class);
+    }
+
+    public function cabinet(): BelongsTo
+    {
+        return $this->belongsTo(Cabinet::class);
+    }
+
+    public function cabinetSlot(): BelongsTo
+    {
+        return $this->belongsTo(CabinetSlot::class);
+    }
+
+    public function tags(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class, 'archive_tags');
     }
 }
