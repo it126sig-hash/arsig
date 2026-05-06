@@ -59,14 +59,19 @@ class Archive extends Model
         return $this->belongsTo(Company::class);
     }
 
+    public function privacyTargets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ArchivePrivacyTarget::class);
+    }
+
     public function accessDepartments(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(Department::class, 'archive_department_access');
+        return $this->belongsToMany(Department::class, 'archive_privacy_targets', 'archive_id', 'department_id');
     }
 
     public function accessUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'archive_user_access');
+        return $this->belongsToMany(User::class, 'archive_privacy_targets', 'archive_id', 'user_id');
     }
 
     public function floor(): BelongsTo

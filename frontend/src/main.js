@@ -10,6 +10,7 @@ import router from './router'
 import VueKonva from 'vue-konva'
 import ToastService from 'primevue/toastservice'
 import ConfirmationService from 'primevue/confirmationservice'
+import Tooltip from 'primevue/tooltip'
 
 const app = createApp(App)
 
@@ -26,6 +27,7 @@ app.use(PrimeVue, {
 app.use(VueKonva)
 app.use(ToastService)
 app.use(ConfirmationService)
+app.directive('tooltip', Tooltip)
 
 app.mount('#app')
 

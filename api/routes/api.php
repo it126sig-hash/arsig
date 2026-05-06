@@ -33,5 +33,7 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('categories', \App\Http\Controllers\CategoryController::class);
         Route::get('archives', [\App\Http\Controllers\ArchiveController::class, 'index']);
         Route::post('archives', [\App\Http\Controllers\ArchiveController::class, 'store']);
+        Route::put('archives/{archive}', [\App\Http\Controllers\ArchiveController::class, 'update']);
+        Route::get('archives/{archive}/download', [\App\Http\Controllers\ArchiveController::class, 'download']);
     });
 });
