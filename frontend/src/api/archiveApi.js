@@ -11,3 +11,22 @@ export function uploadArchive(formData) {
         }
     })
 }
+
+export function updateArchive(id, formData) {
+    // Laravel requires _method: 'PUT' when sending multipart/form-data via POST
+    if (formData instanceof FormData && !formData.has('_method')) {
+        formData.append('_method', 'PUT')
+    }
+    
+    return api.post(`/archives/${id}`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    })
+}
+
+export function downloadArchive(id) {
+    return api.get(`/archives/${id}/download`, {
+        responseType: 'blob'
+    })
+}

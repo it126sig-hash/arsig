@@ -9,12 +9,32 @@ use Illuminate\Support\Facades\Auth;
 
 class ArchiveService
 {
-    public function list(?int $companyId = null, ?int $categoryId = null)
-    {
+    public function list(
+        ?int $companyId = null,
+        ?int $categoryId = null,
+        ?string $q = null,
+        ?string $archiveType = null,
+        ?string $dateFrom = null,
+        ?string $dateTo = null,
+        array $tagIds = []
+    ) {
         return Archive::query()
-            ->with(['tags', 'accessDepartments', 'accessUsers'])
+            ->with(['tags', 'accessDepartments', 'accessUsers', 'category', 'company'])
             ->when($companyId, fn ($q) => $q->where('company_id', $companyId))
             ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId))
+            ->when($archiveType, fn ($q) => $q->where('archive_type', $archiveType))
+            ->when($dateFrom, fn ($q) => $q->whereDate('issue_date', '>=', $dateFrom))
+            ->when($dateTo, fn ($q) => $q->whereDate('issue_date', '<=', $dateTo))
+            ->when($q, function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('name', 'like', "%{$q}%")
+                        ->orWhere('file_number', 'like', "%{$q}%")
+                        ->orWhere('keterangan', 'like', "%{$q}%");
+                });
+            })
+            ->when(!empty($tagIds), function ($query) use ($tagIds) {
+                $query->whereHas('tags', fn ($t) => $t->whereIn('tags.id', $tagIds));
+            })
             ->orderByDesc('issue_date')
             ->orderByDesc('id')
             ->get();

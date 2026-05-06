@@ -29,7 +29,7 @@ Masalah utama yang diselesaikan adalah sulitnya melacak keberadaan dan aksesibil
 |---|---|---|
 | FR-01 | Aksesibilitas | Aplikasi dapat diakses via Web Browser (desktop/laptop) dan Android app (Capacitor WebView). |
 | FR-02 | Multi-entitas | Sistem mendukung banyak PT, departemen, dan user dalam satu instansi dengan isolasi data yang tepat. |
-| FR-03 | Tipe Arsip | Tiga tipe: `full` (metadata + file digital), `physical_only` (metadata + lokasi hardfile), `placeholder` (metadata + arahan ke PIC). |
+| FR-03 | Tipe Arsip | Tiga tipe: `full` (metadata + file digital),`digital_only` (metadata + file digital saja), `physical_only` (metadata + lokasi hardfile), `placeholder` (metadata + arahan ke PIC). |
 | FR-04 | Kontrol Akses | Level akses: `public`, `private`, `specific_user`, `specific_department`. Divalidasi di backend setiap request. |
 | FR-05 | Download Policy | Direct download via signed URL (TTL 60 detik) atau request ke PIC dengan alur approve/reject. |
 | FR-06 | Audit Trail | Semua aktivitas (upload, edit, hapus, download, pindah lokasi fisik, ganti PIC) tercatat di log table. |
