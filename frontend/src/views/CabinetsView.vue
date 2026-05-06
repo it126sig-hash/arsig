@@ -236,12 +236,11 @@ const selectedFloorImageUrl = computed(() => {
 
 const selectedFloorRooms = computed(() => {
   if (!cabinet.value.room_id) return []
-  const room = locationStore.rooms.find(r => r.id === cabinet.value.room_id)
-  if (!room) return []
   return locationStore.rooms
-    .filter(r => r.floor_id === room.floor_id && r.points && r.points.length >= 3)
+    .filter(r => r.id === cabinet.value.room_id && r.points && r.points.length >= 3)
     .map(r => ({ name: r.name, points: r.points }))
 })
+
 
 const isDoorCountValid = computed(() => {
   if (!cabinet.value.door_count) return false
