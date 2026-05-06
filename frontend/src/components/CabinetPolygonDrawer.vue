@@ -35,22 +35,25 @@
           <!-- Existing room polygons (background layer) -->
           <template v-for="(room, rIdx) in existingRooms" :key="'room-' + rIdx">
             <v-line :config="{
-              points: room.points.flatMap(p => [p.x, p.y]),
-              fill: 'rgba(100, 116, 139, 0.08)',
-              stroke: 'rgba(100, 116, 139, 0.3)',
-              strokeWidth: 1 / scale,
+              points: scalePoints(room.points),
+              fill: 'rgba(59, 130, 246, 0.15)',
+              stroke: 'rgba(59, 130, 246, 0.4)',
+              strokeWidth: 2 / scale,
+
               closed: true,
               listening: false
             }" />
             <v-text :config="{
-              x: Math.min(...room.points.map(p => p.x)),
-              y: Math.min(...room.points.map(p => p.y)),
+              x: getMinPos(room.points, 'x'),
+              y: getMinPos(room.points, 'y'),
               text: room.name,
               fontSize: 12 / scale,
-              fill: 'rgba(100, 116, 139, 0.5)',
+              fill: 'rgba(59, 130, 246, 0.7)',
+
               listening: false
             }" />
           </template>
+
 
           <!-- Filled polygon (when >= 4 points) -->
           <v-line
@@ -216,17 +219,44 @@ const imageConfig = computed(() => ({
 const imgDisplayWidth = ref(800)
 const imgDisplayHeight = ref(450)
 
-const flatPoints = computed(() => {
-  return points.value.flatMap(p => {
-    // If it's normalized (0-1), scale it to current display size for rendering
-    if (Math.abs(p.x) <= 1.2 && Math.abs(p.y) <= 1.2) {
-      return [p.x * imgDisplayWidth.value, p.y * imgDisplayHeight.value]
+const scalePoints = (polygon) => {
+  if (!polygon) return []
+  
+  // Check first point to guess format
+  const firstPoint = polygon[0]
+  let isNormalized = false
+  if (firstPoint && Math.abs(firstPoint.x) <= 1.2 && Math.abs(firstPoint.y) <= 1.2) {
+    isNormalized = true
+  }
+
+  return polygon.flatMap(p => {
+    let x = p.x
+    let y = p.y
+
+    if (isNormalized) {
+      x = x * imgDisplayWidth.value
+      y = y * imgDisplayHeight.value
+    } else {
+      const scaleFactor = imgDisplayHeight.value / 450
+      x = x * scaleFactor
+      y = y * scaleFactor
     }
-    // If it's old absolute format (made with 450px reference)
-    const scaleFactor = imgDisplayHeight.value / 450
-    return [p.x * scaleFactor, p.y * scaleFactor]
+
+    return [x, y]
   })
-})
+}
+
+const getMinPos = (polygon, axis) => {
+  const scaled = scalePoints(polygon)
+  const values = []
+  for (let i = (axis === 'x' ? 0 : 1); i < scaled.length; i += 2) {
+    values.push(scaled[i])
+  }
+  return Math.min(...values)
+}
+
+const flatPoints = computed(() => scalePoints(points.value))
+
 
 
 // Convert screen position to image coordinates
