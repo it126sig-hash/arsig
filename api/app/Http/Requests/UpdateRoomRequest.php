@@ -16,6 +16,7 @@ class UpdateRoomRequest extends FormRequest
         return [
             'floor_id' => 'sometimes|required|exists:floors,id',
             'name' => 'sometimes|required|string|max:255',
+            'keterangan' => 'nullable|string|max:1000',
             'points' => 'sometimes|required|array',
             'needs_coordinate_review' => 'boolean',
         ];
