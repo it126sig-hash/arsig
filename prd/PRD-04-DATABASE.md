@@ -17,6 +17,7 @@
 | `user_devices` | FCM token per device per user |
 | `master_categories` | Kategori referensi global (template hierarkis) |
 | `categories` | Salinan relasional kategori per PT |
+| `tags` | Prefix kata kunci untuk pencarian |
 | `archives` | Inti sistem — metadata, tipe arsip, privacy, download policy |
 | `archive_privacy_targets` | Target akses spesifik (`user_id` atau `department_id`) |
 | `archive_tags` | Hashtag untuk pencarian per arsip |
@@ -85,6 +86,27 @@ Menyimpan FCM token per device per user. Satu user bisa punya lebih dari satu de
 | `updated_at` | TIMESTAMP | |
 | `deleted_at` | TIMESTAMP NULL | Soft delete (Laravel SoftDeletes) |
 
+### 6.4 Tabel `tags` (Inti)
+
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| `id` | BIGINT PK | Auto increment |
+| `nama` | VARCHAR(255) | Nama tag |
+| `created_by` | BIGINT FK | User yang mengupload |
+| `created_at` | TIMESTAMP | |
+| `updated_at` | TIMESTAMP | |
+| `deleted_at` | TIMESTAMP NULL | Soft delete (Laravel SoftDeletes) |
+
+### 6.5 Tabel `archive_tags` (Inti)
+
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| `id` | BIGINT PK | Auto increment |
+| `archive_id` | BIGINT FK | ID arsip |
+| `tag_id` | BIGINT FK | ID tag |
+| `created_at` | TIMESTAMP | |
+| `updated_at` | TIMESTAMP | |
+
 ### 6.5 ERD
 
 ```mermaid
@@ -136,6 +158,12 @@ erDiagram
         string file_path
         date expire_date
         timestamp deleted_at
+    }
+
+    archive_tags {
+        bigint id PK
+        bigint archive_id FK
+        bigint tag_id FK
     }
 
     archive_download_requests {

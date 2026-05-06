@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # ARSIG — Project Rules
 
 ## Stack Wajib
@@ -17,7 +21,7 @@ Project ini menggunakan stack berikut. Jangan pernah menyimpang dari ini:
 
 ## Larangan Keras
 
-- **JANGAN** gunakan CodeIgniter, Bootstrap, atau Tailwind
+- **JANGAN** gunakan CodeIgniter, Bootstrap
 - **JANGAN** simpan access token di `localStorage` atau `sessionStorage` — wajib memory (Pinia)
 - **JANGAN** buat Blade views, route web, atau middleware `web` — Laravel adalah pure REST API
 - **JANGAN** tulis logika bisnis di Controller — pindahkan ke Service

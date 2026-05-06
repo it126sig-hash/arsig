@@ -39,6 +39,31 @@ const routes = [
                 name: 'cabinet-slots',
                 component: () => import('../views/CabinetSlotsView.vue')
             },
+            {
+                path: 'file-explorer',
+                name: 'file-explorer',
+                component: () => import('../views/FileExplorerView.vue')
+            },
+            {
+                path: 'companies',
+                name: 'companies',
+                component: () => import('../views/CompanyView.vue')
+            },
+            {
+                path: 'departments',
+                name: 'departments',
+                component: () => import('../views/DepartmentView.vue')
+            },
+            {
+                path: 'users',
+                name: 'users',
+                component: () => import('../views/UserView.vue')
+            },
+            {
+                path: 'tags',
+                name: 'tags',
+                component: () => import('../views/TagView.vue')
+            },
         ]
     }
 ]
