@@ -12,7 +12,8 @@ class CabinetSlot extends Model
     protected $fillable = [
         'cabinet_id',
         'name',
-        'pic_user_id',
+        'keterangan',
+        'status',
     ];
 
     public function cabinet()
@@ -20,8 +21,13 @@ class CabinetSlot extends Model
         return $this->belongsTo(Cabinet::class);
     }
 
-    public function picUser()
+    public function picUsers()
     {
-        return $this->belongsTo(User::class, 'pic_user_id');
+        return $this->belongsToMany(User::class, 'cabinet_slot_user');
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'cabinet_slot_tag');
     }
 }

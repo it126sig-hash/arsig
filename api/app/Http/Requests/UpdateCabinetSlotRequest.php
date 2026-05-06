@@ -16,7 +16,12 @@ class UpdateCabinetSlotRequest extends FormRequest
         return [
             'cabinet_id' => 'sometimes|required|exists:cabinets,id',
             'name' => 'sometimes|required|string|max:255',
-            'pic_user_id' => 'sometimes|required|exists:users,id',
+            'keterangan' => 'nullable|string|max:1000',
+            'status' => 'sometimes|in:aktif,nonaktif,rusak',
+            'pic_user_ids' => 'nullable|array',
+            'pic_user_ids.*' => 'exists:users,id',
+            'tag_ids' => 'nullable|array',
+            'tag_ids.*' => 'exists:tags,id',
         ];
     }
 }

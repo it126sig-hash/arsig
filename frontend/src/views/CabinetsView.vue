@@ -36,7 +36,7 @@
         :rowsPerPageOptions="[5, 10, 25]"
         dataKey="id"
         :loading="locationStore.loading"
-        :globalFilterFields="['id', 'name', 'room.name', 'room.floor.name']"
+        :globalFilterFields="['id', 'name', 'keterangan', 'room.name', 'room.floor.name']"
         :filters="filters"
         :showGridlines="false"
         stripedRows
@@ -52,6 +52,21 @@
 
         <Column field="id" header="ID" sortable style="width: 80px;" />
         <Column field="name" header="Nama Lemari" sortable />
+        <Column field="keterangan" header="Keterangan" sortable>
+          <template #body="slotProps">
+            <span v-if="slotProps.data.keterangan" class="text-sm text-slate-600 truncate block max-w-[200px]" :title="slotProps.data.keterangan">{{ slotProps.data.keterangan }}</span>
+            <span v-else class="text-xs text-slate-400 italic">—</span>
+          </template>
+        </Column>
+        <Column field="door_count" header="Jumlah Pintu" sortable style="width: 160px;">
+          <template #body="slotProps">
+            <span v-if="slotProps.data.door_count" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-orange-50 text-orange-700 rounded-full text-xs font-medium">
+              <i class="pi pi-th-large text-xs"></i>
+              {{ formatDoorCount(slotProps.data.door_count) }}
+            </span>
+            <span v-else class="text-xs text-slate-400 italic">—</span>
+          </template>
+        </Column>
         <Column field="room.name" header="Ruangan" sortable>
           <template #body="slotProps">
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-medium">
@@ -90,7 +105,7 @@
     </div>
 
     <!-- Create/Edit Dialog -->
-    <Dialog v-model:visible="cabinetDialog" :style="{ width: '500px' }" header="Detail Lemari" :modal="true" :draggable="false">
+    <Dialog v-model:visible="cabinetDialog" :style="{ width: '900px' }" header="Detail Lemari" :modal="true" :draggable="false">
       <div class="flex flex-col gap-5">
         <!-- Room Dropdown -->
         <div class="flex flex-col gap-1.5">
@@ -123,14 +138,41 @@
           <small v-if="submitted && !cabinet.name" class="text-red-500 text-xs">Nama lemari wajib diisi.</small>
         </div>
 
-        <!-- Points Field -->
+        <!-- Keterangan Field -->
         <div class="flex flex-col gap-1.5">
-          <label for="cabinet-points" class="text-sm font-semibold text-slate-700">
-            Koordinat (JSON) <span class="text-slate-400 font-normal text-xs ml-1">opsional</span>
+          <label for="cabinet-keterangan" class="text-sm font-semibold text-slate-700">
+            Keterangan <span class="text-slate-400 font-normal text-xs ml-1">opsional</span>
           </label>
-          <InputText id="cabinet-points" v-model="pointsText" placeholder='[{"x":10, "y":20}]' :invalid="!!pointsError" @input="validatePoints" />
-          <small v-if="pointsError" class="text-red-500 text-xs">{{ pointsError }}</small>
-          <small v-else class="text-slate-400 text-xs">Format: array of {x, y} objects</small>
+          <Textarea id="cabinet-keterangan" v-model="cabinet.keterangan" placeholder="Catatan tambahan tentang lemari (opsional)" rows="2" class="w-full" />
+        </div>
+
+        <!-- Door Count Field -->
+        <div class="flex flex-col gap-1.5">
+          <label for="cabinet-door-count" class="text-sm font-semibold text-slate-700">
+            Jumlah Pintu <span class="text-slate-400 font-normal text-xs ml-1">format: X * Y</span>
+          </label>
+          <InputText id="cabinet-door-count" v-model.trim="cabinet.door_count" placeholder="Contoh: 4 * 3" :invalid="submitted && cabinet.door_count && !isDoorCountValid" />
+          <small v-if="cabinet.door_count && isDoorCountValid" class="text-emerald-600 text-xs flex items-center gap-1">
+            <i class="pi pi-check-circle text-xs"></i>
+            = {{ doorCountTotal }} pintu
+          </small>
+          <small v-else-if="cabinet.door_count && !isDoorCountValid" class="text-red-500 text-xs">
+            Format tidak valid. Gunakan format: X * Y (contoh: 4 * 3)
+          </small>
+        </div>
+
+        <!-- KonvaJS Polygon Drawer -->
+        <div v-if="cabinet.room_id && selectedFloorImageUrl">
+          <CabinetPolygonDrawer
+            :floorImageUrl="selectedFloorImageUrl"
+            :existingRooms="selectedFloorRooms"
+            :initialPoints="cabinet.points || []"
+            @update:points="(pts) => cabinet.points = pts"
+          />
+        </div>
+        <div v-else-if="!cabinet.room_id" class="border border-dashed border-slate-300 rounded-xl p-6 text-center text-sm text-slate-400">
+          <i class="pi pi-map-marker text-2xl mb-2 block opacity-40"></i>
+          Pilih ruangan terlebih dahulu untuk menampilkan peta
         </div>
 
         <!-- Coordinate Review Checkbox -->
@@ -152,7 +194,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { FilterMatchMode } from '@primevue/core/api'
 import { useLocationStore } from '../store/location'
 import { useToast } from 'primevue/usetoast'
@@ -162,10 +204,12 @@ import Column from 'primevue/column'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
 import Dropdown from 'primevue/dropdown'
 import Checkbox from 'primevue/checkbox'
 import Toast from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
+import CabinetPolygonDrawer from '../components/CabinetPolygonDrawer.vue'
 
 const locationStore = useLocationStore()
 const toast         = useToast()
@@ -174,38 +218,74 @@ const confirm       = useConfirm()
 const cabinetDialog = ref(false)
 const cabinet       = ref({ needs_coordinate_review: false })
 const submitted     = ref(false)
-const pointsText    = ref('[]')
-const pointsError   = ref('')
 const globalFilter  = ref('')
 
 const filters = ref({ global: { value: null, matchMode: FilterMatchMode.CONTAINS } })
 watch(globalFilter, (val) => { filters.value.global.value = val })
 
+const appBase = import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '')
+
+const selectedFloorImageUrl = computed(() => {
+  if (!cabinet.value.room_id) return ''
+  const room = locationStore.rooms.find(r => r.id === cabinet.value.room_id)
+  if (!room) return ''
+  const floor = locationStore.floors.find(f => f.id === room.floor_id)
+  if (!floor || !floor.floor_plan_image) return ''
+  return `${appBase}/storage/${floor.floor_plan_image}`
+})
+
+const selectedFloorRooms = computed(() => {
+  if (!cabinet.value.room_id) return []
+  const room = locationStore.rooms.find(r => r.id === cabinet.value.room_id)
+  if (!room) return []
+  return locationStore.rooms
+    .filter(r => r.floor_id === room.floor_id && r.points && r.points.length >= 3)
+    .map(r => ({ name: r.name, points: r.points }))
+})
+
+const isDoorCountValid = computed(() => {
+  if (!cabinet.value.door_count) return false
+  return /^\d+\s*\*\s*\d+$/.test(cabinet.value.door_count)
+})
+
+const doorCountTotal = computed(() => {
+  if (!isDoorCountValid.value) return 0
+  const [cols, rows] = cabinet.value.door_count.split('*').map(s => parseInt(s.trim()))
+  return cols * rows
+})
+
+const formatDoorCount = (dc) => {
+  if (!dc) return '—'
+  const parts = dc.split('*').map(s => s.trim())
+  if (parts.length !== 2) return dc
+  const total = parseInt(parts[0]) * parseInt(parts[1])
+  return `${parts[0]} × ${parts[1]} = ${total} pintu`
+}
+
 onMounted(async () => {
   try {
-    await Promise.all([locationStore.fetchRooms(), locationStore.fetchCabinets()])
+    await Promise.all([locationStore.fetchFloors(), locationStore.fetchRooms(), locationStore.fetchCabinets()])
   } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal memuat data', life: 3000 })
   }
 })
 
-const validatePoints = () => {
-  try {
-    const parsed = JSON.parse(pointsText.value || '[]')
-    if (!Array.isArray(parsed)) { pointsError.value = 'Harus berupa JSON array'; return false }
-    pointsError.value = ''; return true
-  } catch { pointsError.value = 'Format JSON tidak valid'; return false }
-}
-
-const openNew    = () => { cabinet.value = { needs_coordinate_review: false }; pointsText.value = '[]'; pointsError.value = ''; submitted.value = false; cabinetDialog.value = true }
+const openNew    = () => { cabinet.value = { needs_coordinate_review: false, points: [] }; submitted.value = false; cabinetDialog.value = true }
 const hideDialog = () => { cabinetDialog.value = false; submitted.value = false }
 
 const saveCabinet = async () => {
   submitted.value = true
-  if (!validatePoints()) return
   if (!cabinet.value.name?.trim() || !cabinet.value.room_id) return
+  if (cabinet.value.door_count && !isDoorCountValid.value) return
   try {
-    const data = { ...cabinet.value, points: JSON.parse(pointsText.value || '[]') }
+    const data = {
+      room_id: cabinet.value.room_id,
+      name: cabinet.value.name,
+      keterangan: cabinet.value.keterangan || null,
+      door_count: cabinet.value.door_count || null,
+      points: cabinet.value.points || [],
+      needs_coordinate_review: cabinet.value.needs_coordinate_review || false
+    }
     if (cabinet.value.id) {
       await locationStore.updateCabinet(cabinet.value.id, data)
       toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Data lemari diperbarui', life: 3000 })
@@ -217,7 +297,11 @@ const saveCabinet = async () => {
   } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal menyimpan data lemari', life: 3000 }) }
 }
 
-const editCabinet = (editData) => { cabinet.value = { ...editData }; pointsText.value = JSON.stringify(editData.points || []); pointsError.value = ''; cabinetDialog.value = true }
+const editCabinet = (editData) => {
+  cabinet.value = { ...editData }
+  submitted.value = false
+  cabinetDialog.value = true
+}
 
 const confirmDeleteCabinet = (deleteData) => {
   confirm.require({

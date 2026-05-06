@@ -16,6 +16,8 @@ class UpdateCabinetRequest extends FormRequest
         return [
             'room_id' => 'sometimes|required|exists:rooms,id',
             'name' => 'sometimes|required|string|max:255',
+            'keterangan' => 'nullable|string|max:1000',
+            'door_count' => 'nullable|string|max:20|regex:/^\d+\s*\*\s*\d+$/',
             'points' => 'sometimes|required|array',
             'needs_coordinate_review' => 'boolean',
         ];

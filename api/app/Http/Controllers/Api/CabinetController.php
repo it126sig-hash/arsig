@@ -12,7 +12,7 @@ class CabinetController extends Controller
 {
     public function index()
     {
-        $cabinets = Cabinet::with('room.floor')->latest()->get();
+        $cabinets = Cabinet::with(['room.floor', 'cabinetSlots'])->latest()->get();
         return CabinetResource::collection($cabinets);
     }
 
@@ -27,7 +27,7 @@ class CabinetController extends Controller
 
     public function show(Cabinet $cabinet)
     {
-        return new CabinetResource($cabinet->load('room'));
+        return new CabinetResource($cabinet->load(['room', 'cabinetSlots.picUsers', 'cabinetSlots.tags']));
     }
 
     public function update(UpdateCabinetRequest $request, Cabinet $cabinet)
