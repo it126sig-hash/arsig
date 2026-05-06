@@ -117,6 +117,11 @@ const isActive = (path) => {
 // Main navigation items
 const menuItems = [
   { to: '/', label: 'Dashboard', icon: 'pi pi-home' },
+  { to: '/file-explorer', label: 'File Explorer', icon: 'pi pi-folder' },
+  { to: '/companies', label: 'Perusahaan (PT)', icon: 'pi pi-building' },
+  { to: '/departments', label: 'Departemen', icon: 'pi pi-sitemap' },
+  { to: '/users', label: 'User', icon: 'pi pi-users' },
+  { to: '/tags', label: 'Tag (Hashtag)', icon: 'pi pi-hashtag' },
 ]
 
 // Location management items
