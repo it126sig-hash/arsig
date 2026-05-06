@@ -300,6 +300,16 @@ const loadInitialData = async () => {
     }
 }
 
+// Reset semua field lokasi fisik setiap kali dialog dibuka ulang (Issue #22)
+watch(() => props.visible, (isVisible) => {
+    if (isVisible) {
+        resetForm()
+        rooms.value = []
+        cabinets.value = []
+        slots.value = []
+    }
+})
+
 watch(() => props.preselectedCategory, (newVal) => {
     if (newVal) {
         form.category_id = newVal.data.id
