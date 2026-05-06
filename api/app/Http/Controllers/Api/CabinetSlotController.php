@@ -12,31 +12,47 @@ class CabinetSlotController extends Controller
 {
     public function index()
     {
-        $slots = CabinetSlot::with(['cabinet.room.floor', 'picUser'])->latest()->get();
+        $slots = CabinetSlot::with(['cabinet.room.floor', 'picUsers', 'tags'])->latest()->get();
         return CabinetSlotResource::collection($slots);
     }
 
     public function store(StoreCabinetSlotRequest $request)
     {
         $data = $request->validated();
+        unset($data['pic_user_ids'], $data['tag_ids']);
         
         $slot = CabinetSlot::create($data);
 
-        return new CabinetSlotResource($slot->load(['cabinet', 'picUser']));
+        if ($request->has('pic_user_ids')) {
+            $slot->picUsers()->sync($request->pic_user_ids);
+        }
+        if ($request->has('tag_ids')) {
+            $slot->tags()->sync($request->tag_ids);
+        }
+
+        return new CabinetSlotResource($slot->load(['cabinet', 'picUsers', 'tags']));
     }
 
     public function show(CabinetSlot $cabinetSlot)
     {
-        return new CabinetSlotResource($cabinetSlot->load(['cabinet', 'picUser']));
+        return new CabinetSlotResource($cabinetSlot->load(['cabinet', 'picUsers', 'tags']));
     }
 
     public function update(UpdateCabinetSlotRequest $request, CabinetSlot $cabinetSlot)
     {
         $data = $request->validated();
+        unset($data['pic_user_ids'], $data['tag_ids']);
 
         $cabinetSlot->update($data);
 
-        return new CabinetSlotResource($cabinetSlot->load(['cabinet', 'picUser']));
+        if ($request->has('pic_user_ids')) {
+            $cabinetSlot->picUsers()->sync($request->pic_user_ids);
+        }
+        if ($request->has('tag_ids')) {
+            $cabinetSlot->tags()->sync($request->tag_ids);
+        }
+
+        return new CabinetSlotResource($cabinetSlot->load(['cabinet', 'picUsers', 'tags']));
     }
 
     public function destroy(CabinetSlot $cabinetSlot)

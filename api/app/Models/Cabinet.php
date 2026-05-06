@@ -12,6 +12,8 @@ class Cabinet extends Model
     protected $fillable = [
         'room_id',
         'name',
+        'keterangan',
+        'door_count',
         'points',
         'needs_coordinate_review',
     ];

@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-2">
-    <label class="text-sm font-semibold text-slate-700">Koordinat Ruangan</label>
+    <label class="text-sm font-semibold text-slate-700">Koordinat Lemari</label>
 
     <!-- Canvas Container (fixed viewport) -->
     <div
@@ -32,13 +32,33 @@
           <!-- Floor plan image -->
           <v-image :config="imageConfig" />
 
+          <!-- Existing room polygons (background layer) -->
+          <template v-for="(room, rIdx) in existingRooms" :key="'room-' + rIdx">
+            <v-line :config="{
+              points: room.points.flatMap(p => [p.x, p.y]),
+              fill: 'rgba(100, 116, 139, 0.08)',
+              stroke: 'rgba(100, 116, 139, 0.3)',
+              strokeWidth: 1 / scale,
+              closed: true,
+              listening: false
+            }" />
+            <v-text :config="{
+              x: Math.min(...room.points.map(p => p.x)),
+              y: Math.min(...room.points.map(p => p.y)),
+              text: room.name,
+              fontSize: 12 / scale,
+              fill: 'rgba(100, 116, 139, 0.5)',
+              listening: false
+            }" />
+          </template>
+
           <!-- Filled polygon (when >= 4 points) -->
           <v-line
             v-if="points.length >= 4"
             :config="{
               points: flatPoints,
-              fill: 'rgba(16, 185, 129, 0.2)',
-              stroke: 'rgba(16, 185, 129, 0.6)',
+              fill: 'rgba(249, 115, 22, 0.25)',
+              stroke: 'rgba(249, 115, 22, 0.8)',
               strokeWidth: 2 / scale,
               closed: true,
               listening: false
@@ -50,7 +70,7 @@
             v-if="points.length >= 2 && points.length < 4"
             :config="{
               points: flatPoints,
-              stroke: 'rgba(16, 185, 129, 0.8)',
+              stroke: 'rgba(249, 115, 22, 0.8)',
               strokeWidth: 2 / scale,
               closed: false,
               listening: false
@@ -65,7 +85,7 @@
               x: point.x,
               y: point.y,
               radius: 6 / scale,
-              fill: index === 0 ? '#059669' : '#10b981',
+              fill: index === 0 ? '#ea580c' : '#f97316',
               stroke: '#fff',
               strokeWidth: 2 / scale,
               draggable: !isPanning
@@ -125,7 +145,7 @@
     <!-- Validation message -->
     <small v-if="points.length > 0 && points.length < 4" class="text-amber-600 text-xs flex items-center gap-1">
       <i class="pi pi-exclamation-triangle text-xs"></i>
-      Minimal 4 titik diperlukan untuk membentuk area ruangan (saat ini: {{ points.length }})
+      Minimal 4 titik diperlukan untuk membentuk area lemari (saat ini: {{ points.length }})
     </small>
   </div>
 </template>
@@ -137,6 +157,10 @@ const props = defineProps({
   floorImageUrl: {
     type: String,
     required: true
+  },
+  existingRooms: {
+    type: Array,
+    default: () => []
   },
   initialPoints: {
     type: Array,

@@ -13,9 +13,12 @@ class CabinetResource extends JsonResource
             'id' => $this->id,
             'room_id' => $this->room_id,
             'name' => $this->name,
+            'keterangan' => $this->keterangan,
+            'door_count' => $this->door_count,
             'points' => $this->points,
             'needs_coordinate_review' => $this->needs_coordinate_review,
             'room' => new RoomResource($this->whenLoaded('room')),
+            'slots' => CabinetSlotResource::collection($this->whenLoaded('cabinetSlots')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

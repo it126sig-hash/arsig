@@ -16,7 +16,12 @@ class StoreCabinetSlotRequest extends FormRequest
         return [
             'cabinet_id' => 'required|exists:cabinets,id',
             'name' => 'required|string|max:255',
-            'pic_user_id' => 'required|exists:users,id',
+            'keterangan' => 'nullable|string|max:1000',
+            'status' => 'sometimes|in:aktif,nonaktif,rusak',
+            'pic_user_ids' => 'nullable|array',
+            'pic_user_ids.*' => 'exists:users,id',
+            'tag_ids' => 'nullable|array',
+            'tag_ids.*' => 'exists:tags,id',
         ];
     }
 }
