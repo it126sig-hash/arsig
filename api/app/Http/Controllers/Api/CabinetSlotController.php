@@ -10,9 +10,12 @@ use App\Http\Resources\CabinetSlotResource;
 
 class CabinetSlotController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
-        $slots = CabinetSlot::with(['cabinet.room.floor', 'picUsers', 'tags'])->latest()->get();
+        $slots = CabinetSlot::with(['cabinet.room.floor', 'picUsers', 'tags'])
+            ->when($request->cabinet_id, fn($q) => $q->where('cabinet_id', $request->cabinet_id))
+            ->latest()
+            ->get();
         return CabinetSlotResource::collection($slots);
     }
 

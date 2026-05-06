@@ -160,6 +160,7 @@
                                         <thead class="bg-slate-50 text-slate-600">
                                             <tr>
                                                 <th class="text-left p-3 font-semibold">Nama</th>
+                                                <th class="text-left p-3 font-semibold">Keterangan</th>
                                                 <th class="text-left p-3 font-semibold">No. File</th>
                                                 <th class="text-left p-3 font-semibold">Tgl Terbit</th>
                                                 <th class="text-left p-3 font-semibold">Tipe</th>
@@ -170,9 +171,14 @@
                                                 <td class="p-3 text-slate-800">
                                                     <div class="font-medium">{{ a.name }}</div>
                                                 </td>
+                                                <td class="p-3 text-slate-500 italic max-w-[200px] truncate">
+                                                    {{ a.keterangan || '—' }}
+                                                </td>
                                                 <td class="p-3 text-slate-600">{{ a.file_number || '—' }}</td>
                                                 <td class="p-3 text-slate-600">{{ formatDateDisplay(a.issue_date) }}</td>
-                                                <td class="p-3 text-slate-600">{{ a.archive_type }}</td>
+                                                <td class="p-3 text-slate-600">
+                                                    <Tag :value="getArchiveTypeLabel(a.archive_type)" :severity="getArchiveTypeSeverity(a.archive_type)" />
+                                                </td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -249,6 +255,7 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Dialog from 'primevue/dialog'
 import Toast from 'primevue/toast'
+import Tag from 'primevue/tag'
 import ArchiveUploadDialog from '@/components/ArchiveUploadDialog.vue'
 
 const categoryStore = useCategoryStore()
@@ -354,6 +361,26 @@ const formatDateDisplay = (dateStr) => {
     const d = new Date(dateStr)
     if (Number.isNaN(d.getTime())) return String(dateStr)
     return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: '2-digit' })
+}
+
+const getArchiveTypeLabel = (type) => {
+    const labels = {
+        full: 'Digital + Fisik',
+        physical_only: 'Hanya Fisik',
+        digital_only: 'Hanya Digital',
+        placeholder: 'Placeholder'
+    }
+    return labels[type] || type
+}
+
+const getArchiveTypeSeverity = (type) => {
+    const severities = {
+        full: 'success',
+        physical_only: 'info',
+        digital_only: 'warn',
+        placeholder: 'secondary'
+    }
+    return severities[type] || null
 }
 
 const openAddSubcategory = () => {

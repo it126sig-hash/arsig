@@ -10,9 +10,12 @@ use App\Http\Resources\RoomResource;
 
 class RoomController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
-        $rooms = Room::with('floor')->latest()->get();
+        $rooms = Room::with('floor')
+            ->when($request->floor_id, fn($q) => $q->where('floor_id', $request->floor_id))
+            ->latest()
+            ->get();
         return RoomResource::collection($rooms);
     }
 

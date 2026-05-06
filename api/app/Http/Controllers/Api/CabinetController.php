@@ -10,9 +10,12 @@ use App\Http\Resources\CabinetResource;
 
 class CabinetController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
-        $cabinets = Cabinet::with(['room.floor', 'cabinetSlots'])->latest()->get();
+        $cabinets = Cabinet::with(['room.floor', 'cabinetSlots'])
+            ->when($request->room_id, fn($q) => $q->where('room_id', $request->room_id))
+            ->latest()
+            ->get();
         return CabinetResource::collection($cabinets);
     }
 

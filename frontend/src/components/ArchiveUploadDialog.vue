@@ -4,49 +4,52 @@
         @update:visible="$emit('update:visible', $event)"
         header="Upload Arsip Baru" 
         :modal="true" 
-        class="w-full max-w-2xl"
+        class="w-full max-w-4xl"
     >
-        <form @submit.prevent="handleSubmit" class="grid grid-cols-12 gap-4 mt-2">
+        <form @submit.prevent="handleSubmit" class="grid grid-cols-12 gap-x-6 gap-y-4 mt-2">
             <!-- Kategori (Read Only) -->
             <div class="col-span-12">
-                <label class="block text-sm font-medium text-slate-700 mb-1">Kategori Terpilih</label>
-                <div class="p-3 bg-slate-100 rounded border border-slate-200 text-slate-600 font-semibold flex items-center gap-2">
-                    <i class="pi pi-folder"></i>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Kategori Terpilih</label>
+                <div class="p-3 bg-slate-50 rounded border border-slate-200 text-slate-600 font-semibold flex items-center gap-2">
+                    <i class="pi pi-folder text-yellow-500"></i>
                     {{ preselectedCategory?.label || 'Belum dipilih' }}
                 </div>
             </div>
 
-            <!-- Nama Arsip -->
+            <!-- Nama Arsip & Nomor File -->
             <div class="col-span-12 md:col-span-8">
                 <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Nama Arsip *</label>
                 <InputText id="name" v-model="form.name" class="w-full" placeholder="Contoh: Laporan Keuangan Q1 2024" required />
             </div>
 
-            <!-- Nomor File -->
             <div class="col-span-12 md:col-span-4">
                 <label for="file_number" class="block text-sm font-medium text-slate-700 mb-1">Nomor File</label>
                 <InputText id="file_number" v-model="form.file_number" class="w-full" placeholder="No. Reg / Ref" />
             </div>
 
-            <!-- Tipe Arsip -->
+            <!-- Keterangan -->
+            <div class="col-span-12">
+                <label for="keterangan" class="block text-sm font-medium text-slate-700 mb-1">Keterangan</label>
+                <Textarea id="keterangan" v-model="form.keterangan" rows="2" class="w-full" placeholder="Deskripsi singkat arsip (opsional)" />
+            </div>
+
+            <!-- Tipe Arsip, Tanggal, PIC -->
             <div class="col-span-12 md:col-span-4">
                 <label for="archive_type" class="block text-sm font-medium text-slate-700 mb-1">Tipe Arsip *</label>
                 <Select id="archive_type" v-model="form.archive_type" :options="typeOptions" optionLabel="label" optionValue="value" class="w-full" required />
             </div>
 
-            <!-- Tanggal Terbit -->
             <div class="col-span-12 md:col-span-4">
                 <label for="issue_date" class="block text-sm font-medium text-slate-700 mb-1">Tanggal Terbit *</label>
                 <DatePicker id="issue_date" v-model="form.issue_date" class="w-full" dateFormat="yy-mm-dd" required />
             </div>
 
-            <!-- PIC -->
             <div class="col-span-12 md:col-span-4">
                 <label for="pic" class="block text-sm font-medium text-slate-700 mb-1">PIC *</label>
                 <Select id="pic" v-model="form.pic_user_id" :options="users" optionLabel="name" optionValue="id" class="w-full" required />
             </div>
 
-            <!-- Privacy & Download Policy -->
+            <!-- Privacy & Granular Access -->
             <div class="col-span-12 md:col-span-6">
                 <label for="privacy_type" class="block text-sm font-medium text-slate-700 mb-1">Privasi *</label>
                 <Select id="privacy_type" v-model="form.privacy_type" :options="privacyOptions" optionLabel="label" optionValue="value" class="w-full" required />
@@ -57,29 +60,117 @@
                 <Select id="download_policy" v-model="form.download_policy" :options="policyOptions" optionLabel="label" optionValue="value" class="w-full" required />
             </div>
 
-            <!-- Hashtags -->
-            <div class="col-span-12">
-                <label for="hashtags" class="block text-sm font-medium text-slate-700 mb-1">Hashtags (Gunakan Enter)</label>
-                <Chips id="hashtags" v-model="form.hashtags" class="w-full" placeholder="audit, 2024, pajak" />
+            <!-- Department Access MultiSelect -->
+            <div v-if="form.privacy_type === 'department'" class="col-span-12">
+                <label class="block text-sm font-medium text-slate-700 mb-1">Pilih Departemen yang Berhak Akses *</label>
+                <MultiSelect 
+                    v-model="form.department_ids" 
+                    :options="departments" 
+                    optionLabel="name" 
+                    optionValue="id" 
+                    placeholder="Pilih satu atau lebih departemen" 
+                    class="w-full" 
+                    display="chip"
+                    required
+                />
             </div>
 
-            <!-- File Upload (Conditional) -->
-            <div v-if="form.archive_type === 'full'" class="col-span-12">
-                <label class="block text-sm font-medium text-slate-700 mb-1">Upload File (PDF/DOC/Image) *</label>
+            <!-- User Access MultiSelect -->
+            <div v-if="form.privacy_type === 'user'" class="col-span-12">
+                <label class="block text-sm font-medium text-slate-700 mb-1">Pilih User yang Berhak Akses *</label>
+                <MultiSelect 
+                    v-model="form.user_ids" 
+                    :options="allUsers" 
+                    optionLabel="name" 
+                    optionValue="id" 
+                    placeholder="Pilih satu atau lebih user" 
+                    class="w-full" 
+                    display="chip"
+                    required
+                />
+            </div>
+
+            <!-- Physical Location (Conditional) -->
+            <div v-if="['full', 'physical_only'].includes(form.archive_type)" class="col-span-12 grid grid-cols-12 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <h4 class="col-span-12 text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <i class="pi pi-map-marker text-red-500"></i>
+                    Lokasi Fisik
+                </h4>
+                
+                <div class="col-span-12 md:col-span-3">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Lantai</label>
+                    <Select v-model="form.floor_id" :options="floors" optionLabel="name" optionValue="id" placeholder="Pilih Lantai" class="w-full p-fluid" />
+                </div>
+                <div class="col-span-12 md:col-span-3">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Ruangan</label>
+                    <Select v-model="form.room_id" :options="rooms" optionLabel="name" optionValue="id" placeholder="Pilih Ruangan" class="w-full" :disabled="!form.floor_id" />
+                </div>
+                <div class="col-span-12 md:col-span-3">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Kabinet</label>
+                    <Select v-model="form.cabinet_id" :options="cabinets" optionLabel="name" optionValue="id" placeholder="Pilih Kabinet" class="w-full" :disabled="!form.room_id" />
+                </div>
+                <div class="col-span-12 md:col-span-3">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Slot</label>
+                    <Select v-model="form.cabinet_slot_id" :options="slots" optionLabel="name" optionValue="id" placeholder="Pilih Slot" class="w-full" :disabled="!form.cabinet_id" />
+                </div>
+
+                <!-- Floor Plan Image -->
+                <div v-if="selectedFloor?.floor_plan_image" class="col-span-12 md:col-span-6 flex flex-col gap-1">
+                    <label class="text-xs font-medium text-slate-500 italic">Denah Lantai</label>
+                    <div class="border rounded overflow-hidden bg-white flex items-center justify-center p-2 h-48">
+                        <img :src="getFullImageUrl(selectedFloor.floor_plan_image)" alt="Floor Plan" class="max-w-full max-h-full object-contain" />
+                    </div>
+                </div>
+
+                <!-- Cabinet Visual -->
+                <div v-if="selectedCabinet" class="col-span-12 md:col-span-6 flex flex-col gap-1">
+                    <label class="text-xs font-medium text-slate-500 italic">Visual Kabinet</label>
+                    <div class="border rounded bg-white p-4 h-48 overflow-auto">
+                        <CabinetDoorGrid 
+                            :doorCount="selectedCabinet.door_count || 1" 
+                            :slots="slots" 
+                            :highlightedSlotId="form.cabinet_slot_id"
+                            @slot-click="form.cabinet_slot_id = $event.id"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Upload -->
+            <div v-if="['full', 'digital_only'].includes(form.archive_type)" class="col-span-12">
+                <label class="block text-sm font-medium text-slate-700 mb-1">Upload File *</label>
                 <FileUpload 
                     mode="advanced" 
                     name="file" 
                     :auto="false" 
                     :multiple="false" 
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" 
-                    :maxFileSize="20000000"
+                    :maxFileSize="50000000"
                     @select="onFileSelect"
                     @remove="onFileRemove"
                 >
                     <template #empty>
-                        <p>Drag and drop files to here to upload.</p>
+                        <div class="flex flex-col items-center justify-center py-4 text-slate-400">
+                            <i class="pi pi-cloud-upload text-3xl mb-2"></i>
+                            <p>Tarik file ke sini atau klik untuk memilih</p>
+                        </div>
                     </template>
                 </FileUpload>
+            </div>
+
+            <!-- Tags (Table Based) -->
+            <div class="col-span-12">
+                <label for="tags" class="block text-sm font-medium text-slate-700 mb-1">Tags *</label>
+                <MultiSelect 
+                    id="tags" 
+                    v-model="form.tag_ids" 
+                    :options="availableTags" 
+                    optionLabel="nama" 
+                    optionValue="id" 
+                    placeholder="Pilih tag..." 
+                    class="w-full" 
+                    display="chip"
+                    filter
+                />
             </div>
 
             <!-- Expire & Reminder -->
@@ -102,37 +193,54 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted, computed } from 'vue'
 import { uploadArchive } from '@/api/archiveApi'
+import { fetchUsers } from '@/api/userApi'
+import { fetchDepartments } from '@/api/departmentApi'
+import { fetchTags } from '@/api/tagApi'
+import { fetchFloors, fetchRoomsByFloor, fetchCabinetsByRoom, fetchSlotsByCabinet } from '@/api/locationApi'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
 import DatePicker from 'primevue/datepicker'
 import Select from 'primevue/select'
+import MultiSelect from 'primevue/multiselect'
 import FileUpload from 'primevue/fileupload'
 import Chips from 'primevue/chips'
 import Button from 'primevue/button'
-import api from '@/services/api'
+import CabinetDoorGrid from '@/components/CabinetDoorGrid.vue'
 
 const props = defineProps({
     visible: Boolean,
-    preselectedCategory: Object
+    preselectedCategory: Object,
+    companyId: [Number, String]
 })
 
 const emit = defineEmits(['update:visible', 'upload-success'])
 
 const isUploading = ref(false)
 const users = ref([])
+const allUsers = ref([])
+const departments = ref([])
+const floors = ref([])
+const rooms = ref([])
+const cabinets = ref([])
+const slots = ref([])
+const availableTags = ref([])
 const selectedFile = ref(null)
 
 const typeOptions = [
     { label: 'Digital + Fisik', value: 'full' },
     { label: 'Hanya Fisik', value: 'physical_only' },
+    { label: 'Hanya Digital', value: 'digital_only' },
     { label: 'Placeholder', value: 'placeholder' }
 ]
 
 const privacyOptions = [
-    { label: 'Publik', value: 'public' },
-    { label: 'Internal (Private)', value: 'private' }
+    { label: 'Publik (Semua Orang)', value: 'public' },
+    { label: 'Private (Hanya PIC)', value: 'private' },
+    { label: 'Departemen Tertentu', value: 'department' },
+    { label: 'User Tertentu', value: 'user' }
 ]
 
 const policyOptions = [
@@ -142,6 +250,7 @@ const policyOptions = [
 
 const form = reactive({
     name: '',
+    keterangan: '',
     file_number: '',
     category_id: null,
     issue_date: new Date(),
@@ -149,30 +258,90 @@ const form = reactive({
     privacy_type: 'public',
     download_policy: 'direct_download',
     pic_user_id: null,
-    hashtags: [],
+    tag_ids: [],
     expire_date: null,
     reminder_date: null,
-    company_id: 1 // Default for now
+    company_id: null,
+    department_ids: [],
+    user_ids: [],
+    floor_id: null,
+    room_id: null,
+    cabinet_id: null,
+    cabinet_slot_id: null
 })
 
+const selectedFloor = computed(() => floors.value.find(f => f.id === form.floor_id))
+const selectedCabinet = computed(() => cabinets.value.find(c => c.id === form.cabinet_id))
+
 onMounted(async () => {
-    try {
-        // Mocking user fetch or actual fetch if endpoint exists
-        // const response = await api.get('/users')
-        // users.value = response.data.data
-        users.value = [{ id: 1, name: 'Admin User' }] // Default fallback
-        form.pic_user_id = 1
-    } catch (e) {
-        console.error('Failed to load users', e)
-    }
+    loadInitialData()
 })
+
+const loadInitialData = async () => {
+    try {
+        const [uRes, dRes, fRes, tRes] = await Promise.all([
+            fetchUsers(),
+            fetchDepartments(),
+            fetchFloors(),
+            fetchTags()
+        ])
+        users.value = uRes.data.data
+        allUsers.value = uRes.data.data
+        departments.value = dRes.data.data
+        floors.value = fRes.data.data
+        availableTags.value = tRes.data.data
+        
+        // Default PIC to current user or first user
+        if (users.value.length > 0) {
+            form.pic_user_id = users.value[0].id
+        }
+    } catch (e) {
+        console.error('Failed to load initial data', e)
+    }
+}
 
 watch(() => props.preselectedCategory, (newVal) => {
     if (newVal) {
         form.category_id = newVal.data.id
-        form.company_id = newVal.data.company_id
+        form.company_id = newVal.data.company_id || props.companyId
     }
 }, { immediate: true })
+
+watch(() => form.privacy_type, () => {
+    form.department_ids = []
+    form.user_ids = []
+})
+
+// Location Watchers
+watch(() => form.floor_id, async (newId) => {
+    form.room_id = null
+    form.cabinet_id = null
+    form.cabinet_slot_id = null
+    rooms.value = []
+    if (newId) {
+        const res = await fetchRoomsByFloor(newId)
+        rooms.value = res.data.data
+    }
+})
+
+watch(() => form.room_id, async (newId) => {
+    form.cabinet_id = null
+    form.cabinet_slot_id = null
+    cabinets.value = []
+    if (newId) {
+        const res = await fetchCabinetsByRoom(newId)
+        cabinets.value = res.data.data
+    }
+})
+
+watch(() => form.cabinet_id, async (newId) => {
+    form.cabinet_slot_id = null
+    slots.value = []
+    if (newId) {
+        const res = await fetchSlotsByCabinet(newId)
+        slots.value = res.data.data
+    }
+})
 
 const onFileSelect = (event) => {
     selectedFile.value = event.files[0]
@@ -180,6 +349,12 @@ const onFileSelect = (event) => {
 
 const onFileRemove = () => {
     selectedFile.value = null
+}
+
+const getFullImageUrl = (path) => {
+    if (!path) return ''
+    const base = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+    return `${base}/storage/${path}`
 }
 
 const formatDate = (date) => {
@@ -197,11 +372,22 @@ const formatDate = (date) => {
 
 const handleSubmit = async () => {
     if (!form.name || !form.category_id || !form.issue_date || !form.pic_user_id) {
+        alert('Mohon lengkapi field wajib (*)')
         return
     }
 
-    if (form.archive_type === 'full' && !selectedFile.value) {
-        alert('File wajib diupload untuk tipe Digital + Fisik')
+    if (['full', 'digital_only'].includes(form.archive_type) && !selectedFile.value) {
+        alert('File wajib diupload untuk tipe Digital')
+        return
+    }
+
+    if (form.privacy_type === 'department' && !form.department_ids.length) {
+        alert('Mohon pilih minimal satu departemen')
+        return
+    }
+
+    if (form.privacy_type === 'user' && !form.user_ids.length) {
+        alert('Mohon pilih minimal satu user')
         return
     }
 
@@ -209,6 +395,7 @@ const handleSubmit = async () => {
     try {
         const formData = new FormData()
         formData.append('name', form.name)
+        formData.append('keterangan', form.keterangan || '')
         formData.append('file_number', form.file_number || '')
         formData.append('category_id', form.category_id)
         formData.append('issue_date', formatDate(form.issue_date))
@@ -218,8 +405,24 @@ const handleSubmit = async () => {
         formData.append('pic_user_id', form.pic_user_id)
         formData.append('company_id', form.company_id)
 
-        if (form.hashtags && form.hashtags.length) {
-            form.hashtags.forEach(tag => formData.append('hashtags[]', tag))
+        // Privacy Access
+        if (form.privacy_type === 'department') {
+            form.department_ids.forEach(id => formData.append('department_ids[]', id))
+        }
+        if (form.privacy_type === 'user') {
+            form.user_ids.forEach(id => formData.append('user_ids[]', id))
+        }
+
+        // Location
+        if (['full', 'physical_only'].includes(form.archive_type)) {
+            if (form.floor_id) formData.append('floor_id', form.floor_id)
+            if (form.room_id) formData.append('room_id', form.room_id)
+            if (form.cabinet_id) formData.append('cabinet_id', form.cabinet_id)
+            if (form.cabinet_slot_id) formData.append('cabinet_slot_id', form.cabinet_slot_id)
+        }
+
+        if (form.tag_ids && form.tag_ids.length) {
+            form.tag_ids.forEach(id => formData.append('tag_ids[]', id))
         }
 
         if (selectedFile.value) {
@@ -245,11 +448,22 @@ const handleSubmit = async () => {
 }
 
 const resetForm = () => {
-    form.name = ''
-    form.file_number = ''
-    form.expire_date = null
-    form.reminder_date = null
-    form.hashtags = []
+    Object.assign(form, {
+        name: '',
+        keterangan: '',
+        file_number: '',
+        expire_date: null,
+        reminder_date: null,
+        tag_ids: [],
+        department_ids: [],
+        user_ids: [],
+        floor_id: null,
+        room_id: null,
+        cabinet_id: null,
+        cabinet_slot_id: null
+    })
     selectedFile.value = null
 }
 </script>
+
+

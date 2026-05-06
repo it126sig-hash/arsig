@@ -15,11 +15,11 @@
         v-for="(slot, idx) in normalizedSlots"
         :key="slot.id || idx"
         class="border-2 rounded-lg p-2.5 cursor-pointer transition-all hover:shadow-md hover:scale-[1.02] flex flex-col items-center justify-center min-h-[100px] text-center"
-        :class="doorColorClass(slot.status)"
-        @click="$emit('click-door', slot, idx)"
+        :class="[doorColorClass(slot.status), { 'ring-4 ring-orange-400 border-orange-500 shadow-lg scale-105 z-10': slot.id && slot.id === highlightedSlotId }]"
+        @click="$emit('slot-click', slot, idx)"
       >
         <!-- Door number -->
-        <span class="text-sm font-bold text-slate-700">{{ slot.name || String(idx + 1).padStart(2, '0') }}</span>
+        <span class="text-sm font-bold text-slate-700" :class="{ 'text-orange-700': slot.id && slot.id === highlightedSlotId }">{{ slot.name || String(idx + 1).padStart(2, '0') }}</span>
 
         <!-- PIC list -->
         <div v-if="slot.pic_users && slot.pic_users.length > 0" class="mt-1.5 flex flex-wrap gap-1 justify-center">
@@ -74,10 +74,14 @@ const props = defineProps({
   cabinetName: {
     type: String,
     default: ''
+  },
+  highlightedSlotId: {
+    type: [Number, String, null],
+    default: null
   }
 })
 
-defineEmits(['click-door'])
+defineEmits(['slot-click'])
 
 const cols = computed(() => {
   if (!props.doorCount) return 0

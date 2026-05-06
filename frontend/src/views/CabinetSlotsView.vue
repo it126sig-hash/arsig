@@ -34,7 +34,7 @@
           :doorCount="selectedCabinet.door_count"
           :slots="selectedCabinetSlots"
           :cabinetName="selectedCabinet.name"
-          @click-door="onClickDoor"
+          @slot-click="onClickDoor"
         />
       </div>
       <div v-else-if="selectedCabinetId && !selectedCabinet?.door_count" class="mt-4 text-center py-8 text-slate-400 text-sm">
