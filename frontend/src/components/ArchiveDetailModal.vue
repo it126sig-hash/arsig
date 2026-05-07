@@ -162,9 +162,12 @@
 
                     <!-- Location Mode -->
                     <div v-else-if="viewMode === 'location'" class="w-full h-full flex flex-col p-4 animate-fade-in">
-                        <div class="flex-1 bg-white border border-slate-200 rounded-lg overflow-hidden relative flex items-center justify-center">
-                            <p class="text-slate-400 italic">[Visualisasi Denah: {{ archive.floor?.name }} > {{ archive.room?.name }}]</p>
-                            <!-- Future: Integrasi Konva.js Visualizer -->
+                        <div class="flex-1 bg-white border border-slate-200 rounded-lg overflow-hidden relative">
+                            <LocationVisualizer 
+                                :floor="archive.floor" 
+                                :room="archive.room" 
+                                :cabinet="archive.cabinet" 
+                            />
                         </div>
                         <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded text-sm text-blue-800">
                             <strong>Lokasi Detail:</strong> Lemari {{ archive.cabinet?.name }}, Slot {{ archive.cabinet_slot?.name }}
@@ -280,10 +283,15 @@ import Tag from 'primevue/tag'
 import InputOtp from 'primevue/inputotp'
 import ProgressSpinner from 'primevue/progressspinner'
 import Timeline from 'primevue/timeline'
+import LocationVisualizer from '@/components/LocationVisualizer.vue'
 
 const props = defineProps({
     modelValue: Boolean,
-    archive: Object
+    archive: Object,
+    alreadyUnlocked: {
+        type: Boolean,
+        default: false
+    }
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -316,6 +324,9 @@ const needsAccess = computed(() => {
         return false
     }
 
+    // Check if already unlocked from parent component
+    if (props.alreadyUnlocked) return false
+
     return props.archive.download_policy === 'request_to_pic' && !isUnlocked.value
 })
 
@@ -338,13 +349,21 @@ const isImage = computed(() => {
 })
 
 // Logic
-watch(() => props.archive, (newVal) => {
-    if (newVal) {
+const initModal = () => {
+    if (props.archive) {
         resetState()
-        if (newVal.download_policy === 'direct_download') {
+        if (!needsAccess.value) {
             loadPreview()
         }
     }
+}
+
+watch(() => props.modelValue, (isOpen) => {
+    if (isOpen) initModal()
+})
+
+watch(() => props.archive, (newVal) => {
+    if (props.modelValue && newVal) initModal()
 })
 
 const resetState = () => {

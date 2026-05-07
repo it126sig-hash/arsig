@@ -249,7 +249,7 @@
     </div>
 
     <!-- Enhanced Detail Modal -->
-    <ArchiveDetailModal v-model="detailDialog" :archive="selectedArchive" />
+    <ArchiveDetailModal v-model="detailDialog" :archive="selectedArchive" :already-unlocked="selectedArchive ? unlockedArchives.has(selectedArchive.id) : false" />
 
     <!-- Edit Archive Dialog -->
     <ArchiveEditDialog
@@ -567,10 +567,24 @@ const handleTableVerifyOtp = async (archive) => {
     isVerifying.value[archive.id] = true
     try {
         await verifyOtp(archive.id, otp)
-        unlockedArchives.value.add(archive.id)
+        
+        // Force reactivity by re-assigning the Set
+        const newSet = new Set(unlockedArchives.value)
+        newSet.add(archive.id)
+        unlockedArchives.value = newSet
+
         toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Akses terbuka! Anda sekarang dapat melihat detail berkas.', life: 3000 })
+        
         // Clear input
         delete otpInputs.value[archive.id]
+
+        // Close popover
+        if (otpPopover.value) {
+            otpPopover.value.hide()
+        }
+
+        // Automatically open the detail modal
+        viewDetail(archive)
     } catch (err) {
         toast.add({ severity: 'error', summary: 'Gagal', detail: 'Kode OTP tidak valid.', life: 3000 })
     } finally {
