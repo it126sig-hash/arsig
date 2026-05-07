@@ -46,7 +46,7 @@ class ArchiveService
             $year = date('Y', strtotime($data['issue_date']));
             $path = "archives/{$data['company_id']}/{$year}";
             $data['file_path'] = $file->store($path, 'local');
-            $data['file_type'] = $file->getClientOriginalExtension();
+            $data['file_type'] = $file->extension();
         }
 
         $data['created_by'] = Auth::id() ?? 1; // Fallback for testing
@@ -76,7 +76,7 @@ class ArchiveService
             $year = date('Y', strtotime($data['issue_date']));
             $path = "archives/{$data['company_id']}/{$year}";
             $data['file_path'] = $file->store($path, 'local');
-            $data['file_type'] = $file->getClientOriginalExtension();
+            $data['file_type'] = $file->extension();
         }
 
         $archive->update($data);

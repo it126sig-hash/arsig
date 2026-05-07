@@ -18,6 +18,7 @@ class Archive extends Model
         'keterangan',
         'file_number',
         'archive_type',
+        'file_type',
         'privacy_type',
         'download_policy',
         'status',
