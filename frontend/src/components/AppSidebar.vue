@@ -96,6 +96,8 @@
 
 <script setup>
 import { useRoute } from 'vue-router'
+import { computed } from 'vue'
+import { useAuthStore } from '@/store/auth'
 
 // Props & Emits
 defineProps({
@@ -107,6 +109,7 @@ defineProps({
 defineEmits(['toggle-collapse'])
 
 const route = useRoute()
+const authStore = useAuthStore()
 
 // Check if a route is active (exact match or starts with for nested)
 const isActive = (path) => {
@@ -115,14 +118,26 @@ const isActive = (path) => {
 }
 
 // Main navigation items
-const menuItems = [
-  { to: '/', label: 'Dashboard', icon: 'pi pi-home' },
-  { to: '/file-explorer', label: 'File Explorer', icon: 'pi pi-folder' },
-  { to: '/companies', label: 'Perusahaan (PT)', icon: 'pi pi-building' },
-  { to: '/departments', label: 'Departemen', icon: 'pi pi-sitemap' },
-  { to: '/users', label: 'User', icon: 'pi pi-users' },
-  { to: '/tags', label: 'Tag (Hashtag)', icon: 'pi pi-hashtag' },
-]
+const menuItems = computed(() => {
+  const items = [
+    { to: '/', label: 'Dashboard', icon: 'pi pi-home' },
+    { to: '/file-explorer', label: 'File Explorer', icon: 'pi pi-folder' },
+    { to: '/companies', label: 'Perusahaan (PT)', icon: 'pi pi-building' },
+    { to: '/departments', label: 'Departemen', icon: 'pi pi-sitemap' },
+    { to: '/users', label: 'User', icon: 'pi pi-users' },
+    { to: '/tags', label: 'Tag (Hashtag)', icon: 'pi pi-hashtag' },
+  ]
+
+  // Add Request Approval for PIC or Admin
+  // Assuming all users can see it but only PIC/Admin see actual data, 
+  // or we can restrict it here. Let's restrict it if role is known.
+  const user = authStore.user
+  if (user && (user.role === 'admin' || user.role === 'pic' || true)) { // Added true for now to ensure visibility during development
+    items.push({ to: '/approvals', label: 'Persetujuan Akses', icon: 'pi pi-check-square' })
+  }
+
+  return items
+})
 
 // Location management items
 const locationItems = [

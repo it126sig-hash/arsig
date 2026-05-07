@@ -64,6 +64,11 @@ const routes = [
                 name: 'tags',
                 component: () => import('../views/TagView.vue')
             },
+            {
+                path: 'approvals',
+                name: 'approvals',
+                component: () => import('../views/RequestApprovalView.vue')
+            }
         ]
     }
 ]

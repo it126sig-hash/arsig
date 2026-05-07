@@ -16,6 +16,7 @@ class CabinetResource extends JsonResource
             'keterangan' => $this->keterangan,
             'door_count' => $this->door_count,
             'points' => $this->points,
+            'coordinates' => $this->points,
             'needs_coordinate_review' => $this->needs_coordinate_review,
             'room' => new RoomResource($this->whenLoaded('room')),
             'slots' => CabinetSlotResource::collection($this->whenLoaded('cabinetSlots')),

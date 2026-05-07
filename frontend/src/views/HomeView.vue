@@ -121,17 +121,9 @@
         <DataTable :value="archives" responsiveLayout="scroll" class="p-datatable-sm" :rowClass="getRowClass">
           <Column field="name" header="Nama Dokumen">
             <template #body="{ data }">
-              <div class="flex items-start gap-3" :class="{ 'opacity-50': isMuted(data) }">
-                <div class="mt-1">
-                  <i :class="[getFileIcon(data.file_type), getFileColor(data.file_type), 'text-xl']"></i>
-                </div>
-                <div class="flex flex-col">
-                  <span class="font-bold text-slate-800">{{ data.name }}</span>
-                  <div class="flex items-center gap-2">
-                    <span class="text-xs text-slate-500">{{ data.file_number }}</span>
-                    <span v-if="data.file_type" class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold uppercase">{{ data.file_type }}</span>
-                  </div>
-                </div>
+              <div class="flex flex-col" :class="{ 'opacity-50': isMuted(data) }">
+                <span class="font-bold text-slate-800">{{ data.name }}</span>
+                <span class="text-xs text-slate-500">{{ data.file_number }}</span>
               </div>
             </template>
           </Column>
@@ -166,15 +158,22 @@
               </div>
             </template>
           </Column>
-          <Column header="Aksi" style="width: 150px">
+          <Column header="Aksi" style="width: 120px">
             <template #body="{ data }">
               <div v-if="!hasAccess(data)" class="text-xs italic text-red-500 font-medium">
                 Hubungi PIC untuk mendapatkan berkas
               </div>
-              <div v-else class="flex gap-2">
-                <Button icon="pi pi-eye" v-tooltip="'Detail'" severity="info" text rounded @click="viewDetail(data)" />
-                <Button v-if="data.archive_type !== 'placeholder'" icon="pi pi-download" v-tooltip="'Download'" severity="success" text rounded @click="downloadArchive(data)" />
-                <Button v-if="hasPhysicalLocation(data)" icon="pi pi-map-marker" v-tooltip="'Lokasi Fisik'" severity="help" text rounded @click="viewLocation(data)" />
+              <div v-else class="flex gap-1">
+                <Button icon="pi pi-eye" v-tooltip="'View Detail'" severity="info" text rounded @click="viewDetail(data)" />
+                <Button 
+                    icon="pi pi-ellipsis-v" 
+                    severity="secondary" 
+                    text 
+                    rounded 
+                    @click="toggleActionMenu($event, data)" 
+                    aria-haspopup="true" 
+                    aria-controls="overlay_menu"
+                />
               </div>
             </template>
           </Column>
@@ -190,17 +189,9 @@
           :class="{ 'bg-slate-50 border-dashed': isMuted(archive) }"
         >
           <div class="flex justify-between items-start mb-3">
-            <div class="flex items-start gap-3" :class="{ 'opacity-50': isMuted(archive) }">
-              <div class="mt-1">
-                <i :class="[getFileIcon(archive.file_type), getFileColor(archive.file_type), 'text-2xl']"></i>
-              </div>
-              <div class="flex flex-col">
-                <span class="font-bold text-slate-800">{{ archive.name }}</span>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs text-slate-500">{{ archive.file_number }}</span>
-                  <span v-if="archive.file_type" class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold uppercase">{{ archive.file_type }}</span>
-                </div>
-              </div>
+            <div class="flex flex-col" :class="{ 'opacity-50': isMuted(archive) }">
+              <span class="font-bold text-slate-800">{{ archive.name }}</span>
+              <span class="text-xs text-slate-500">{{ archive.file_number }}</span>
             </div>
             <Tag :value="archive.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(archive.privacy_type)" :class="{ 'opacity-50': isMuted(archive) }" />
           </div>
@@ -234,126 +225,19 @@
               Hubungi PIC untuk mendapatkan berkas
             </div>
             <div v-else class="flex justify-around gap-2">
-              <Button label="Detail" icon="pi pi-eye" severity="info" text size="small" @click="viewDetail(archive)" />
-              <Button v-if="archive.archive_type !== 'placeholder'" label="Download" icon="pi pi-download" severity="success" text size="small" @click="downloadArchive(archive)" />
-              <Button v-if="hasPhysicalLocation(archive)" label="Peta" icon="pi pi-map-marker" severity="help" text size="small" @click="viewLocation(archive)" />
+              <Button label="View" icon="pi pi-eye" severity="info" text size="small" @click="viewDetail(archive)" />
+              <Button label="Options" icon="pi pi-ellipsis-h" severity="secondary" text size="small" @click="toggleActionMenu($event, archive)" />
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Detail Dialog -->
-    <Dialog v-model:visible="detailDialog" modal header="Detail Arsip" :style="{ width: '50rem' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
-      <div v-if="selectedArchive" class="flex flex-col gap-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-slate-400 uppercase font-bold tracking-wider">Nama Dokumen</label>
-            <div class="text-slate-800 font-medium">{{ selectedArchive.name }}</div>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-slate-400 uppercase font-bold tracking-wider">No. Berkas</label>
-            <div class="text-slate-800 font-medium">{{ selectedArchive.file_number }}</div>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-slate-400 uppercase font-bold tracking-wider">PT</label>
-            <div class="text-slate-800 font-medium">{{ selectedArchive.company?.name }}</div>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-slate-400 uppercase font-bold tracking-wider">Kategori</label>
-            <div class="text-slate-800 font-medium">{{ getCategoryPath(selectedArchive) }}</div>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-slate-400 uppercase font-bold tracking-wider">Tanggal Terbit</label>
-            <div class="text-slate-800 font-medium">{{ formatDate(selectedArchive.issue_date) }}</div>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-slate-400 uppercase font-bold tracking-wider">Tanggal Kadaluarsa</label>
-            <div class="text-slate-800 font-medium">{{ selectedArchive.expire_date ? formatDate(selectedArchive.expire_date) : '-' }}</div>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-slate-400 uppercase font-bold tracking-wider">Privacy</label>
-            <div><Tag :value="selectedArchive.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(selectedArchive.privacy_type)" /></div>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-xs text-slate-400 uppercase font-bold tracking-wider">Tipe Arsip</label>
-            <div class="flex items-center gap-2">
-              <span class="capitalize">{{ selectedArchive.archive_type }}</span>
-              <span v-if="selectedArchive.file_type" class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold uppercase">
-                <i :class="[getFileIcon(selectedArchive.file_type), getFileColor(selectedArchive.file_type), 'mr-1']"></i>
-                {{ selectedArchive.file_type }}
-              </span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="flex flex-col gap-1 mt-2">
-          <label class="text-xs text-slate-400 uppercase font-bold tracking-wider">Keterangan</label>
-          <div class="text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm whitespace-pre-wrap">
-            {{ selectedArchive.keterangan || 'Tidak ada keterangan.' }}
-          </div>
-        </div>
+    <!-- Enhanced Detail Modal -->
+    <ArchiveDetailModal v-model="detailDialog" :archive="selectedArchive" />
 
-        <div class="flex flex-col gap-1 mt-2">
-          <label class="text-xs text-slate-400 uppercase font-bold tracking-wider">Hashtag</label>
-          <div class="flex flex-wrap gap-2">
-            <Tag v-for="tag in selectedArchive.tags" :key="tag.id" :value="tag.nama" severity="secondary" rounded />
-            <span v-if="selectedArchive.tags?.length === 0" class="text-slate-400 italic text-sm">Tidak ada hashtag.</span>
-          </div>
-        </div>
-
-        <!-- Location Info if available -->
-        <div v-if="hasPhysicalLocation(selectedArchive)" class="flex flex-col gap-1 mt-2 border-t pt-4">
-          <label class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-2">Lokasi Fisik</label>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="flex flex-col">
-              <span class="text-[10px] text-slate-400 uppercase">Lantai</span>
-              <span class="text-sm font-medium">{{ selectedArchive.floor?.name }}</span>
-            </div>
-            <div class="flex flex-col">
-              <span class="text-[10px] text-slate-400 uppercase">Ruangan</span>
-              <span class="text-sm font-medium">{{ selectedArchive.room?.name }}</span>
-            </div>
-            <div class="flex flex-col">
-              <span class="text-[10px] text-slate-400 uppercase">Lemari</span>
-              <span class="text-sm font-medium">{{ selectedArchive.cabinet?.name }}</span>
-            </div>
-            <div class="flex flex-col">
-              <span class="text-[10px] text-slate-400 uppercase">Slot</span>
-              <span class="text-sm font-medium">Baris {{ selectedArchive.cabinet_slot?.row_position }}, Kolom {{ selectedArchive.cabinet_slot?.column_position }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <template #footer>
-        <Button label="Tutup" icon="pi pi-times" @click="detailDialog = false" severity="secondary" text />
-        <Button v-if="selectedArchive && selectedArchive.archive_type !== 'placeholder' && hasAccess(selectedArchive)" label="Download Berkas" icon="pi pi-download" @click="downloadArchive(selectedArchive)" />
-      </template>
-    </Dialog>
-
-    <!-- Location Modal (Visual) -->
-    <Dialog v-model:visible="locationDialog" modal header="Visualisasi Lokasi Fisik" :style="{ width: '90vw', maxWidth: '1000px' }">
-      <div v-if="selectedArchive" class="flex flex-col items-center">
-        <div class="w-full bg-slate-50 rounded-xl border border-slate-200 overflow-hidden relative" style="height: 60vh;">
-           <p class="absolute inset-0 flex items-center justify-center text-slate-400 italic">
-             [Integrasi Konva.js Floor Plan Visualizer]
-           </p>
-        </div>
-        <div class="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg w-full">
-          <div class="flex items-center gap-2 text-blue-800 font-bold mb-1">
-            <i class="pi pi-info-circle"></i>
-            <span>Informasi Lokasi</span>
-          </div>
-          <p class="text-sm text-blue-700">
-            Arsip berada di <strong>{{ selectedArchive.company?.name }}</strong>, 
-            <strong>Lantai {{ selectedArchive.floor?.name }}</strong>, 
-            <strong>Ruangan {{ selectedArchive.room?.name }}</strong>, 
-            <strong>Lemari {{ selectedArchive.cabinet?.name }}</strong>, 
-            <strong>Slot Baris {{ selectedArchive.cabinet_slot?.row_position }} Kolom {{ selectedArchive.cabinet_slot?.column_position }}</strong>.
-          </p>
-        </div>
-      </div>
-    </Dialog>
+    <!-- Action Menu Overlay -->
+    <Menu ref="actionMenu" id="overlay_menu" :model="actionMenuItems" :popup="true" />
   </div>
 </template>
 
@@ -376,7 +260,9 @@ import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
-import Dialog from 'primevue/dialog'
+import Menu from 'primevue/menu'
+import ArchiveDetailModal from '@/components/ArchiveDetailModal.vue'
+import { useToast } from 'primevue/usetoast'
 
 const authStore = useAuthStore()
 const loading = ref(false)
@@ -400,10 +286,21 @@ const filters = reactive({
   tag_ids: []
 })
 
+const toast = useToast()
 const dateRange = ref(null)
 const detailDialog = ref(false)
-const locationDialog = ref(false)
+const actionMenu = ref(null)
 const selectedArchive = ref(null)
+
+const actionMenuItems = ref([
+    { 
+        label: 'Opsi Arsip',
+        items: [
+            { label: 'Pindah Lokasi File Fisik', icon: 'pi pi-arrows-alt', command: () => { toast.add({ severity: 'info', summary: 'Placeholder', detail: 'Fitur pindah lokasi segera hadir.' }) } },
+            { label: 'Ubah Status Keluar/Kembali', icon: 'pi pi-sync', command: () => { toast.add({ severity: 'info', summary: 'Placeholder', detail: 'Fitur status segera hadir.' }) } }
+        ]
+    }
+])
 
 // Initialize
 onMounted(async () => {
@@ -590,29 +487,9 @@ const viewDetail = (archive) => {
   detailDialog.value = true
 }
 
-const viewLocation = (archive) => {
+const toggleActionMenu = (event, archive) => {
   selectedArchive.value = archive
-  locationDialog.value = true
-}
-
-const getFileIcon = (type) => {
-  if (!type) return 'pi pi-file'
-  const t = type.toLowerCase()
-  if (t === 'pdf') return 'pi pi-file-pdf'
-  if (['doc', 'docx'].includes(t)) return 'pi pi-file-word'
-  if (['xls', 'xlsx', 'csv'].includes(t)) return 'pi pi-file-excel'
-  if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(t)) return 'pi pi-image'
-  return 'pi pi-file'
-}
-
-const getFileColor = (type) => {
-  if (!type) return 'text-slate-400'
-  const t = type.toLowerCase()
-  if (t === 'pdf') return 'text-red-500'
-  if (['doc', 'docx'].includes(t)) return 'text-blue-500'
-  if (['xls', 'xlsx', 'csv'].includes(t)) return 'text-green-500'
-  if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(t)) return 'text-orange-500'
-  return 'text-slate-400'
+  actionMenu.value.toggle(event)
 }
 
 const downloadArchive = async (archive) => {

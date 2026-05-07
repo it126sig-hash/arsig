@@ -24,6 +24,7 @@ class Archive extends Model
         'status',
         'pic_user_id',
         'file_path',
+        'file_type',
         'issue_date',
         'expire_date',
         'reminder_date',

@@ -30,11 +30,11 @@
 
           <!-- Room Polygon (Blue) -->
           <v-line
-            v-if="roomPolygon && roomPolygon.length >= 3"
+            v-if="highlightedRoomCoords && highlightedRoomCoords.length >= 4"
             :config="{
               points: flatRoomPoints,
-              fill: 'rgba(59, 130, 246, 0.2)',
-              stroke: 'rgba(59, 130, 246, 0.5)',
+              fill: 'rgba(59, 130, 246, 0.25)',
+              stroke: 'rgba(59, 130, 246, 0.8)',
               strokeWidth: 2 / scale,
               closed: true,
               listening: false
@@ -43,11 +43,11 @@
 
           <!-- Cabinet Polygon (Orange) -->
           <v-line
-            v-if="cabinetPolygon && cabinetPolygon.length >= 3"
+            v-if="highlightedCabinetCoords && highlightedCabinetCoords.length >= 4"
             :config="{
               points: flatCabinetPoints,
-              fill: 'rgba(249, 115, 22, 0.4)',
-              stroke: '#f97316',
+              fill: 'rgba(245, 158, 11, 0.3)',
+              stroke: 'rgba(245, 158, 11, 0.9)',
               strokeWidth: 2 / scale,
               closed: true,
               listening: false
@@ -94,11 +94,11 @@ const props = defineProps({
     type: String,
     required: true
   },
-  roomPolygon: {
+  highlightedRoomCoords: {
     type: Array,
     default: () => []
   },
-  cabinetPolygon: {
+  highlightedCabinetCoords: {
     type: Array,
     default: () => []
   }
@@ -179,8 +179,8 @@ const scalePoints = (polygon) => {
   })
 }
 
-const flatRoomPoints = computed(() => scalePoints(props.roomPolygon))
-const flatCabinetPoints = computed(() => scalePoints(props.cabinetPolygon))
+const flatRoomPoints = computed(() => scalePoints(props.highlightedRoomCoords))
+const flatCabinetPoints = computed(() => scalePoints(props.highlightedCabinetCoords))
 
 const loadImage = () => {
 

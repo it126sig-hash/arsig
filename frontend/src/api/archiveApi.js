@@ -30,3 +30,17 @@ export function downloadArchive(id) {
         responseType: 'blob'
     })
 }
+
+export function previewArchive(id) {
+    return api.get(`/archives/${id}/preview`, {
+        responseType: 'blob'
+    })
+}
+
+export function requestOtp(id) {
+    return api.post(`/archives/${id}/request-otp`)
+}
+
+export function verifyOtp(id, otp) {
+    return api.post(`/archives/${id}/verify-otp`, { otp })
+}
