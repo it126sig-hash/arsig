@@ -86,7 +86,15 @@
                     </div>
                 </div>
 
-                <div v-if="hasPhysicalLocation" class="mt-auto pt-4 border-t border-slate-200">
+                <div v-if="hasPhysicalLocation" class="mt-auto flex flex-col gap-2 pt-4 border-t border-slate-200">
+                    <Button 
+                        :label="viewMode === 'history' ? 'Lihat Preview File' : 'Riwayat Lokasi'" 
+                        icon="pi pi-history" 
+                        severity="secondary" 
+                        outlined 
+                        class="w-full"
+                        @click="toggleHistoryMode"
+                    />
                     <Button 
                         :label="viewMode === 'location' ? 'Lihat Preview File' : 'Lihat Lokasi Fisik'" 
                         :icon="viewMode === 'location' ? 'pi pi-file' : 'pi pi-map-marker'" 
@@ -159,7 +167,69 @@
                             <!-- Future: Integrasi Konva.js Visualizer -->
                         </div>
                         <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded text-sm text-blue-800">
-                            <strong>Lokasi Detail:</strong> Lemari {{ archive.cabinet?.name }}, Slot Baris {{ archive.cabinet_slot?.row_position }} Kolom {{ archive.cabinet_slot?.column_position }}
+                            <strong>Lokasi Detail:</strong> Lemari {{ archive.cabinet?.name }}, Slot {{ archive.cabinet_slot?.name }}
+                        </div>
+                    </div>
+
+                    <!-- History Mode -->
+                    <div v-else-if="viewMode === 'history'" class="w-full h-full flex flex-col p-6 animate-fade-in overflow-y-auto bg-white">
+                        <div class="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
+                            <i class="pi pi-history text-blue-500"></i>
+                            <h3 class="text-base font-bold text-slate-700 uppercase tracking-tight">Riwayat Pergerakan Fisik</h3>
+                        </div>
+
+                        <div v-if="loadingHistory" class="flex flex-col items-center justify-center py-20">
+                            <ProgressSpinner style="width: 40px; height: 40px" />
+                            <p class="mt-3 text-xs text-slate-400">Memuat riwayat...</p>
+                        </div>
+
+                        <Timeline v-else-if="locationHistories.length > 0" :value="locationHistories" class="customized-timeline">
+                            <template #opposite="slotProps">
+                                <small class="text-slate-400 font-medium whitespace-nowrap">{{ formatDateTimeShort(slotProps.item.created_at) }}</small>
+                            </template>
+                            <template #content="slotProps">
+                                <div class="flex flex-col mb-6 bg-slate-50/50 p-3 rounded-xl border border-slate-100 shadow-sm">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="text-[10px] font-bold px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">DIPINDAHKAN</span>
+                                        <span class="text-[10px] text-slate-400 italic">oleh {{ slotProps.item.moved_by?.name }}</span>
+                                    </div>
+                                    <div class="text-xs text-slate-600">
+                                        <!-- Lokasi Lama -->
+                                        <div v-if="slotProps.item.old_floor" class="flex flex-col mb-2 pb-2 border-b border-slate-100/50">
+                                            <div class="flex items-center gap-1.5 mb-0.5">
+                                                <i class="pi pi-history text-[10px] text-slate-300"></i>
+                                                <span class="text-slate-400">Dari: {{ slotProps.item.old_floor?.name }} > {{ slotProps.item.old_room?.name }}</span>
+                                            </div>
+                                            <div class="pl-4 text-[10px] text-slate-300">
+                                                Lemari {{ slotProps.item.old_cabinet?.name }}
+                                                <span v-if="slotProps.item.old_cabinet_slot">, Slot {{ slotProps.item.old_cabinet_slot?.name }}</span>
+                                            </div>
+                                        </div>
+                                        <div v-else class="flex items-center gap-1.5 mb-2 text-slate-400 italic">
+                                            <i class="pi pi-plus-circle text-[10px]"></i>
+                                            <span>Penempatan Lokasi Pertama</span>
+                                        </div>
+
+                                        <!-- Lokasi Baru -->
+                                        <div class="flex items-center gap-1.5 mb-1">
+                                            <i class="pi pi-map-marker text-[10px] text-blue-400"></i>
+                                            <span class="font-medium">Ke: {{ slotProps.item.new_floor?.name }} > {{ slotProps.item.new_room?.name }}</span>
+                                        </div>
+                                        <div class="pl-4 text-[10px] text-slate-500">
+                                            Lemari {{ slotProps.item.new_cabinet?.name }}
+                                            <span v-if="slotProps.item.new_cabinet_slot">, Slot {{ slotProps.item.new_cabinet_slot?.name }}</span>
+                                        </div>
+                                    </div>
+                                    <div v-if="slotProps.item.notes" class="mt-2 text-[11px] text-slate-500 bg-white p-2 rounded border-l-2 border-slate-200 italic">
+                                        "{{ slotProps.item.notes }}"
+                                    </div>
+                                </div>
+                            </template>
+                        </Timeline>
+
+                        <div v-else class="flex flex-col items-center justify-center py-20 text-slate-300">
+                            <i class="pi pi-history text-5xl mb-4 opacity-20"></i>
+                            <p class="italic">Belum ada riwayat pemindahan.</p>
                         </div>
                     </div>
 
@@ -201,7 +271,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { previewArchive, downloadArchive, requestOtp, verifyOtp } from '@/api/archiveApi'
+import { previewArchive, downloadArchive, requestOtp, verifyOtp, fetchArchiveLocationHistories } from '@/api/archiveApi'
 import { useAuthStore } from '@/store/auth'
 import { useToast } from 'primevue/usetoast'
 import Dialog from 'primevue/dialog'
@@ -209,6 +279,7 @@ import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import InputOtp from 'primevue/inputotp'
 import ProgressSpinner from 'primevue/progressspinner'
+import Timeline from 'primevue/timeline'
 
 const props = defineProps({
     modelValue: Boolean,
@@ -224,13 +295,16 @@ const visible = computed({
     set: (val) => emit('update:modelValue', val)
 })
 
-const viewMode = ref('preview') // 'preview' | 'location'
+const viewMode = ref('preview') // 'preview' | 'location' | 'history'
 const isUnlocked = ref(false)
 const otpSent = ref(false)
 const otpCode = ref('')
 const loading = ref(false)
 const loadingPreview = ref(false)
 const previewUrl = ref(null)
+
+const locationHistories = ref([])
+const loadingHistory = ref(false)
 
 // Computed
 const needsAccess = computed(() => {
@@ -286,6 +360,27 @@ const resetState = () => {
 
 const toggleViewMode = () => {
     viewMode.value = viewMode.value === 'preview' ? 'location' : 'preview'
+}
+
+const toggleHistoryMode = () => {
+    if (viewMode.value === 'history') {
+        viewMode.value = 'preview'
+    } else {
+        viewMode.value = 'history'
+        loadHistory()
+    }
+}
+
+const loadHistory = async () => {
+    loadingHistory.value = true
+    try {
+        const res = await fetchArchiveLocationHistories(props.archive.id)
+        locationHistories.value = res.data.data
+    } catch (err) {
+        console.error('Failed to load history', err)
+    } finally {
+        loadingHistory.value = false
+    }
 }
 
 const handleRequestOtp = async () => {
@@ -356,6 +451,13 @@ const formatDate = (dateString) => {
     if (!dateString) return '-'
     return new Date(dateString).toLocaleDateString('id-ID', {
         day: '2-digit', month: 'short', year: 'numeric'
+    })
+}
+
+const formatDateTimeShort = (dateString) => {
+    if (!dateString) return '-'
+    return new Date(dateString).toLocaleString('id-ID', {
+        day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
     })
 }
 

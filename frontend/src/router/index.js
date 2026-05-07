@@ -68,6 +68,11 @@ const routes = [
                 path: 'approvals',
                 name: 'approvals',
                 component: () => import('../views/RequestApprovalView.vue')
+            },
+            {
+                path: 'location-histories',
+                name: 'location-histories',
+                component: () => import('../views/LocationHistoryView.vue')
             }
         ]
     }

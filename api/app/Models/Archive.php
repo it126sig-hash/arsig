@@ -100,4 +100,9 @@ class Archive extends Model
     {
         return $this->belongsToMany(Tag::class, 'archive_tags');
     }
+
+    public function locationLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ArchiveLocationLog::class);
+    }
 }

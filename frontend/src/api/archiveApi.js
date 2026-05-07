@@ -44,3 +44,11 @@ export function requestOtp(id) {
 export function verifyOtp(id, otp) {
     return api.post(`/archives/${id}/verify-otp`, { otp })
 }
+
+export function fetchArchiveLocationHistories(id) {
+    return api.get(`/archives/${id}/location-histories`)
+}
+
+export function moveArchiveLocation(id, data) {
+    return api.post(`/archives/${id}/move-location`, data)
+}

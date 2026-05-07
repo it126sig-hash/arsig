@@ -101,11 +101,6 @@
         <Button label="Reset Filter" icon="pi pi-refresh" severity="secondary" outlined @click="resetFilters" />
         <Button label="Cari" icon="pi pi-search" @click="search" :loading="loading" />
       </div>
-
-      <div class="flex justify-end gap-3 mt-6">
-        <Button label="Reset Filter" icon="pi pi-refresh" severity="secondary" outlined @click="resetFilters" />
-        <Button label="Cari" icon="pi pi-search" @click="search" :loading="loading" />
-      </div>
     </div>
 
     <!-- Results Section -->
@@ -265,6 +260,13 @@
       @edit-success="onEditSuccess"
     />
 
+    <!-- Move Location Dialog -->
+    <MoveLocationDialog 
+      v-model="moveLocationDialog" 
+      :archive="selectedArchive" 
+      @moved="onMoveSuccess" 
+    />
+
     <!-- Action Menu Overlay -->
     <Menu ref="actionMenu" id="overlay_menu" :model="actionMenuItems" :popup="true" />
 
@@ -338,6 +340,7 @@ import Popover from 'primevue/popover'
 import Toast from 'primevue/toast'
 import ArchiveDetailModal from '@/components/ArchiveDetailModal.vue'
 import ArchiveEditDialog from '@/components/ArchiveEditDialog.vue'
+import MoveLocationDialog from '@/components/MoveLocationDialog.vue'
 import { useToast } from 'primevue/usetoast'
 
 const authStore = useAuthStore()
@@ -366,6 +369,7 @@ const toast = useToast()
 const dateRange = ref(null)
 const detailDialog = ref(false)
 const editDialog = ref(false)
+const moveLocationDialog = ref(false)
 const actionMenu = ref(null)
 const otpPopover = ref(null)
 const selectedArchive = ref(null)
@@ -382,7 +386,7 @@ const actionMenuItems = computed(() => {
     const isPicOrAdmin = archive && user && (user.role === 'admin' || archive.pic_user_id === user.id)
 
     const items = [
-        { label: 'Pindah Lokasi File Fisik', icon: 'pi pi-arrows-alt', command: () => { toast.add({ severity: 'info', summary: 'Info', detail: 'Fitur pindah lokasi segera hadir.' }) } },
+        { label: 'Pindah Lokasi File Fisik', icon: 'pi pi-arrows-alt', command: () => { moveLocationDialog.value = true } },
         { label: 'Ubah Status Keluar/Kembali', icon: 'pi pi-sync', command: () => { toast.add({ severity: 'info', summary: 'Info', detail: 'Fitur status segera hadir.' }) } }
     ]
 
@@ -657,6 +661,12 @@ const downloadArchive = async (archive) => {
   } catch (err) {
     console.error('Download failed', err)
   }
+}
+
+const onMoveSuccess = async () => {
+  moveLocationDialog.value = false
+  toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Lokasi fisik arsip berhasil diperbarui.', life: 3000 })
+  await search()
 }
 </script>
 

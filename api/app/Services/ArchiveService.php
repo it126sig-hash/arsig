@@ -7,6 +7,9 @@ use App\Models\Archive;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 
+use App\Models\ArchiveLocationLog;
+use Illuminate\Pagination\LengthAwarePaginator;
+
 class ArchiveService
 {
     public function list(
@@ -109,5 +112,54 @@ class ArchiveService
                 $archive->privacyTargets()->create(['user_id' => (int) $userId]);
             }
         }
+    }
+
+    public function moveLocation(Archive $archive, array $data): Archive
+    {
+        // Record log
+        ArchiveLocationLog::create([
+            'archive_id' => $archive->id,
+            'user_id' => Auth::id(),
+            'old_floor_id' => $archive->floor_id,
+            'old_room_id' => $archive->room_id,
+            'old_cabinet_id' => $archive->cabinet_id,
+            'old_cabinet_slot_id' => $archive->cabinet_slot_id,
+            'new_floor_id' => $data['new_floor_id'],
+            'new_room_id' => $data['new_room_id'],
+            'new_cabinet_id' => $data['new_cabinet_id'],
+            'new_cabinet_slot_id' => $data['new_cabinet_slot_id'] ?? null,
+            'notes' => $data['notes'] ?? null,
+        ]);
+
+        // Update archive
+        $archive->update([
+            'floor_id' => $data['new_floor_id'],
+            'room_id' => $data['new_room_id'],
+            'cabinet_id' => $data['new_cabinet_id'],
+            'cabinet_slot_id' => $data['new_cabinet_slot_id'] ?? null,
+        ]);
+
+        return $archive->load(['floor', 'room', 'cabinet', 'cabinetSlot']);
+    }
+
+    public function getLocationHistories(array $filters = []): LengthAwarePaginator
+    {
+        return ArchiveLocationLog::query()
+            ->with([
+                'archive', 
+                'movedBy', 
+                'oldFloor', 'oldRoom', 'oldCabinet', 'oldCabinetSlot',
+                'newFloor', 'newRoom', 'newCabinet', 'newCabinetSlot'
+            ])
+            ->when($filters['q'] ?? null, function ($query, $q) {
+                $query->whereHas('archive', function ($sub) use ($q) {
+                    $sub->where('name', 'like', "%{$q}%")
+                        ->orWhere('file_number', 'like', "%{$q}%");
+                });
+            })
+            ->when($filters['date_from'] ?? null, fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
+            ->when($filters['date_to'] ?? null, fn ($q, $date) => $q->whereDate('created_at', '<=', $date))
+            ->orderByDesc('created_at')
+            ->paginate(15);
     }
 }
