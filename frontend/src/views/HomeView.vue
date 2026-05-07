@@ -236,13 +236,24 @@
     <!-- Enhanced Detail Modal -->
     <ArchiveDetailModal v-model="detailDialog" :archive="selectedArchive" />
 
+    <!-- Edit Archive Dialog -->
+    <ArchiveEditDialog
+      v-if="editDialog"
+      :visible="editDialog"
+      :archive="selectedArchive"
+      @update:visible="editDialog = $event"
+      @edit-success="onEditSuccess"
+    />
+
     <!-- Action Menu Overlay -->
     <Menu ref="actionMenu" id="overlay_menu" :model="actionMenuItems" :popup="true" />
+
+    <Toast />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, computed } from 'vue'
 import { fetchArchives, downloadArchive as downloadApi } from '@/api/archiveApi'
 import { fetchCompanies } from '@/api/companyApi'
 import { fetchCategoryTree } from '@/api/categoryApi'
@@ -261,7 +272,9 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import Menu from 'primevue/menu'
+import Toast from 'primevue/toast'
 import ArchiveDetailModal from '@/components/ArchiveDetailModal.vue'
+import ArchiveEditDialog from '@/components/ArchiveEditDialog.vue'
 import { useToast } from 'primevue/usetoast'
 
 const authStore = useAuthStore()
@@ -289,18 +302,26 @@ const filters = reactive({
 const toast = useToast()
 const dateRange = ref(null)
 const detailDialog = ref(false)
+const editDialog = ref(false)
 const actionMenu = ref(null)
 const selectedArchive = ref(null)
 
-const actionMenuItems = ref([
-    { 
-        label: 'Opsi Arsip',
-        items: [
-            { label: 'Pindah Lokasi File Fisik', icon: 'pi pi-arrows-alt', command: () => { toast.add({ severity: 'info', summary: 'Placeholder', detail: 'Fitur pindah lokasi segera hadir.' }) } },
-            { label: 'Ubah Status Keluar/Kembali', icon: 'pi pi-sync', command: () => { toast.add({ severity: 'info', summary: 'Placeholder', detail: 'Fitur status segera hadir.' }) } }
-        ]
+const actionMenuItems = computed(() => {
+    const archive = selectedArchive.value
+    const user = authStore.user
+    const isPicOrAdmin = archive && user && (user.role === 'admin' || archive.pic_user_id === user.id)
+
+    const items = [
+        { label: 'Pindah Lokasi File Fisik', icon: 'pi pi-arrows-alt', command: () => { toast.add({ severity: 'info', summary: 'Info', detail: 'Fitur pindah lokasi segera hadir.' }) } },
+        { label: 'Ubah Status Keluar/Kembali', icon: 'pi pi-sync', command: () => { toast.add({ severity: 'info', summary: 'Info', detail: 'Fitur status segera hadir.' }) } }
+    ]
+
+    if (isPicOrAdmin) {
+        items.unshift({ label: 'Ubah Archive', icon: 'pi pi-pencil', command: () => { editDialog.value = true } })
     }
-])
+
+    return [{ label: 'Opsi Arsip', items }]
+})
 
 // Initialize
 onMounted(async () => {
@@ -485,6 +506,12 @@ const hasPhysicalLocation = (archive) => {
 const viewDetail = (archive) => {
   selectedArchive.value = archive
   detailDialog.value = true
+}
+
+const onEditSuccess = async () => {
+  editDialog.value = false
+  toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Arsip berhasil diperbarui.', life: 3000 })
+  await search()
 }
 
 const toggleActionMenu = (event, archive) => {

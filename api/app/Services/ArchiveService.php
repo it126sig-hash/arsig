@@ -67,6 +67,10 @@ class ArchiveService
 
     public function update(Archive $archive, array $data, ?UploadedFile $file): Archive
     {
+        // Lokasi fisik TIDAK boleh diubah lewat endpoint edit archive.
+        // Gunakan endpoint "Pindah Lokasi" yang terpisah.
+        unset($data['floor_id'], $data['room_id'], $data['cabinet_id'], $data['cabinet_slot_id']);
+
         if ($file && in_array($data['archive_type'], ['full', 'digital_only'])) {
             // Delete old file if exists
             if ($archive->file_path && \Illuminate\Support\Facades\Storage::disk('local')->exists($archive->file_path)) {

@@ -92,7 +92,10 @@
               <Button icon="pi pi-times" severity="danger" text rounded v-tooltip="'Tolak'" @click="confirmReject(data)" />
             </div>
             <div v-else-if="data.status === 'approved'" class="flex flex-col">
-                <span class="text-[10px] text-slate-400 uppercase font-bold">OTP: {{ data.otp_code }}</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-slate-400 uppercase font-bold">OTP: {{ data.otp_code }}</span>
+                    <Button icon="pi pi-copy" severity="secondary" text rounded size="small" class="!w-6 !h-6" v-tooltip="'Salin OTP'" @click="copyToClipboard(data.otp_code)" />
+                </div>
                 <span class="text-[9px] text-slate-400">{{ data.reviewer?.name }}</span>
             </div>
             <div v-else class="text-xs text-slate-400 italic">
@@ -130,6 +133,14 @@ const requests = ref([])
 const loading = ref(false)
 const searchQuery = ref('')
 const statusFilter = ref('all')
+
+const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+        toast.add({ severity: 'success', summary: 'Tersalin', detail: 'OTP berhasil disalin ke clipboard.', life: 2000 })
+    }).catch(err => {
+        toast.add({ severity: 'error', summary: 'Gagal', detail: 'Gagal menyalin ke clipboard.', life: 2000 })
+    })
+}
 
 const statusOptions = [
     { label: 'Semua Status', value: 'all' },
