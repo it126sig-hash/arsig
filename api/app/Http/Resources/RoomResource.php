@@ -15,6 +15,7 @@ class RoomResource extends JsonResource
             'name' => $this->name,
             'keterangan' => $this->keterangan,
             'points' => $this->points,
+            'coordinates' => $this->points,
             'needs_coordinate_review' => $this->needs_coordinate_review,
             'floor' => new FloorResource($this->whenLoaded('floor')),
             'created_at' => $this->created_at,

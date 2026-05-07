@@ -35,5 +35,13 @@ Route::prefix('v1')->group(function () {
         Route::post('archives', [\App\Http\Controllers\ArchiveController::class, 'store']);
         Route::put('archives/{archive}', [\App\Http\Controllers\ArchiveController::class, 'update']);
         Route::get('archives/{archive}/download', [\App\Http\Controllers\ArchiveController::class, 'download']);
+        Route::get('archives/{archive}/preview', [\App\Http\Controllers\ArchiveController::class, 'preview']);
+        Route::post('archives/{archive}/request-otp', [\App\Http\Controllers\ArchiveController::class, 'requestOtp']);
+        Route::post('archives/{archive}/verify-otp', [\App\Http\Controllers\ArchiveController::class, 'verifyOtp']);
+
+        // Archive Access Requests (for PIC/Admin)
+        Route::get('archive-requests', [\App\Http\Controllers\ArchiveRequestController::class, 'index']);
+        Route::post('archive-requests/{archiveRequest}/approve', [\App\Http\Controllers\ArchiveRequestController::class, 'approve']);
+        Route::post('archive-requests/{archiveRequest}/reject', [\App\Http\Controllers\ArchiveRequestController::class, 'reject']);
     });
 });
