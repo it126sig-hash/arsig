@@ -164,12 +164,19 @@
                                                 <th class="text-left p-3 font-semibold">No. File</th>
                                                 <th class="text-left p-3 font-semibold">Tgl Terbit</th>
                                                 <th class="text-left p-3 font-semibold">Tipe</th>
+                                                <th class="text-left p-3 font-semibold">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr v-for="a in archives" :key="a.id" class="border-t border-slate-200 hover:bg-slate-50">
                                                 <td class="p-3 text-slate-800">
-                                                    <div class="font-medium">{{ a.name }}</div>
+                                                    <div class="flex items-center gap-2">
+                                                        <i :class="[getFileIcon(a.file_type), getFileColor(a.file_type), 'text-lg']"></i>
+                                                        <div class="flex flex-col">
+                                                            <div class="font-medium">{{ a.name }}</div>
+                                                            <div v-if="a.file_type" class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">.{{ a.file_type }}</div>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                                 <td class="p-3 text-slate-500 italic max-w-[200px] truncate">
                                                     {{ a.keterangan || '—' }}
@@ -178,6 +185,17 @@
                                                 <td class="p-3 text-slate-600">{{ formatDateDisplay(a.issue_date) }}</td>
                                                 <td class="p-3 text-slate-600">
                                                     <Tag :value="getArchiveTypeLabel(a.archive_type)" :severity="getArchiveTypeSeverity(a.archive_type)" />
+                                                </td>
+                                                <td class="p-3">
+                                                    <Button 
+                                                        v-if="a.pic_user_id === currentUserId" 
+                                                        icon="pi pi-pencil" 
+                                                        size="small" 
+                                                        severity="secondary" 
+                                                        text 
+                                                        @click="openEditArchive(a)" 
+                                                        v-tooltip.top="'Edit Arsip'" 
+                                                    />
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -238,6 +256,12 @@
             @upload-success="onUploadSuccess"
         />
 
+        <ArchiveEditDialog
+            v-model:visible="showEditArchiveDialog"
+            :archive="selectedArchive"
+            @edit-success="onEditSuccess"
+        />
+
         <Toast />
     </div>
 </template>
@@ -248,6 +272,7 @@ import { useCategoryStore } from '@/store/category'
 import { createCategory, updateCategory } from '@/api/categoryApi'
 import { fetchCompanies } from '@/api/companyApi'
 import { fetchArchives } from '@/api/archiveApi'
+import { useAuthStore } from '@/store/auth'
 import { useToast } from 'primevue/usetoast'
 import Tree from 'primevue/tree'
 import Button from 'primevue/button'
@@ -256,9 +281,14 @@ import Select from 'primevue/select'
 import Dialog from 'primevue/dialog'
 import Toast from 'primevue/toast'
 import Tag from 'primevue/tag'
+import Tooltip from 'primevue/tooltip'
 import ArchiveUploadDialog from '@/components/ArchiveUploadDialog.vue'
+import ArchiveEditDialog from '@/components/ArchiveEditDialog.vue'
+
+const vTooltip = Tooltip
 
 const categoryStore = useCategoryStore()
+const authStore = useAuthStore()
 const toast = useToast()
 
 // State
@@ -270,6 +300,8 @@ const filterText = ref('')
 const showAddCategoryDialog = ref(false)
 const showEditCategoryDialog = ref(false)
 const showUploadDialog = ref(false)
+const showEditArchiveDialog = ref(false)
+const selectedArchive = ref(null)
 const newCategoryName = ref('')
 const editCategoryName = ref('')
 const isSaving = ref(false)
@@ -279,6 +311,7 @@ const archives = ref([])
 const isLoadingArchives = ref(false)
 
 // Computed
+const currentUserId = computed(() => authStore.user?.id)
 const selectedCompanyName = computed(() => {
     const found = companies.value.find(c => c.id === selectedCompanyId.value)
     return found?.name || '—'
@@ -465,6 +498,37 @@ const onUploadSuccess = () => {
     toast.add({ severity: 'success', summary: 'Sukses', detail: 'Arsip berhasil diupload', life: 3000 })
     showUploadDialog.value = false
     loadArchives()
+}
+
+const openEditArchive = (archive) => {
+    selectedArchive.value = archive
+    showEditArchiveDialog.value = true
+}
+
+const onEditSuccess = () => {
+    toast.add({ severity: 'success', summary: 'Sukses', detail: 'Arsip berhasil diperbarui', life: 3000 })
+    showEditArchiveDialog.value = false
+    loadArchives()
+}
+
+const getFileIcon = (type) => {
+  if (!type) return 'pi pi-file'
+  const t = type.toLowerCase()
+  if (t === 'pdf') return 'pi pi-file-pdf'
+  if (['doc', 'docx'].includes(t)) return 'pi pi-file-word'
+  if (['xls', 'xlsx', 'csv'].includes(t)) return 'pi pi-file-excel'
+  if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(t)) return 'pi pi-image'
+  return 'pi pi-file'
+}
+
+const getFileColor = (type) => {
+  if (!type) return 'text-slate-400'
+  const t = type.toLowerCase()
+  if (t === 'pdf') return 'text-red-500'
+  if (['doc', 'docx'].includes(t)) return 'text-blue-500'
+  if (['xls', 'xlsx', 'csv'].includes(t)) return 'text-green-500'
+  if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(t)) return 'text-orange-500'
+  return 'text-slate-400'
 }
 </script>
 
