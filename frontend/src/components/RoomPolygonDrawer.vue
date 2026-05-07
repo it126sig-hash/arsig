@@ -32,6 +32,19 @@
           <!-- Floor plan image -->
           <v-image :config="imageConfig" />
 
+          <!-- Rectangle drawing preview -->
+          <v-line
+            v-if="drawingMode === 'rect' && rectStartPoint && tempEndPoint"
+            :config="{
+              points: previewRectPoints,
+              stroke: 'rgba(16, 185, 129, 0.8)',
+              strokeWidth: 2 / scale,
+              dash: [5 / scale, 5 / scale],
+              closed: true,
+              listening: false
+            }"
+          />
+
           <!-- Filled polygon (when >= 4 points) -->
           <v-line
             v-if="points.length >= 4"
@@ -87,6 +100,24 @@
             <span class="text-xs text-white/60">
               Zoom: {{ Math.round(scale * 100) }}%
             </span>
+
+            <!-- Drawing Mode Toggle -->
+            <div class="flex items-center gap-1.5 ml-2 border-l border-white/20 pl-3">
+              <button
+                type="button"
+                @click="setDrawingMode('polygon')"
+                :class="['px-2 py-1 text-[10px] font-semibold rounded-md transition-colors', drawingMode === 'polygon' ? 'bg-emerald-500 text-white shadow-sm' : 'bg-white/20 text-white/70 hover:bg-white/30']"
+              >
+                Manual
+              </button>
+              <button
+                type="button"
+                @click="setDrawingMode('rect')"
+                :class="['px-2 py-1 text-[10px] font-semibold rounded-md transition-colors', drawingMode === 'rect' ? 'bg-emerald-500 text-white shadow-sm' : 'bg-white/20 text-white/70 hover:bg-white/30']"
+              >
+                Persegi
+              </button>
+            </div>
           </div>
           <div class="flex gap-2">
             <button
@@ -152,6 +183,11 @@ const layerRef = ref(null)
 const imageLoaded = ref(false)
 const floorImage = ref(null)
 const points = ref([])
+
+// Drawing mode
+const drawingMode = ref('polygon') // 'polygon' | 'rect'
+const rectStartPoint = ref(null)
+const tempEndPoint = ref(null)
 
 // Pan & zoom state
 const scale = ref(1)
@@ -309,10 +345,16 @@ const handleMouseDown = (e) => {
 }
 
 const handleMouseMove = () => {
-  if (!potentialPan.value) return
   const stage = stageRef.value?.getStage()
   const pointer = stage?.getPointerPosition()
   if (!pointer) return
+
+  // Update temp end point for rect preview
+  if (drawingMode.value === 'rect' && rectStartPoint.value) {
+    tempEndPoint.value = screenToImage(pointer.x, pointer.y)
+  }
+
+  if (!potentialPan.value) return
 
   const dx = pointer.x - panStart.value.x
   const dy = pointer.y - panStart.value.y
@@ -352,6 +394,32 @@ const handleStageClick = (e) => {
 
   const imgPoint = screenToImage(pointerPos.x, pointerPos.y)
 
+  if (drawingMode.value === 'rect') {
+    if (!rectStartPoint.value) {
+      // First click: start rectangle
+      rectStartPoint.value = imgPoint
+    } else {
+      // Second click: finish rectangle
+      const x1 = rectStartPoint.value.x / imgDisplayWidth.value
+      const y1 = rectStartPoint.value.y / imgDisplayHeight.value
+      const x2 = imgPoint.x / imgDisplayWidth.value
+      const y2 = imgPoint.y / imgDisplayHeight.value
+
+      // Create 4 points
+      points.value = [
+        { x: x1, y: y1 },
+        { x: x2, y: y1 },
+        { x: x2, y: y2 },
+        { x: x1, y: y2 }
+      ]
+      
+      rectStartPoint.value = null
+      tempEndPoint.value = null
+      emit('update:points', [...points.value])
+    }
+    return
+  }
+
   // Normalize for storage (0-1)
   const normalizedPoint = {
     x: imgPoint.x / imgDisplayWidth.value,
@@ -361,6 +429,25 @@ const handleStageClick = (e) => {
   points.value = [...points.value, normalizedPoint]
   emit('update:points', [...points.value])
 }
+
+const setDrawingMode = (mode) => {
+  drawingMode.value = mode
+  rectStartPoint.value = null
+  tempEndPoint.value = null
+  if (mode === 'rect') {
+    points.value = []
+    emit('update:points', [])
+  }
+}
+
+const previewRectPoints = computed(() => {
+  if (!rectStartPoint.value || !tempEndPoint.value) return []
+  const x1 = rectStartPoint.value.x
+  const y1 = rectStartPoint.value.y
+  const x2 = tempEndPoint.value.x
+  const y2 = tempEndPoint.value.y
+  return [x1, y1, x2, y1, x2, y2, x1, y2]
+})
 
 
 const isDraggingPoint = ref(false)
