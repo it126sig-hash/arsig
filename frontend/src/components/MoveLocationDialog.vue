@@ -3,99 +3,164 @@
         v-model:visible="visible" 
         header="Pindah Lokasi Fisik Arsip" 
         modal 
-        class="p-fluid max-w-lg w-full"
+        class="p-fluid max-w-4xl w-full"
     >
-        <div class="flex flex-col gap-4 mt-2">
-            <div class="p-3 bg-slate-50 rounded-lg border border-slate-100 mb-2">
-                <div class="text-[10px] uppercase font-bold text-slate-400 mb-1">Arsip yang dipilih</div>
-                <div class="font-bold text-slate-700">{{ archive?.name }}</div>
-                <div class="text-xs text-slate-500">{{ archive?.file_number }}</div>
-            </div>
-
-            <!-- Floor Selection -->
-            <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-bold text-slate-600">Lantai <span class="text-red-500">*</span></label>
-                <Select 
-                    v-model="form.new_floor_id" 
-                    :options="floors" 
-                    optionLabel="name" 
-                    optionValue="id" 
-                    placeholder="Pilih Lantai"
-                    @change="onFloorChange"
-                    :loading="loadingFloors"
-                />
-            </div>
-
-            <!-- Room Selection -->
-            <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-bold text-slate-600">Ruangan <span class="text-red-500">*</span></label>
-                <Select 
-                    v-model="form.new_room_id" 
-                    :options="rooms" 
-                    optionLabel="name" 
-                    optionValue="id" 
-                    placeholder="Pilih Ruangan"
-                    :disabled="!form.new_floor_id"
-                    @change="onRoomChange"
-                    :loading="loadingRooms"
-                />
-            </div>
-
-            <!-- Cabinet Selection -->
-            <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-bold text-slate-600">Lemari <span class="text-red-500">*</span></label>
-                <Select 
-                    v-model="form.new_cabinet_id" 
-                    :options="cabinets" 
-                    optionLabel="name" 
-                    optionValue="id" 
-                    placeholder="Pilih Lemari"
-                    :disabled="!form.new_room_id"
-                    @change="onCabinetChange"
-                    :loading="loadingCabinets"
-                />
-            </div>
-
-            <!-- Slot Selection -->
-            <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-bold text-slate-600">Slot / Rak <span class="text-red-500">*</span></label>
-                <Select 
-                    v-model="form.new_cabinet_slot_id" 
-                    :options="slots" 
-                    optionLabel="name"
-                    optionValue="id"
-                    placeholder="Pilih Slot"
-                    :disabled="!form.new_cabinet_id"
-                    :loading="loadingSlots"
-                >
-                    <template #value="slotProps">
-                        <div v-if="slotProps.value">
-                            {{ getSlotLabel(slotProps.value) }}
-                        </div>
-                        <span v-else>{{ slotProps.placeholder }}</span>
-                    </template>
-                    <template #option="slotProps">
-                        <div class="flex flex-col">
-                            <div class="flex items-center justify-between">
-                                <span class="font-semibold">{{ slotProps.option.name }}</span>
-                                <div v-if="slotProps.option.pic_users?.length" class="flex gap-1">
-                                    <Tag v-for="user in slotProps.option.pic_users" :key="user.id" :value="user.name" severity="secondary" class="text-[9px] px-1 py-0" />
-                                </div>
+        <div class="grid grid-cols-12 gap-6 mt-2">
+            <!-- Left Column: Info & Form -->
+            <div class="col-span-12 lg:col-span-5 flex flex-col gap-4">
+                <!-- Current Info -->
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="text-[10px] uppercase font-bold text-slate-400 mb-2 tracking-wider">Arsip yang dipilih</div>
+                    <div class="font-bold text-slate-800 text-lg leading-tight mb-1">{{ archive?.name }}</div>
+                    <div class="text-xs text-slate-500 mb-4">{{ archive?.file_number }}</div>
+                    
+                    <div class="pt-3 border-t border-slate-200/60">
+                        <div class="text-[10px] uppercase font-bold text-slate-400 mb-2 tracking-wider">Lokasi Saat Ini</div>
+                        <div v-if="archive?.floor || archive?.room || archive?.cabinet || archive?.cabinet_slot" class="flex flex-col gap-2">
+                            <div class="flex items-center gap-2 text-sm text-slate-600">
+                                <i class="pi pi-map-marker text-red-500 text-xs"></i>
+                                <span>{{ archive.floor?.name || '-' }} / {{ archive.room?.name || '-' }}</span>
                             </div>
-                            <small v-if="slotProps.option.keterangan" class="text-slate-400 mt-0.5">{{ slotProps.option.keterangan }}</small>
+                            <div class="flex items-center gap-2 text-sm text-slate-600">
+                                <i class="pi pi-box text-blue-500 text-xs"></i>
+                                <span class="font-medium text-slate-700">{{ archive.cabinet?.name || '-' }}</span>
+                                <span class="text-slate-400 px-2">•</span>
+                                <span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[11px] font-bold">{{ archive.cabinet_slot?.name || '-' }}</span>
+                            </div>
                         </div>
-                    </template>
-                </Select>
+                        <div v-else class="text-sm text-slate-400 italic">Belum ditentukan</div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    <h4 class="text-sm font-bold text-slate-700 flex items-center gap-2 uppercase tracking-wide">
+                        <i class="pi pi-external-link text-primary"></i>
+                        Pilih Lokasi Baru
+                    </h4>
+
+                    <!-- Floor Selection -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-bold text-slate-600">Lantai <span class="text-red-500">*</span></label>
+                        <Select 
+                            v-model="form.new_floor_id" 
+                            :options="floors" 
+                            optionLabel="name" 
+                            optionValue="id" 
+                            placeholder="Pilih Lantai"
+                            @change="onFloorChange"
+                            :loading="loadingFloors"
+                        />
+                    </div>
+
+                    <!-- Room Selection -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-bold text-slate-600">Ruangan <span class="text-red-500">*</span></label>
+                        <Select 
+                            v-model="form.new_room_id" 
+                            :options="rooms" 
+                            optionLabel="name" 
+                            optionValue="id" 
+                            placeholder="Pilih Ruangan"
+                            :disabled="!form.new_floor_id"
+                            @change="onRoomChange"
+                            :loading="loadingRooms"
+                        />
+                    </div>
+
+                    <!-- Cabinet Selection -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-bold text-slate-600">Lemari <span class="text-red-500">*</span></label>
+                        <Select 
+                            v-model="form.new_cabinet_id" 
+                            :options="cabinets" 
+                            optionLabel="name" 
+                            optionValue="id" 
+                            placeholder="Pilih Lemari"
+                            :disabled="!form.new_room_id"
+                            @change="onCabinetChange"
+                            :loading="loadingCabinets"
+                        />
+                    </div>
+
+                    <!-- Slot Selection -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-bold text-slate-600">Slot / Rak <span class="text-red-500">*</span></label>
+                        <Select 
+                            v-model="form.new_cabinet_slot_id" 
+                            :options="slots" 
+                            optionLabel="name"
+                            optionValue="id"
+                            placeholder="Pilih Slot"
+                            :disabled="!form.new_cabinet_id"
+                            :loading="loadingSlots"
+                        >
+                            <template #value="slotProps">
+                                <div v-if="slotProps.value">
+                                    {{ getSlotLabel(slotProps.value) }}
+                                </div>
+                                <span v-else>{{ slotProps.placeholder }}</span>
+                            </template>
+                            <template #option="slotProps">
+                                <div class="flex flex-col">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-semibold">{{ slotProps.option.name }}</span>
+                                        <div v-if="slotProps.option.pic_users?.length" class="flex gap-1">
+                                            <Tag v-for="user in slotProps.option.pic_users" :key="user.id" :value="user.name" severity="secondary" class="text-[9px] px-1 py-0" />
+                                        </div>
+                                    </div>
+                                    <small v-if="slotProps.option.keterangan" class="text-slate-400 mt-0.5">{{ slotProps.option.keterangan }}</small>
+                                </div>
+                            </template>
+                        </Select>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-bold text-slate-600">Keterangan Pemindahan</label>
+                        <Textarea 
+                            v-model="form.notes" 
+                            rows="2" 
+                            placeholder="Contoh: Pemindahan untuk audit tahunan..."
+                        />
+                    </div>
+                </div>
             </div>
 
-            <!-- Notes -->
-            <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-bold text-slate-600">Keterangan Pemindahan</label>
-                <Textarea 
-                    v-model="form.notes" 
-                    rows="3" 
-                    placeholder="Contoh: Pemindahan untuk audit tahunan atau reposisi rak..."
-                />
+            <!-- Right Column: Visualizer -->
+            <div class="col-span-12 lg:col-span-7 flex flex-col gap-4">
+                <div v-if="selectedFloor?.floor_plan_image" class="flex flex-col gap-2">
+                    <label class="text-xs font-bold text-slate-500 flex items-center gap-2">
+                        <i class="pi pi-map"></i>
+                        VISUALISASI LOKASI BARU
+                    </label>
+                    <div class="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden relative" style="height: 320px;">
+                        <FloorPlanViewer 
+                            :imageUrl="getFullImageUrl(selectedFloor.floor_plan_image)" 
+                            :highlightedRoomCoords="selectedRoomCoords"
+                            :highlightedCabinetCoords="selectedCabinetCoords"
+                        />
+                    </div>
+                </div>
+
+                <div v-if="selectedCabinet" class="flex flex-col gap-2">
+                    <label class="text-xs font-bold text-slate-500 flex items-center gap-2">
+                        <i class="pi pi-th-large"></i>
+                        GRID KABINET BARU
+                    </label>
+                    <div class="bg-white rounded-xl border border-slate-200 p-4 overflow-auto" style="height: 320px;">
+                        <CabinetDoorGrid 
+                            :doorCount="selectedCabinet.door_count || 1" 
+                            :slots="slots" 
+                            :highlightedSlotId="form.new_cabinet_slot_id"
+                            @slot-click="form.new_cabinet_slot_id = $event.id"
+                        />
+                    </div>
+                </div>
+
+                <div v-if="!selectedFloor" class="flex-1 flex flex-col items-center justify-center text-slate-300 py-20 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    <i class="pi pi-map-marker text-4xl mb-3"></i>
+                    <p class="text-sm font-medium">Pilih lokasi baru untuk melihat denah</p>
+                </div>
             </div>
         </div>
 
@@ -123,6 +188,8 @@ import Tag from 'primevue/tag'
 import { useToast } from 'primevue/usetoast'
 import { fetchFloors, fetchRoomsByFloor, fetchCabinetsByRoom, fetchSlotsByCabinet } from '@/api/locationApi'
 import { moveArchiveLocation } from '@/api/archiveApi'
+import CabinetDoorGrid from '@/components/CabinetDoorGrid.vue'
+import FloorPlanViewer from '@/components/FloorPlanViewer.vue'
 
 const props = defineProps({
     modelValue: Boolean,
@@ -155,6 +222,33 @@ const loadingFloors = ref(false)
 const loadingRooms = ref(false)
 const loadingCabinets = ref(false)
 const loadingSlots = ref(false)
+
+// Computed helpers for visualizers
+const selectedFloor = computed(() => floors.value.find(f => f.id === form.new_floor_id))
+const selectedRoom = computed(() => rooms.value.find(r => r.id === form.new_room_id))
+const selectedCabinet = computed(() => cabinets.value.find(c => c.id === form.new_cabinet_id))
+
+const selectedRoomCoords = computed(() => {
+    if (form.new_room_id && selectedRoom.value?.coordinates) {
+        const pts = selectedRoom.value.coordinates
+        return typeof pts === 'string' ? JSON.parse(pts) : pts
+    }
+    return []
+})
+
+const selectedCabinetCoords = computed(() => {
+    if (form.new_cabinet_id && selectedCabinet.value?.coordinates) {
+        const pts = selectedCabinet.value.coordinates
+        return typeof pts === 'string' ? JSON.parse(pts) : pts
+    }
+    return []
+})
+
+const getFullImageUrl = (path) => {
+    if (!path) return ''
+    const base = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+    return `${base}/storage/${path}`
+}
 
 const isFormValid = computed(() => {
     return form.new_floor_id && form.new_room_id && form.new_cabinet_id && form.new_cabinet_slot_id
@@ -261,3 +355,4 @@ const handleSubmit = async () => {
     }
 }
 </script>
+
