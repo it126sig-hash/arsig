@@ -19,7 +19,7 @@ class ArchiveService
         array $tagIds = []
     ) {
         return Archive::query()
-            ->with(['tags', 'accessDepartments', 'accessUsers', 'category', 'company'])
+            ->with(['tags', 'accessDepartments', 'accessUsers', 'category', 'company', 'pic'])
             ->when($companyId, fn ($q) => $q->where('company_id', $companyId))
             ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId))
             ->when($archiveType, fn ($q) => $q->where('archive_type', $archiveType))
