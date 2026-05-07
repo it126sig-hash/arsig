@@ -27,14 +27,24 @@ class ArchivePolicy
         }
 
         if ($archive->privacy_type === 'department') {
-            return $archive->accessDepartments()->where('departments.id', $user->department_id)->exists();
+            if ($archive->accessDepartments()->where('departments.id', $user->department_id)->exists()) {
+                return true;
+            }
         }
 
         if ($archive->privacy_type === 'user') {
-            return $archive->accessUsers()->where('users.id', $user->id)->exists();
+            if ($archive->accessUsers()->where('users.id', $user->id)->exists()) {
+                return true;
+            }
         }
 
-        return false;
+        // Check for verified OTP access
+        return \App\Models\ArchiveDownloadRequest::where('archive_id', $archive->id)
+            ->where('requester_user_id', $user->id)
+            ->where('status', 'approved')
+            ->where('is_verified', true)
+            ->where('otp_expires_at', '>', now())
+            ->exists();
     }
 
     public function update(User $user, Archive $archive): bool

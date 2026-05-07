@@ -148,6 +148,8 @@ class ArchiveController extends BaseController
             return $this->errorResponse('Kode OTP tidak valid atau sudah kadaluarsa.', 422);
         }
 
+        $downloadRequest->update(['is_verified' => true]);
+
         return $this->successResponse(null, 'OTP berhasil diverifikasi. Akses diberikan.');
     }
 
