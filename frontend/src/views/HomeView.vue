@@ -1,312 +1,379 @@
 <template>
-  <div class="p-4 md:p-6">
-    <!-- Page Header -->
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-slate-800 mb-1">Cari Arsip</h1>
-      <p class="text-slate-500 text-sm">Cari dan temukan dokumen arsip di seluruh PT dan kategori</p>
-    </div>
-
-    <!-- Search Form / Filters -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Keyword -->
-        <div class="flex flex-col gap-2">
-          <label class="text-sm font-semibold text-slate-700">Keyword</label>
-          <IconField>
-            <InputIcon class="pi pi-search" />
-            <InputText v-model="filters.q" placeholder="Nama, No. Berkas, Keterangan..." class="w-full" @input="debouncedSearch" />
-          </IconField>
+  <div class="flex flex-col min-h-screen bg-slate-50/50">
+    <!-- Main Content Area -->
+    <main class="p-4 md:p-6 flex-1 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
+      
+      <!-- EXPIRY ALERT -->
+      <div v-if="dummyStats.expiring > 0" class="bg-orange-50 border border-orange-200 border-l-4 border-l-orange-500 rounded-xl p-4 flex items-center gap-4 shadow-sm">
+        <div class="bg-orange-100 p-2 rounded-full">
+          <i class="pi pi-exclamation-triangle text-orange-600 text-xl"></i>
         </div>
-
-        <!-- Company -->
-        <div class="flex flex-col gap-2">
-          <label class="text-sm font-semibold text-slate-700">PT</label>
-          <Select 
-            v-model="filters.company_id" 
-            :options="companies" 
-            optionLabel="name" 
-            optionValue="id" 
-            placeholder="Semua PT" 
-            class="w-full" 
-            showClear
-            @change="onCompanyChange"
-          />
-        </div>
-
-        <!-- Category -->
-        <div class="flex flex-col gap-2">
-          <label class="text-sm font-semibold text-slate-700">Kategori</label>
-          <TreeSelect 
-            v-model="filters.category_id" 
-            :options="categories" 
-            placeholder="Pilih Kategori" 
-            class="w-full" 
-            :disabled="!filters.company_id"
-            showClear
-            filter
-            @change="search"
-          />
-        </div>
-
-        <!-- Archive Type -->
-        <div class="flex flex-col gap-2">
-          <label class="text-sm font-semibold text-slate-700">Tipe File</label>
-          <Select 
-            v-model="filters.archive_type" 
-            :options="archiveTypes" 
-            optionLabel="label" 
-            optionValue="value" 
-            placeholder="Semua Tipe" 
-            class="w-full" 
-            showClear
-            @change="search"
-          />
-        </div>
-
-        <!-- Date Range -->
-        <div class="flex flex-col gap-2 lg:col-span-2">
-          <label class="text-sm font-semibold text-slate-700">Rentang Tanggal Terbit</label>
-          <DatePicker 
-            v-model="dateRange" 
-            selectionMode="range" 
-            :manualInput="false" 
-            placeholder="Pilih rentang tanggal" 
-            class="w-full"
-            showIcon
-            iconDisplay="input"
-            showClear
-            @hide="onDateRangeChange"
-            @clear="onDateRangeChange"
-          />
-        </div>
-
-        <!-- Tags -->
-        <div class="flex flex-col gap-2 lg:col-span-2">
-          <label class="text-sm font-semibold text-slate-700">Hashtag</label>
-          <MultiSelect 
-            v-model="filters.tag_ids" 
-            :options="tags" 
-            optionLabel="nama" 
-            optionValue="id" 
-            placeholder="Filter Hashtag" 
-            :maxSelectedLabels="3" 
-            class="w-full"
-            filter
-            @change="search"
-          />
+        <div class="flex-1">
+          <p class="text-sm text-orange-800">
+            <span class="font-bold">{{ dummyStats.expiring }} dokumen akan kadaluarsa</span> dalam waktu dekat.
+            <a href="#" class="font-bold underline ml-2 hover:text-orange-900">Lihat dokumen &rarr;</a>
+          </p>
         </div>
       </div>
 
-      <div class="flex justify-end gap-3 mt-6">
-        <Button label="Reset Filter" icon="pi pi-refresh" severity="secondary" outlined @click="resetFilters" />
-        <Button label="Cari" icon="pi pi-search" @click="search" :loading="loading" />
-      </div>
-
-      <div class="flex justify-end gap-3 mt-6">
-        <Button label="Reset Filter" icon="pi pi-refresh" severity="secondary" outlined @click="resetFilters" />
-        <Button label="Cari" icon="pi pi-search" @click="search" :loading="loading" />
-      </div>
-    </div>
-
-    <!-- Results Section -->
-    <div v-if="loading" class="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-200">
-      <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="4" />
-      <p class="mt-4 text-slate-500">Mencari arsip...</p>
-    </div>
-
-    <div v-else-if="archives.length === 0" class="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-200 text-center px-4">
-      <i class="pi pi-inbox text-5xl text-slate-300 mb-4"></i>
-      <h3 class="text-lg font-bold text-slate-700">Tidak ada arsip ditemukan</h3>
-      <p class="text-slate-500 max-w-sm">Coba sesuaikan filter pencarian Anda atau reset filter untuk melihat semua data.</p>
-    </div>
-
-    <div v-else>
-      <!-- Desktop View (DataTable) -->
-      <div class="hidden md:block">
-        <DataTable :value="archives" responsiveLayout="scroll" class="p-datatable-sm" :rowClass="getRowClass">
-          <Column field="name" header="Nama Dokumen">
-            <template #body="{ data }">
-              <div class="flex flex-col" :class="{ 'opacity-50': isMuted(data) }">
-                <span class="font-bold text-slate-800">{{ data.name }}</span>
-                <span class="text-xs text-slate-500">{{ data.file_number }}</span>
-              </div>
-              
-              <!-- PIC Info for restricted access -->
-              <div v-if="!hasAccess(data)" class="mt-2 p-2 bg-red-50/50 border border-red-100/50 rounded-lg max-w-sm">
-                <p class="text-[10px] text-red-600 italic">
-                  Hubungi <span class="font-bold">{{ data.pic?.name || 'PIC' }}</span> untuk mendapatkan berkas.
-                </p>
-              </div>
-            </template>
-          </Column>
-          <Column header="PT & Kategori">
-            <template #body="{ data }">
-              <div class="flex flex-col" :class="{ 'opacity-50': isMuted(data) }">
-                <span class="font-bold text-slate-700">{{ data.company?.name }}</span>
-                <span class="text-xs text-slate-500">{{ getCategoryPath(data) }}</span>
-              </div>
-            </template>
-          </Column>
-          <Column header="Tgl Terbit">
-            <template #body="{ data }">
-              <span :class="{ 'opacity-50': isMuted(data) }">{{ formatDate(data.issue_date) }}</span>
-            </template>
-          </Column>
-          <Column header="Kadaluarsa">
-            <template #body="{ data }">
-              <span :class="{ 'opacity-50': isMuted(data) }">{{ data.expire_date ? formatDate(data.expire_date) : '-' }}</span>
-            </template>
-          </Column>
-          <Column header="Privacy">
-            <template #body="{ data }">
-              <Tag :value="data.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(data.privacy_type)" :class="{ 'opacity-50': isMuted(data) }" />
-            </template>
-          </Column>
-          <Column header="Hashtag">
-            <template #body="{ data }">
-              <div class="flex flex-wrap gap-1" :class="{ 'opacity-50': isMuted(data) }">
-                <Tag v-for="tag in data.tags?.slice(0, 3)" :key="tag.id" :value="tag.nama" severity="secondary" rounded />
-                <Tag v-if="data.tags?.length > 3" :value="`+${data.tags.length - 3} lainnya`" severity="secondary" rounded />
-              </div>
-            </template>
-          </Column>
-          <Column header="Aksi" style="width: 120px">
-            <template #body="{ data }">
-              <div class="flex gap-1">
-                <template v-if="hasAccess(data)">
-                  <Button icon="pi pi-eye" v-tooltip="'View Detail'" severity="info" text rounded @click="viewDetail(data)" />
-                </template>
-                <Button 
-                    icon="pi pi-ellipsis-v" 
-                    :severity="!hasAccess(data) ? 'danger' : 'secondary'" 
-                    text 
-                    rounded 
-                    @click="toggleActionMenu($event, data)" 
-                    aria-haspopup="true" 
-                />
-              </div>
-            </template>
-          </Column>
-        </DataTable>
-      </div>
-
-      <!-- Mobile View (Card View) -->
-      <div class="md:hidden flex flex-col gap-4">
-        <div 
-          v-for="archive in archives" 
-          :key="archive.id" 
-          class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"
-          :class="{ 'bg-slate-50 border-dashed': isMuted(archive) }"
-        >
-          <div class="flex justify-between items-start mb-3">
-            <div class="flex flex-col" :class="{ 'opacity-50': isMuted(archive) }">
-              <span class="font-bold text-slate-800">{{ archive.name }}</span>
-              <span class="text-xs text-slate-500">{{ archive.file_number }}</span>
-            </div>
-            <Tag v-if="hasAccess(archive)" :value="archive.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(archive.privacy_type)" :class="{ 'opacity-50': isMuted(archive) }" />
-            <i v-else class="pi pi-lock text-red-400"></i>
+      <!-- STATS ROW -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+            <i class="pi pi-archive text-xl"></i>
           </div>
-
-          <div class="grid grid-cols-2 gap-3 mb-4 text-sm" :class="{ 'opacity-50': isMuted(archive) }">
-            <div class="flex flex-col">
-              <span class="text-xs text-slate-400 uppercase font-semibold">PT</span>
-              <span class="text-slate-700">{{ archive.company?.name }}</span>
-            </div>
-            <div class="flex flex-col">
-              <span class="text-xs text-slate-400 uppercase font-semibold">Kategori</span>
-              <span class="text-slate-700 truncate">{{ archive.category?.name }}</span>
-            </div>
-            <div class="flex flex-col">
-              <span class="text-xs text-slate-400 uppercase font-semibold">Tgl Terbit</span>
-              <span class="text-slate-700">{{ formatDate(archive.issue_date) }}</span>
-            </div>
-            <div class="flex flex-col">
-              <span class="text-xs text-slate-400 uppercase font-semibold">Tipe</span>
-              <span class="text-slate-700 capitalize">{{ archive.archive_type }}</span>
-            </div>
+          <div>
+            <div class="text-2xl font-bold text-slate-800">{{ dummyStats.total.toLocaleString() }}</div>
+            <div class="text-xs text-slate-500 font-medium uppercase tracking-wider">Total Arsip</div>
           </div>
-
-          <div v-if="hasAccess(archive)" class="flex flex-wrap gap-1 mb-4" :class="{ 'opacity-50': isMuted(archive) }">
-            <Tag v-for="tag in archive.tags?.slice(0, 3)" :key="tag.id" :value="tag.nama" severity="secondary" rounded />
-            <span v-if="archive.tags?.length > 3" class="text-xs text-slate-400 self-center">+{{ archive.tags.length - 3 }} lainnya</span>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
+            <i class="pi pi-check-circle text-xl"></i>
           </div>
+          <div>
+            <div class="text-2xl font-bold text-slate-800">{{ dummyStats.inCabinet.toLocaleString() }}</div>
+            <div class="text-xs text-slate-500 font-medium uppercase tracking-wider">Ada di Lemari</div>
+          </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
+            <i class="pi pi-external-link text-xl"></i>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-slate-800">{{ dummyStats.borrowed.toLocaleString() }}</div>
+            <div class="text-xs text-slate-500 font-medium uppercase tracking-wider">Sedang Keluar</div>
+          </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
+            <i class="pi pi-clock text-xl"></i>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-slate-800">{{ dummyStats.expiring.toLocaleString() }}</div>
+            <div class="text-xs text-slate-500 font-medium uppercase tracking-wider">Segera Kadaluarsa</div>
+          </div>
+        </div>
+      </div>
 
-          <div class="border-t border-slate-100 pt-3">
-            <div v-if="!hasAccess(archive)" class="mt-2 p-2 bg-red-50/50 border border-red-100/50 rounded-lg">
-              <p class="text-[10px] text-red-600 italic text-center">
-                Hubungi <span class="font-bold">{{ archive.pic?.name || 'PIC' }}</span> untuk mendapatkan berkas.
-              </p>
-            </div>
-            <div class="flex justify-around gap-2 mt-3">
-              <Button v-if="hasAccess(archive)" label="View" icon="pi pi-eye" severity="info" text size="small" @click="viewDetail(archive)" />
-              <Button 
-                :label="hasAccess(archive) ? 'Options' : 'Request Akses'" 
-                :icon="hasAccess(archive) ? 'pi pi-ellipsis-h' : 'pi pi-lock'" 
-                :severity="hasAccess(archive) ? 'secondary' : 'danger'" 
-                text 
-                size="small" 
-                @click="toggleActionMenu($event, archive)" 
+      <!-- SEARCH HERO -->
+      <div class="bg-gradient-to-br from-primary-900 via-primary-700 to-primary-500 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-lg shadow-blue-900/10">
+        <!-- Abstract Decorations -->
+        <div class="absolute -top-20 -right-20 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-primary-400/10 rounded-full blur-3xl"></div>
+        
+        <div class="relative z-10 flex flex-col items-center text-center max-w-3xl mx-auto">
+          <h1 class="text-2xl md:text-3xl font-extrabold text-white mb-6 leading-tight">
+            Temukan Dokumen <span class="text-blue-300">dengan Cepat</span>
+          </h1>
+          
+          <div class="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-1.5 flex flex-col md:flex-row gap-2 focus-within:ring-2 focus-within:ring-blue-400/50 transition-all">
+            <div class="flex-1 flex items-center px-4 py-2">
+              <i class="pi pi-search text-white/40 mr-3"></i>
+              <input 
+                v-model="filters.q" 
+                type="text" 
+                placeholder="Cari berdasarkan nama, nomor, atau keterangan..." 
+                class="bg-transparent border-none outline-none text-white placeholder:text-white/40 w-full text-base"
+                @input="debouncedSearch"
+                @keyup.enter="search"
               />
             </div>
+            <Button 
+              label="Cari" 
+              icon="pi pi-search" 
+              class="!bg-white !text-primary-800 !border-none !rounded-xl !px-8 !font-bold hover:!bg-blue-50 transition-colors"
+              :loading="loading"
+              @click="search"
+            />
+          </div>
+
+          <div class="flex flex-wrap justify-center gap-4 mt-6 text-white/50 text-[10px] uppercase tracking-widest">
+            <div class="flex items-center gap-1.5"><i class="pi pi-building"></i> <strong>{{ companies.length }}</strong> PT</div>
+            <div class="flex items-center gap-1.5"><i class="pi pi-tags"></i> <strong>{{ tags.length }}</strong> Hashtags</div>
+            <div class="flex items-center gap-1.5"><i class="pi pi-history"></i> Update 5m ago</div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Enhanced Detail Modal -->
+      <!-- FILTER BAR -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2 px-3 border-r border-slate-100 hidden lg:flex">
+          <i class="pi pi-filter text-slate-400"></i>
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Filter</span>
+        </div>
+        
+        <Select 
+          v-model="filters.company_id" 
+          :options="companies" 
+          optionLabel="name" 
+          optionValue="id" 
+          placeholder="Semua PT" 
+          class="flex-1 min-w-[150px] p-select-sm" 
+          showClear
+          @change="onCompanyChange"
+        />
+
+        <TreeSelect 
+          v-model="filters.category_id" 
+          :options="categories" 
+          placeholder="Semua Kategori" 
+          class="flex-1 min-w-[200px] p-select-sm" 
+          :disabled="!filters.company_id"
+          showClear
+          filter
+          @change="search"
+        />
+
+        <Select 
+          v-model="filters.archive_type" 
+          :options="archiveTypes" 
+          optionLabel="label" 
+          optionValue="value" 
+          placeholder="Semua Tipe" 
+          class="flex-1 min-w-[150px] p-select-sm" 
+          showClear
+          @change="search"
+        />
+
+        <MultiSelect 
+          v-model="filters.tag_ids" 
+          :options="tags" 
+          optionLabel="nama" 
+          optionValue="id" 
+          placeholder="Hashtag" 
+          :maxSelectedLabels="1" 
+          class="flex-1 min-w-[150px] p-select-sm"
+          filter
+          @change="search"
+        />
+
+        <div class="flex gap-2 ml-auto">
+          <Button icon="pi pi-refresh" severity="secondary" text @click="resetFilters" v-tooltip="'Reset'" />
+          <Button label="Export" icon="pi pi-download" severity="secondary" size="small" outlined class="hidden sm:flex" />
+        </div>
+      </div>
+
+      <!-- RESULTS SECTION -->
+      <div class="flex-1 flex flex-col gap-4">
+        <!-- Results Header -->
+        <div class="flex items-center justify-between px-2">
+          <div class="text-sm text-slate-500">
+            Menampilkan <span class="font-bold text-slate-800">{{ archives.length }}</span> hasil
+          </div>
+          <div class="flex items-center gap-3">
+             <!-- Placeholder for view switcher or sort if needed -->
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="loading" class="flex-1 flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-slate-200">
+          <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="4" />
+          <p class="mt-4 text-slate-500 font-medium">Mencari arsip...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="archives.length === 0" class="flex-1 flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-slate-200 text-center px-4">
+          <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+            <i class="pi pi-search text-3xl text-slate-300"></i>
+          </div>
+          <h3 class="text-xl font-bold text-slate-700">Tidak ada arsip ditemukan</h3>
+          <p class="text-slate-500 max-w-sm mt-2">Coba sesuaikan kata kunci atau filter pencarian Anda.</p>
+          <Button label="Bersihkan Semua Filter" class="mt-6" text @click="resetFilters" />
+        </div>
+
+        <!-- Data Display -->
+        <div v-else class="flex-1">
+          <!-- Desktop View (DataTable) -->
+          <div class="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <DataTable :value="archives" responsiveLayout="scroll" class="p-datatable-sm" :rowClass="getRowClass">
+              <Column field="name" header="NAMA DOKUMEN">
+                <template #body="{ data }">
+                  <div class="flex items-center gap-3" :class="{ 'opacity-50': isMuted(data) }">
+                    <div :class="['w-10 h-10 rounded-lg flex items-center justify-center bg-slate-50', getFileColor(data.file_type)]">
+                      <i :class="[getFileIcon(data.file_type), 'text-lg']"></i>
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-slate-800 leading-tight">{{ data.name }}</span>
+                      <span class="text-[10px] font-mono text-slate-500 mt-1 uppercase tracking-tighter">{{ data.file_number }}</span>
+                    </div>
+                  </div>
+                  
+                  <!-- PIC Info for restricted access -->
+                  <div v-if="!hasAccess(data)" class="mt-2 ml-12 p-2 bg-red-50 border border-red-100 rounded-lg max-w-xs">
+                    <p class="text-[10px] text-red-600 italic">
+                      <i class="pi pi-lock mr-1"></i>
+                      Hubungi <span class="font-bold">{{ data.pic?.name || 'PIC' }}</span> untuk akses.
+                    </p>
+                  </div>
+                </template>
+              </Column>
+              
+              <Column header="PT / DIVISI">
+                <template #body="{ data }">
+                  <div class="flex flex-col" :class="{ 'opacity-50': isMuted(data) }">
+                    <span class="font-bold text-slate-700 text-xs">{{ data.company?.name }}</span>
+                    <span class="text-[10px] text-slate-400 font-medium uppercase mt-0.5">{{ getCategoryPath(data) }}</span>
+                  </div>
+                </template>
+              </Column>
+
+              <Column header="TGL TERBIT" style="width: 140px">
+                <template #body="{ data }">
+                  <span class="text-xs font-medium text-slate-600" :class="{ 'opacity-50': isMuted(data) }">{{ formatDate(data.issue_date) }}</span>
+                </template>
+              </Column>
+
+              <Column header="PRIVACY" style="width: 120px">
+                <template #body="{ data }">
+                  <Tag :value="data.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(data.privacy_type)" class="!text-[9px] !px-2" :class="{ 'opacity-50': isMuted(data) }" />
+                </template>
+              </Column>
+
+              <Column header="HASHTAG">
+                <template #body="{ data }">
+                  <div class="flex flex-wrap gap-1" :class="{ 'opacity-50': isMuted(data) }">
+                    <Tag v-for="tag in data.tags?.slice(0, 2)" :key="tag.id" :value="'#' + tag.nama" severity="secondary" rounded class="!text-[9px] !bg-slate-100 !text-slate-600 !border-none" />
+                    <span v-if="data.tags?.length > 2" class="text-[9px] text-slate-400 self-center font-bold ml-1">+{{ data.tags.length - 2 }}</span>
+                  </div>
+                </template>
+              </Column>
+
+              <Column header="STATUS KELUAR" style="width: 160px">
+                <template #body="{ data }">
+                  <div v-if="data.is_checked_out" class="flex flex-col gap-0.5">
+                    <Tag value="Sedang di Luar" severity="danger" class="!text-[9px] !px-2 w-fit" />
+                    <span class="text-[10px] text-slate-600 font-medium">{{ data.last_checkout?.borrower_name || '-' }}</span>
+                    <span class="text-[10px] text-slate-400">Kembali: {{ formatDate(data.last_checkout?.planned_return_date) }}</span>
+                  </div>
+                  <Tag v-else value="Tersedia" severity="success" class="!text-[9px] !px-2" />
+                </template>
+              </Column>
+
+              <Column header="AKSI" style="width: 100px" alignFrozen="right" frozen>
+                <template #body="{ data }">
+                  <div class="flex gap-1 justify-end">
+                    <Button v-if="hasAccess(data)" icon="pi pi-eye" v-tooltip.top="'View Detail'" severity="info" text rounded @click="viewDetail(data)" />
+                    <Button 
+                        icon="pi pi-ellipsis-v" 
+                        :severity="!hasAccess(data) ? 'danger' : 'secondary'" 
+                        text 
+                        rounded 
+                        @click="toggleActionMenu($event, data)" 
+                    />
+                  </div>
+                </template>
+              </Column>
+            </DataTable>
+          </div>
+
+          <!-- Mobile View (Card View) -->
+          <div class="md:hidden flex flex-col gap-4">
+            <div 
+              v-for="archive in archives" 
+              :key="archive.id" 
+              class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm"
+              :class="{ 'bg-slate-50 border-dashed': isMuted(archive) }"
+            >
+              <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center gap-3" :class="{ 'opacity-50': isMuted(archive) }">
+                  <div :class="['w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50', getFileColor(archive.file_type)]">
+                    <i :class="[getFileIcon(archive.file_type), 'text-lg']"></i>
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="font-bold text-slate-800 leading-tight">{{ archive.name }}</span>
+                    <span class="text-[10px] font-mono text-slate-500 uppercase">{{ archive.file_number }}</span>
+                  </div>
+                </div>
+                <Tag v-if="hasAccess(archive)" :value="archive.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(archive.privacy_type)" class="!text-[9px]" />
+                <i v-else class="pi pi-lock text-red-400"></i>
+              </div>
+
+              <div class="grid grid-cols-2 gap-y-4 gap-x-2 mb-4 text-xs" :class="{ 'opacity-50': isMuted(archive) }">
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">PT / Divisi</span>
+                  <span class="text-slate-700 font-semibold">{{ archive.company?.name }}</span>
+                  <span class="text-[10px] text-slate-500">{{ getCategoryPath(archive) }}</span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Tgl Terbit</span>
+                  <span class="text-slate-700 font-semibold">{{ formatDate(archive.issue_date) }}</span>
+                </div>
+              </div>
+
+              <div v-if="!hasAccess(archive)" class="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-center">
+                <p class="text-[10px] text-red-600 italic">
+                  Hubungi <span class="font-bold">{{ archive.pic?.name || 'PIC' }}</span> untuk akses.
+                </p>
+              </div>
+
+              <div class="flex gap-2">
+                <Button v-if="hasAccess(archive)" label="Detail" icon="pi pi-eye" severity="info" class="flex-1 !rounded-xl" size="small" @click="viewDetail(archive)" />
+                <Button 
+                  :label="hasAccess(archive) ? 'Opsi' : 'Minta Akses'" 
+                  :icon="hasAccess(archive) ? 'pi pi-ellipsis-h' : 'pi pi-key'" 
+                  :severity="hasAccess(archive) ? 'secondary' : 'danger'" 
+                  outlined
+                  class="flex-1 !rounded-xl"
+                  size="small" 
+                  @click="toggleActionMenu($event, archive)" 
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- OVERLAYS & DIALOGS -->
     <ArchiveDetailModal v-model="detailDialog" :archive="selectedArchive" :already-unlocked="selectedArchive ? unlockedArchives.has(selectedArchive.id) : false" />
-
-    <!-- Edit Archive Dialog -->
-    <ArchiveEditDialog
-      v-if="editDialog"
-      :visible="editDialog"
-      :archive="selectedArchive"
-      @update:visible="editDialog = $event"
-      @edit-success="onEditSuccess"
-    />
-
-    <!-- Move Location Dialog -->
-    <MoveLocationDialog 
-      v-model="moveLocationDialog" 
-      :archive="selectedArchive" 
-      @moved="onMoveSuccess" 
-    />
-
-    <!-- Action Menu Overlay -->
+    
+    <ArchiveEditDialog v-if="editDialog" :visible="editDialog" :archive="selectedArchive" @update:visible="editDialog = $event" @edit-success="onEditSuccess" />
+    
+    <MoveLocationDialog v-model="moveLocationDialog" :archive="selectedArchive" @moved="onMoveSuccess" />
+    
+    <CheckoutDialog v-model="checkoutDialog" :archive="selectedArchive" @checked-out="onCheckoutSuccess" />
+    
+    <ConfirmDialog />
+    
     <Menu ref="actionMenu" id="overlay_menu" :model="actionMenuItems" :popup="true" />
 
-    <!-- OTP Popover for Restricted Access -->
     <Popover ref="otpPopover">
-        <div v-if="selectedArchive" class="p-3 flex flex-col gap-3 min-w-[250px]">
-            <div class="flex flex-col gap-1 border-b border-slate-100 pb-2 mb-1">
-                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Akses Terbatas</span>
-                <span class="text-[10px] text-slate-500 italic">Hubungi {{ selectedArchive.pic?.name || 'PIC' }}</span>
+        <div v-if="selectedArchive" class="p-4 flex flex-col gap-4 min-w-[280px]">
+            <div class="flex items-center gap-3 border-b border-slate-100 pb-3 mb-1">
+                <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                  <i class="pi pi-lock"></i>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-sm font-bold text-slate-800 uppercase tracking-wider">Akses Terbatas</span>
+                  <span class="text-[10px] text-slate-500 italic">PIC: {{ selectedArchive.pic?.name || 'Admin' }}</span>
+                </div>
             </div>
             
-            <div class="flex flex-col gap-3">
+            <div class="flex flex-col gap-4">
                 <Button 
-                    label="Request OTP" 
+                    label="Request Kode OTP" 
                     icon="pi pi-send" 
                     severity="danger" 
-                    outlined 
                     size="small"
-                    class="w-full text-xs"
+                    class="w-full !rounded-xl"
                     :loading="isRequesting[selectedArchive.id]"
                     @click="handleTableRequestOtp(selectedArchive)"
                 />
                 
-                <div class="flex flex-col gap-1.5 mt-1 pt-3 border-t border-slate-100">
-                    <label class="text-[10px] font-semibold text-slate-400 uppercase">Input Kode OTP</label>
-                    <div class="flex gap-1">
+                <div class="flex flex-col gap-2 pt-3 border-t border-slate-100">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Verifikasi OTP</label>
+                    <div class="flex gap-2">
                         <InputText 
                             v-model="otpInputs[selectedArchive.id]" 
                             placeholder="Kode 6 Digit" 
-                            class="flex-1 p-inputtext-sm text-center"
+                            class="flex-1 text-center font-mono !rounded-xl"
+                            maxlength="6"
                         />
                         <Button 
                             icon="pi pi-check" 
                             severity="success" 
-                            size="small"
+                            class="!rounded-xl"
                             :loading="isVerifying[selectedArchive.id]"
                             :disabled="!otpInputs[selectedArchive.id]"
                             @click="handleTableVerifyOtp(selectedArchive)"
@@ -346,18 +413,25 @@ import Toast from 'primevue/toast'
 import ArchiveDetailModal from '@/components/ArchiveDetailModal.vue'
 import ArchiveEditDialog from '@/components/ArchiveEditDialog.vue'
 import MoveLocationDialog from '@/components/MoveLocationDialog.vue'
+import CheckoutDialog from '@/components/CheckoutDialog.vue'
+import ConfirmDialog from 'primevue/confirmdialog'
+import { checkinArchive } from '@/api/archiveCheckoutApi'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
+import Tooltip from 'primevue/tooltip'
 
+const vTooltip = Tooltip
 const authStore = useAuthStore()
+const confirm = useConfirm()
 const loading = ref(false)
 const archives = ref([])
 const companies = ref([])
 const categories = ref([])
 const tags = ref([])
 const archiveTypes = [
-  { label: 'Full (Digital & Fisik)', value: 'full' },
-  { label: 'Digital Only', value: 'digital_only' },
-  { label: 'Placeholder (Fisik Only)', value: 'placeholder' }
+  { label: 'Digital & Fisik', value: 'full' },
+  { label: 'Hanya Digital', value: 'digital_only' },
+  { label: 'Hanya Fisik', value: 'placeholder' }
 ]
 
 const filters = reactive({
@@ -375,6 +449,7 @@ const dateRange = ref(null)
 const detailDialog = ref(false)
 const editDialog = ref(false)
 const moveLocationDialog = ref(false)
+const checkoutDialog = ref(false)
 const actionMenu = ref(null)
 const otpPopover = ref(null)
 const selectedArchive = ref(null)
@@ -385,18 +460,36 @@ const isRequesting = ref({}) // { archiveId: true }
 const isVerifying = ref({}) // { archiveId: true }
 const unlockedArchives = ref(new Set()) // Set of archive IDs
 
+// Dummy Stats for UI
+const dummyStats = reactive({
+  total: 2847,
+  inCabinet: 2641,
+  borrowed: 206,
+  expiring: 18
+})
+
 const actionMenuItems = computed(() => {
     const archive = selectedArchive.value
     const user = authStore.user
     const isPicOrAdmin = archive && user && (user.role === 'admin' || archive.pic_user_id === user.id)
 
     const items = [
-        { label: 'Pindah Lokasi File Fisik', icon: 'pi pi-arrows-alt', command: () => { moveLocationDialog.value = true } },
-        { label: 'Ubah Status Keluar/Kembali', icon: 'pi pi-sync', command: () => { toast.add({ severity: 'info', summary: 'Info', detail: 'Fitur status segera hadir.' }) } }
+        { label: 'Pindah Lokasi Fisik', icon: 'pi pi-arrows-alt', command: () => { moveLocationDialog.value = true } },
+        { 
+            label: archive?.is_checked_out ? 'Tandai Sudah Kembali' : 'Keluarkan Arsip', 
+            icon: archive?.is_checked_out ? 'pi pi-check-circle' : 'pi pi-external-link', 
+            command: () => { 
+                if (archive?.is_checked_out) {
+                    confirmCheckin()
+                } else {
+                    checkoutDialog.value = true
+                }
+            } 
+        }
     ]
 
     if (isPicOrAdmin) {
-        items.unshift({ label: 'Ubah Archive', icon: 'pi pi-pencil', command: () => { editDialog.value = true } })
+        items.unshift({ label: 'Ubah Arsip', icon: 'pi pi-pencil', command: () => { editDialog.value = true } })
     }
 
     return [{ label: 'Opsi Arsip', items }]
@@ -447,8 +540,6 @@ const onCompanyChange = async () => {
 const formatTreeData = (data, parentPath = '') => {
   if (!data) return []
   return data.map(node => {
-    // The node might come from the backend formatTree method (key, label, children)
-    // or from a raw model (id, name, children)
     const name = node.label || node.name
     const fullPath = parentPath ? `${parentPath} > ${name}` : name
     
@@ -461,36 +552,10 @@ const formatTreeData = (data, parentPath = '') => {
   })
 }
 
-const onDateRangeChange = () => {
-  if (dateRange.value && dateRange.value.length === 2) {
-    if (dateRange.value[0]) filters.date_from = formatDateForApi(dateRange.value[0])
-    if (dateRange.value[1]) filters.date_to = formatDateForApi(dateRange.value[1])
-    search()
-  } else if (!dateRange.value) {
-    filters.date_from = null
-    filters.date_to = null
-    search()
-  }
-}
-
-const formatDateForApi = (date) => {
-  if (!date) return null
-  const d = new Date(date)
-  let month = '' + (d.getMonth() + 1)
-  let day = '' + d.getDate()
-  const year = d.getFullYear()
-
-  if (month.length < 2) month = '0' + month
-  if (day.length < 2) day = '0' + day
-
-  return [year, month, day].join('-')
-}
-
 const search = async () => {
   loading.value = true
   try {
     const params = { ...filters }
-    // Handle TreeSelect value which can be an object
     if (typeof params.category_id === 'object' && params.category_id !== null) {
       params.category_id = Object.keys(params.category_id)[0]
     }
@@ -543,7 +608,6 @@ const hasAccess = (archive) => {
     return archive.access_users?.some(u => u.id === user.id)
   }
 
-  // Check if manually unlocked via OTP
   if (unlockedArchives.value.has(archive.id)) return true
 
   return false
@@ -553,10 +617,9 @@ const handleTableRequestOtp = async (archive) => {
     isRequesting.value[archive.id] = true
     try {
         const res = await requestOtp(archive.id)
-        toast.add({ severity: 'info', summary: 'Permintaan Terkirim', detail: res.data?.message || 'Permintaan OTP telah dikirim ke PIC.', life: 5000 })
+        toast.add({ severity: 'info', summary: 'Terkirim', detail: 'Permintaan OTP telah dikirim ke PIC.', life: 5000 })
     } catch (err) {
-        const msg = err.response?.data?.message || 'Gagal mengirim permintaan OTP.'
-        toast.add({ severity: 'warn', summary: 'Gagal', detail: msg, life: 6000 })
+        toast.add({ severity: 'warn', summary: 'Gagal', detail: err.response?.data?.message || 'Gagal mengirim OTP.', life: 6000 })
     } finally {
         isRequesting.value[archive.id] = false
     }
@@ -572,26 +635,15 @@ const handleTableVerifyOtp = async (archive) => {
     isVerifying.value[archive.id] = true
     try {
         await verifyOtp(archive.id, otp)
-        
-        // Force reactivity by re-assigning the Set
         const newSet = new Set(unlockedArchives.value)
         newSet.add(archive.id)
         unlockedArchives.value = newSet
-
-        toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Akses terbuka! Anda sekarang dapat melihat detail berkas.', life: 3000 })
-        
-        // Clear input
+        toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Akses terbuka!', life: 3000 })
         delete otpInputs.value[archive.id]
-
-        // Close popover
-        if (otpPopover.value) {
-            otpPopover.value.hide()
-        }
-
-        // Automatically open the detail modal
+        if (otpPopover.value) otpPopover.value.hide()
         viewDetail(archive)
     } catch (err) {
-        toast.add({ severity: 'error', summary: 'Gagal', detail: 'Kode OTP tidak valid.', life: 3000 })
+        toast.add({ severity: 'error', summary: 'Gagal', detail: 'OTP tidak valid.', life: 3000 })
     } finally {
         isVerifying.value[archive.id] = false
     }
@@ -629,10 +681,6 @@ const getCategoryPath = (archive) => {
   return archive.category.name
 }
 
-const hasPhysicalLocation = (archive) => {
-  return archive.floor_id && archive.room_id && archive.cabinet_id
-}
-
 const viewDetail = (archive) => {
   selectedArchive.value = archive
   detailDialog.value = true
@@ -646,7 +694,6 @@ const onEditSuccess = async () => {
 
 const toggleActionMenu = (event, archive) => {
   selectedArchive.value = archive
-  
   if (hasAccess(archive)) {
     actionMenu.value.toggle(event)
   } else {
@@ -654,43 +701,74 @@ const toggleActionMenu = (event, archive) => {
   }
 }
 
-const downloadArchive = async (archive) => {
-  if (!archive.id) return
-  try {
-    const res = await downloadApi(archive.id)
-    
-    // Get filename from content-disposition header if available
-    let fileName = archive.name
-    const contentDisposition = res.headers['content-disposition']
-    if (contentDisposition) {
-      const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/)
-      if (fileNameMatch && fileNameMatch[1]) {
-        fileName = fileNameMatch[1]
-      }
-    }
+const onMoveSuccess = async () => {
+  moveLocationDialog.value = false
+  toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Lokasi fisik berhasil diperbarui.', life: 3000 })
+  await search()
+}
 
-    const url = window.URL.createObjectURL(res.data)
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', fileName)
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    window.URL.revokeObjectURL(url)
+const onCheckoutSuccess = async () => {
+  checkoutDialog.value = false
+  toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Arsip berhasil dikeluarkan.', life: 3000 })
+  await search()
+}
+
+const confirmCheckin = () => {
+  confirm.require({
+    message: 'Apakah Anda yakin ingin menandai arsip ini sudah kembali?',
+    header: 'Konfirmasi Pengembalian',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Ya, Tandai Kembali',
+    rejectLabel: 'Batal',
+    accept: () => handleCheckin()
+  })
+}
+
+const handleCheckin = async () => {
+  try {
+    await checkinArchive(selectedArchive.value.id)
+    toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Arsip berhasil ditandai kembali.', life: 3000 })
+    await search()
   } catch (err) {
-    console.error('Download failed', err)
+    toast.add({ severity: 'error', summary: 'Gagal', detail: err.response?.data?.message || 'Gagal menandai pengembalian.', life: 3000 })
   }
 }
 
-const onMoveSuccess = async () => {
-  moveLocationDialog.value = false
-  toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Lokasi fisik arsip berhasil diperbarui.', life: 3000 })
-  await search()
+const getFileIcon = (type) => {
+  if (!type) return 'pi pi-file'
+  const t = type.toLowerCase()
+  if (t === 'pdf') return 'pi pi-file-pdf'
+  if (['doc', 'docx'].includes(t)) return 'pi pi-file-word'
+  if (['xls', 'xlsx', 'csv'].includes(t)) return 'pi pi-file-excel'
+  if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(t)) return 'pi pi-image'
+  return 'pi pi-file'
+}
+
+const getFileColor = (type) => {
+  if (!type) return 'text-slate-400'
+  const t = type.toLowerCase()
+  if (t === 'pdf') return 'text-red-500'
+  if (['doc', 'docx'].includes(t)) return 'text-blue-500'
+  if (['xls', 'xlsx', 'csv'].includes(t)) return 'text-green-500'
+  if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(t)) return 'text-orange-500'
+  return 'text-slate-400'
 }
 </script>
 
 <style scoped>
 :deep(.p-datatable .p-datatable-tbody > tr.opacity-60) {
   background: #f8fafc;
+}
+:deep(.p-select-sm .p-select-label) {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+}
+:deep(.p-datatable .p-datatable-thead > tr > th) {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1rem;
 }
 </style>
