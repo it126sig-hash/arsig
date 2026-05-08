@@ -101,6 +101,11 @@
         <Button label="Reset Filter" icon="pi pi-refresh" severity="secondary" outlined @click="resetFilters" />
         <Button label="Cari" icon="pi pi-search" @click="search" :loading="loading" />
       </div>
+
+      <div class="flex justify-end gap-3 mt-6">
+        <Button label="Reset Filter" icon="pi pi-refresh" severity="secondary" outlined @click="resetFilters" />
+        <Button label="Cari" icon="pi pi-search" @click="search" :loading="loading" />
+      </div>
     </div>
 
     <!-- Results Section -->
@@ -124,6 +129,13 @@
               <div class="flex flex-col" :class="{ 'opacity-50': isMuted(data) }">
                 <span class="font-bold text-slate-800">{{ data.name }}</span>
                 <span class="text-xs text-slate-500">{{ data.file_number }}</span>
+              </div>
+              
+              <!-- PIC Info for restricted access -->
+              <div v-if="!hasAccess(data)" class="mt-2 p-2 bg-red-50/50 border border-red-100/50 rounded-lg max-w-sm">
+                <p class="text-[10px] text-red-600 italic">
+                  Hubungi <span class="font-bold">{{ data.pic?.name || 'PIC' }}</span> untuk mendapatkan berkas.
+                </p>
               </div>
             </template>
           </Column>
@@ -160,19 +172,17 @@
           </Column>
           <Column header="Aksi" style="width: 120px">
             <template #body="{ data }">
-              <div v-if="!hasAccess(data)" class="text-xs italic text-red-500 font-medium">
-                Hubungi PIC untuk mendapatkan berkas
-              </div>
-              <div v-else class="flex gap-1">
-                <Button icon="pi pi-eye" v-tooltip="'View Detail'" severity="info" text rounded @click="viewDetail(data)" />
+              <div class="flex gap-1">
+                <template v-if="hasAccess(data)">
+                  <Button icon="pi pi-eye" v-tooltip="'View Detail'" severity="info" text rounded @click="viewDetail(data)" />
+                </template>
                 <Button 
                     icon="pi pi-ellipsis-v" 
-                    severity="secondary" 
+                    :severity="!hasAccess(data) ? 'danger' : 'secondary'" 
                     text 
                     rounded 
                     @click="toggleActionMenu($event, data)" 
                     aria-haspopup="true" 
-                    aria-controls="overlay_menu"
                 />
               </div>
             </template>
@@ -193,7 +203,8 @@
               <span class="font-bold text-slate-800">{{ archive.name }}</span>
               <span class="text-xs text-slate-500">{{ archive.file_number }}</span>
             </div>
-            <Tag :value="archive.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(archive.privacy_type)" :class="{ 'opacity-50': isMuted(archive) }" />
+            <Tag v-if="hasAccess(archive)" :value="archive.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(archive.privacy_type)" :class="{ 'opacity-50': isMuted(archive) }" />
+            <i v-else class="pi pi-lock text-red-400"></i>
           </div>
 
           <div class="grid grid-cols-2 gap-3 mb-4 text-sm" :class="{ 'opacity-50': isMuted(archive) }">
@@ -215,18 +226,27 @@
             </div>
           </div>
 
-          <div class="flex flex-wrap gap-1 mb-4" :class="{ 'opacity-50': isMuted(archive) }">
+          <div v-if="hasAccess(archive)" class="flex flex-wrap gap-1 mb-4" :class="{ 'opacity-50': isMuted(archive) }">
             <Tag v-for="tag in archive.tags?.slice(0, 3)" :key="tag.id" :value="tag.nama" severity="secondary" rounded />
             <span v-if="archive.tags?.length > 3" class="text-xs text-slate-400 self-center">+{{ archive.tags.length - 3 }} lainnya</span>
           </div>
 
           <div class="border-t border-slate-100 pt-3">
-            <div v-if="!hasAccess(archive)" class="text-center text-xs italic text-red-500 font-medium">
-              Hubungi PIC untuk mendapatkan berkas
+            <div v-if="!hasAccess(archive)" class="mt-2 p-2 bg-red-50/50 border border-red-100/50 rounded-lg">
+              <p class="text-[10px] text-red-600 italic text-center">
+                Hubungi <span class="font-bold">{{ archive.pic?.name || 'PIC' }}</span> untuk mendapatkan berkas.
+              </p>
             </div>
-            <div v-else class="flex justify-around gap-2">
-              <Button label="View" icon="pi pi-eye" severity="info" text size="small" @click="viewDetail(archive)" />
-              <Button label="Options" icon="pi pi-ellipsis-h" severity="secondary" text size="small" @click="toggleActionMenu($event, archive)" />
+            <div class="flex justify-around gap-2 mt-3">
+              <Button v-if="hasAccess(archive)" label="View" icon="pi pi-eye" severity="info" text size="small" @click="viewDetail(archive)" />
+              <Button 
+                :label="hasAccess(archive) ? 'Options' : 'Request Akses'" 
+                :icon="hasAccess(archive) ? 'pi pi-ellipsis-h' : 'pi pi-lock'" 
+                :severity="hasAccess(archive) ? 'secondary' : 'danger'" 
+                text 
+                size="small" 
+                @click="toggleActionMenu($event, archive)" 
+              />
             </div>
           </div>
         </div>
@@ -236,14 +256,67 @@
     <!-- Enhanced Detail Modal -->
     <ArchiveDetailModal v-model="detailDialog" :archive="selectedArchive" />
 
+    <!-- Edit Archive Dialog -->
+    <ArchiveEditDialog
+      v-if="editDialog"
+      :visible="editDialog"
+      :archive="selectedArchive"
+      @update:visible="editDialog = $event"
+      @edit-success="onEditSuccess"
+    />
+
     <!-- Action Menu Overlay -->
     <Menu ref="actionMenu" id="overlay_menu" :model="actionMenuItems" :popup="true" />
+
+    <!-- OTP Popover for Restricted Access -->
+    <Popover ref="otpPopover">
+        <div v-if="selectedArchive" class="p-3 flex flex-col gap-3 min-w-[250px]">
+            <div class="flex flex-col gap-1 border-b border-slate-100 pb-2 mb-1">
+                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Akses Terbatas</span>
+                <span class="text-[10px] text-slate-500 italic">Hubungi {{ selectedArchive.pic?.name || 'PIC' }}</span>
+            </div>
+            
+            <div class="flex flex-col gap-3">
+                <Button 
+                    label="Request OTP" 
+                    icon="pi pi-send" 
+                    severity="danger" 
+                    outlined 
+                    size="small"
+                    class="w-full text-xs"
+                    :loading="isRequesting[selectedArchive.id]"
+                    @click="handleTableRequestOtp(selectedArchive)"
+                />
+                
+                <div class="flex flex-col gap-1.5 mt-1 pt-3 border-t border-slate-100">
+                    <label class="text-[10px] font-semibold text-slate-400 uppercase">Input Kode OTP</label>
+                    <div class="flex gap-1">
+                        <InputText 
+                            v-model="otpInputs[selectedArchive.id]" 
+                            placeholder="Kode 6 Digit" 
+                            class="flex-1 p-inputtext-sm text-center"
+                        />
+                        <Button 
+                            icon="pi pi-check" 
+                            severity="success" 
+                            size="small"
+                            :loading="isVerifying[selectedArchive.id]"
+                            :disabled="!otpInputs[selectedArchive.id]"
+                            @click="handleTableVerifyOtp(selectedArchive)"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Popover>
+
+    <Toast />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
-import { fetchArchives, downloadArchive as downloadApi } from '@/api/archiveApi'
+import { ref, onMounted, reactive, computed } from 'vue'
+import { fetchArchives, downloadArchive as downloadApi, requestOtp, verifyOtp } from '@/api/archiveApi'
 import { fetchCompanies } from '@/api/companyApi'
 import { fetchCategoryTree } from '@/api/categoryApi'
 import { fetchTags } from '@/api/tagApi'
@@ -261,7 +334,10 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import Menu from 'primevue/menu'
+import Popover from 'primevue/popover'
+import Toast from 'primevue/toast'
 import ArchiveDetailModal from '@/components/ArchiveDetailModal.vue'
+import ArchiveEditDialog from '@/components/ArchiveEditDialog.vue'
 import { useToast } from 'primevue/usetoast'
 
 const authStore = useAuthStore()
@@ -289,18 +365,33 @@ const filters = reactive({
 const toast = useToast()
 const dateRange = ref(null)
 const detailDialog = ref(false)
+const editDialog = ref(false)
 const actionMenu = ref(null)
+const otpPopover = ref(null)
 const selectedArchive = ref(null)
 
-const actionMenuItems = ref([
-    { 
-        label: 'Opsi Arsip',
-        items: [
-            { label: 'Pindah Lokasi File Fisik', icon: 'pi pi-arrows-alt', command: () => { toast.add({ severity: 'info', summary: 'Placeholder', detail: 'Fitur pindah lokasi segera hadir.' }) } },
-            { label: 'Ubah Status Keluar/Kembali', icon: 'pi pi-sync', command: () => { toast.add({ severity: 'info', summary: 'Placeholder', detail: 'Fitur status segera hadir.' }) } }
-        ]
+// OTP States
+const otpInputs = ref({}) // { archiveId: '123456' }
+const isRequesting = ref({}) // { archiveId: true }
+const isVerifying = ref({}) // { archiveId: true }
+const unlockedArchives = ref(new Set()) // Set of archive IDs
+
+const actionMenuItems = computed(() => {
+    const archive = selectedArchive.value
+    const user = authStore.user
+    const isPicOrAdmin = archive && user && (user.role === 'admin' || archive.pic_user_id === user.id)
+
+    const items = [
+        { label: 'Pindah Lokasi File Fisik', icon: 'pi pi-arrows-alt', command: () => { toast.add({ severity: 'info', summary: 'Info', detail: 'Fitur pindah lokasi segera hadir.' }) } },
+        { label: 'Ubah Status Keluar/Kembali', icon: 'pi pi-sync', command: () => { toast.add({ severity: 'info', summary: 'Info', detail: 'Fitur status segera hadir.' }) } }
+    ]
+
+    if (isPicOrAdmin) {
+        items.unshift({ label: 'Ubah Archive', icon: 'pi pi-pencil', command: () => { editDialog.value = true } })
     }
-])
+
+    return [{ label: 'Opsi Arsip', items }]
+})
 
 // Initialize
 onMounted(async () => {
@@ -443,7 +534,44 @@ const hasAccess = (archive) => {
     return archive.access_users?.some(u => u.id === user.id)
   }
 
+  // Check if manually unlocked via OTP
+  if (unlockedArchives.value.has(archive.id)) return true
+
   return false
+}
+
+const handleTableRequestOtp = async (archive) => {
+    isRequesting.value[archive.id] = true
+    try {
+        const res = await requestOtp(archive.id)
+        toast.add({ severity: 'info', summary: 'Permintaan Terkirim', detail: res.data?.message || 'Permintaan OTP telah dikirim ke PIC.', life: 5000 })
+    } catch (err) {
+        const msg = err.response?.data?.message || 'Gagal mengirim permintaan OTP.'
+        toast.add({ severity: 'warn', summary: 'Gagal', detail: msg, life: 6000 })
+    } finally {
+        isRequesting.value[archive.id] = false
+    }
+}
+
+const handleTableVerifyOtp = async (archive) => {
+    const otp = otpInputs.value[archive.id]
+    if (!otp || String(otp).length < 6) {
+        toast.add({ severity: 'warn', summary: 'Peringatan', detail: 'Masukkan 6 digit kode OTP.', life: 3000 })
+        return
+    }
+
+    isVerifying.value[archive.id] = true
+    try {
+        await verifyOtp(archive.id, otp)
+        unlockedArchives.value.add(archive.id)
+        toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Akses terbuka! Anda sekarang dapat melihat detail berkas.', life: 3000 })
+        // Clear input
+        delete otpInputs.value[archive.id]
+    } catch (err) {
+        toast.add({ severity: 'error', summary: 'Gagal', detail: 'Kode OTP tidak valid.', life: 3000 })
+    } finally {
+        isVerifying.value[archive.id] = false
+    }
 }
 
 const isMuted = (archive) => {
@@ -487,9 +615,20 @@ const viewDetail = (archive) => {
   detailDialog.value = true
 }
 
+const onEditSuccess = async () => {
+  editDialog.value = false
+  toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Arsip berhasil diperbarui.', life: 3000 })
+  await search()
+}
+
 const toggleActionMenu = (event, archive) => {
   selectedArchive.value = archive
-  actionMenu.value.toggle(event)
+  
+  if (hasAccess(archive)) {
+    actionMenu.value.toggle(event)
+  } else {
+    otpPopover.value.toggle(event)
+  }
 }
 
 const downloadArchive = async (archive) => {

@@ -108,19 +108,38 @@
                     </div>
                     <h3 class="text-xl font-bold text-slate-800 mb-2">Akses Terbatas</h3>
                     <p class="text-slate-500 mb-6">
-                        Arsip ini memerlukan persetujuan PIC. Silakan masukkan kode OTP untuk membuka akses.
+                        Arsip ini memerlukan persetujuan PIC untuk dibuka.<br>
+                        Hubungi <span class="font-bold text-slate-700">{{ archive.pic?.name || 'PIC' }}</span> untuk mendapatkan kode OTP.
                     </p>
 
-                    <div v-if="!otpSent">
-                        <Button label="Request Akses / OTP" icon="pi pi-send" @click="handleRequestOtp" :loading="loading" />
-                    </div>
+                    <div class="flex flex-col items-center gap-5 w-full">
+                        <div class="flex flex-col items-center gap-3 w-full bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                            <label class="text-sm font-semibold text-slate-600">Masukkan Kode OTP</label>
+                            <InputOtp v-model="otpCode" :length="6" integerOnly />
+                            <Button 
+                                label="Verifikasi & Buka Akses" 
+                                icon="pi pi-check" 
+                                class="w-full mt-2"
+                                @click="handleVerifyOtp" 
+                                :loading="loading" 
+                                :disabled="!otpCode || String(otpCode).length < 6" 
+                            />
+                        </div>
 
-                    <div v-else class="flex flex-col items-center gap-4 animate-fade-in">
-                        <p class="text-sm font-semibold text-blue-600">OTP telah dikirim!</p>
-                        <InputOtp v-model="otpCode" :length="6" integerOnly />
-                        <div class="flex gap-2">
-                            <Button label="Verifikasi" icon="pi pi-check" @click="handleVerifyOtp" :loading="loading" :disabled="otpCode.length < 6" />
-                            <Button label="Resend" severity="secondary" text @click="handleRequestOtp" :disabled="loading" />
+                        <div class="flex flex-col items-center gap-2">
+                            <p class="text-xs text-slate-400">Belum punya kode OTP?</p>
+                            <Button 
+                                :label="otpSent ? 'Kirim Ulang Request' : 'Request OTP ke PIC'" 
+                                :icon="otpSent ? 'pi pi-refresh' : 'pi pi-send'" 
+                                severity="secondary" 
+                                text 
+                                size="small"
+                                @click="handleRequestOtp" 
+                                :loading="loading" 
+                            />
+                            <p v-if="otpSent" class="text-[10px] text-blue-500 font-medium animate-pulse">
+                                Request telah dikirim! Silakan hubungi PIC.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -183,6 +202,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { previewArchive, downloadArchive, requestOtp, verifyOtp } from '@/api/archiveApi'
+import { useAuthStore } from '@/store/auth'
 import { useToast } from 'primevue/usetoast'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
@@ -197,6 +217,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 const toast = useToast()
+const authStore = useAuthStore()
 
 const visible = computed({
     get: () => props.modelValue,
@@ -213,7 +234,15 @@ const previewUrl = ref(null)
 
 // Computed
 const needsAccess = computed(() => {
-    return props.archive?.download_policy === 'request_to_pic' && !isUnlocked.value
+    if (!props.archive) return false
+    
+    // Admin or PIC always has access
+    const user = authStore.user
+    if (user?.role === 'admin' || props.archive.pic_user_id === user?.id || props.archive.created_by === user?.id) {
+        return false
+    }
+
+    return props.archive.download_policy === 'request_to_pic' && !isUnlocked.value
 })
 
 const hasPhysicalLocation = computed(() => {
@@ -262,11 +291,12 @@ const toggleViewMode = () => {
 const handleRequestOtp = async () => {
     loading.value = true
     try {
-        await requestOtp(props.archive.id)
+        const res = await requestOtp(props.archive.id)
         otpSent.value = true
-        toast.add({ severity: 'info', summary: 'OTP Terkirim', detail: 'Silakan cek perangkat Anda.', life: 3000 })
+        toast.add({ severity: 'info', summary: 'Permintaan Terkirim', detail: res.data?.message || 'Permintaan OTP sedang diproses oleh PIC.', life: 5000 })
     } catch (err) {
-        toast.add({ severity: 'error', summary: 'Gagal', detail: 'Gagal mengirim OTP.', life: 3000 })
+        const msg = err.response?.data?.message || 'Gagal mengirim permintaan OTP.'
+        toast.add({ severity: 'warn', summary: 'Tidak Dapat Mengirim', detail: msg, life: 6000 })
     } finally {
         loading.value = false
     }

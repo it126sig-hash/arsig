@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import { useAuthStore } from '../store/auth'
 import { useRouter } from 'vue-router'
+import InputText from 'primevue/inputtext'
+import Password from 'primevue/password'
+import Button from 'primevue/button'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -19,7 +22,7 @@ const handleLogin = async () => {
     })
     router.push('/')
   } catch (err) {
-    error.value = err.response?.data?.message || 'Login failed'
+    error.value = err.response?.data?.message || 'Login gagal. Periksa email dan password Anda.'
   }
 }
 </script>
@@ -108,113 +111,6 @@ const handleLogin = async () => {
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue'
-import { useAuthStore } from '../store/auth'
-import { useRouter } from 'vue-router'
-import InputText from 'primevue/inputtext'
-import Password from 'primevue/password'
-import Button from 'primevue/button'
-
-const auth   = useAuthStore()
-const router = useRouter()
-
-const email    = ref('')
-const password = ref('')
-const error    = ref('')
-
-const handleLogin = async () => {
-  try {
-    error.value = ''
-    await auth.login({ email: email.value, password: password.value })
-    router.push('/')
-  } catch (err) {
-    error.value = err.response?.data?.message || 'Login gagal. Periksa email dan password Anda.'
-  }
-}
-
-.login-header h1 {
-  color: white;
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.login-header p {
-  color: #94a3b8;
-  font-size: 0.875rem;
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-group label {
-  color: #e2e8f0;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.form-group input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 12px 16px;
-  color: white;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-}
-
-.error-message {
-  color: #f87171;
-  font-size: 0.875rem;
-  background: rgba(248, 113, 113, 0.1);
-  border: 1px solid rgba(248, 113, 113, 0.2);
-  padding: 12px;
-  border-radius: 12px;
-  text-align: center;
-}
-
-.login-button {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 14px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 12px;
-}
-
-.login-button:hover:not(:disabled) {
-  background: #2563eb;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-
-.login-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.login-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
+<style scoped>
+/* No extra styles needed as tailwind/inline styles are used */
 </style>
