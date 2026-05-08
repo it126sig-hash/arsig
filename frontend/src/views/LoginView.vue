@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import { useAuthStore } from '../store/auth'
 import { useRouter } from 'vue-router'
+import InputText from 'primevue/inputtext'
+import Password from 'primevue/password'
+import Button from 'primevue/button'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -19,7 +22,7 @@ const handleLogin = async () => {
     })
     router.push('/')
   } catch (err) {
-    error.value = err.response?.data?.message || 'Login failed'
+    error.value = err.response?.data?.message || 'Login gagal. Periksa email dan password Anda.'
   }
 }
 </script>
@@ -108,31 +111,7 @@ const handleLogin = async () => {
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue'
-import { useAuthStore } from '../store/auth'
-import { useRouter } from 'vue-router'
-import InputText from 'primevue/inputtext'
-import Password from 'primevue/password'
-import Button from 'primevue/button'
-
-const auth   = useAuthStore()
-const router = useRouter()
-
-const email    = ref('')
-const password = ref('')
-const error    = ref('')
-
-const handleLogin = async () => {
-  try {
-    error.value = ''
-    await auth.login({ email: email.value, password: password.value })
-    router.push('/')
-  } catch (err) {
-    error.value = err.response?.data?.message || 'Login gagal. Periksa email dan password Anda.'
-  }
-}
-
+<style scoped>
 .login-header h1 {
   color: white;
   font-size: 2rem;
