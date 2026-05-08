@@ -101,6 +101,11 @@
         <Button label="Reset Filter" icon="pi pi-refresh" severity="secondary" outlined @click="resetFilters" />
         <Button label="Cari" icon="pi pi-search" @click="search" :loading="loading" />
       </div>
+
+      <div class="flex justify-end gap-3 mt-6">
+        <Button label="Reset Filter" icon="pi pi-refresh" severity="secondary" outlined @click="resetFilters" />
+        <Button label="Cari" icon="pi pi-search" @click="search" :loading="loading" />
+      </div>
     </div>
 
     <!-- Results Section -->
