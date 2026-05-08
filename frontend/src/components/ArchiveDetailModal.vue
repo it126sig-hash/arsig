@@ -16,6 +16,18 @@
                     <h3 class="text-sm font-bold text-slate-800 uppercase tracking-tight">Informasi Arsip</h3>
                 </div>
 
+                <!-- Checkout Status Badge -->
+                <div class="flex items-center gap-2 mb-4">
+                    <Tag 
+                        :value="archive.is_checked_out ? 'Sedang di Luar' : 'Tersedia'" 
+                        :severity="archive.is_checked_out ? 'danger' : 'success'"
+                        class="text-sm px-3 py-1"
+                    />
+                    <span v-if="archive.checked_out_at" class="text-[10px] text-slate-400">
+                        {{ formatDateTimeShort(archive.checked_out_at) }}
+                    </span>
+                </div>
+
                 <div class="flex flex-col gap-5">
                     <!-- Basic Info Group -->
                     <div class="flex flex-col gap-3">
@@ -104,6 +116,28 @@
                         @click="toggleViewMode"
                     />
                 </div>
+
+                <!-- Checkout Action Buttons -->
+                <div v-if="canModifyCheckout" class="flex flex-col gap-2 pt-4 border-t border-slate-200">
+                    <Button 
+                        v-if="!archive.is_checked_out"
+                        label="Keluarkan Arsip" 
+                        icon="pi pi-external-link" 
+                        severity="warning" 
+                        outlined 
+                        class="w-full"
+                        @click="showCheckoutDialog = true"
+                    />
+                    <Button 
+                        v-else
+                        label="Tandai Sudah Kembali" 
+                        icon="pi pi-check-circle" 
+                        severity="success" 
+                        outlined 
+                        class="w-full"
+                        @click="confirmCheckin"
+                    />
+                </div>
             </div>
 
             <!-- Right Column: dynamic Area -->
@@ -178,7 +212,7 @@
                     <div v-else-if="viewMode === 'history'" class="w-full h-full flex flex-col p-6 animate-fade-in overflow-y-auto bg-white">
                         <div class="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
                             <i class="pi pi-history text-blue-500"></i>
-                            <h3 class="text-base font-bold text-slate-700 uppercase tracking-tight">Riwayat Pergerakan Fisik</h3>
+                            <h3 class="text-base font-bold text-slate-700 uppercase tracking-tight">Riwayat Arsip</h3>
                         </div>
 
                         <div v-if="loadingHistory" class="flex flex-col items-center justify-center py-20">
@@ -186,45 +220,72 @@
                             <p class="mt-3 text-xs text-slate-400">Memuat riwayat...</p>
                         </div>
 
-                        <Timeline v-else-if="locationHistories.length > 0" :value="locationHistories" class="customized-timeline">
+                        <Timeline v-else-if="combinedHistory.length > 0" :value="combinedHistory" class="customized-timeline">
                             <template #opposite="slotProps">
                                 <small class="text-slate-400 font-medium whitespace-nowrap">{{ formatDateTimeShort(slotProps.item.created_at) }}</small>
                             </template>
                             <template #content="slotProps">
                                 <div class="flex flex-col mb-6 bg-slate-50/50 p-3 rounded-xl border border-slate-100 shadow-sm">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <span class="text-[10px] font-bold px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">DIPINDAHKAN</span>
-                                        <span class="text-[10px] text-slate-400 italic">oleh {{ slotProps.item.moved_by?.name }}</span>
+                                    <!-- Location Move Event -->
+                                    <div v-if="slotProps.item.event_type === 'location_move'">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">📦 PINDAH LOKASI</span>
+                                            <span class="text-[10px] text-slate-400 italic">oleh {{ slotProps.item.moved_by?.name }}</span>
+                                        </div>
+                                        <div class="text-xs text-slate-600">
+                                            <div v-if="slotProps.item.old_floor" class="flex flex-col mb-2 pb-2 border-b border-slate-100/50">
+                                                <div class="flex items-center gap-1.5 mb-0.5">
+                                                    <i class="pi pi-history text-[10px] text-slate-300"></i>
+                                                    <span class="text-slate-400">Dari: {{ slotProps.item.old_floor?.name }} > {{ slotProps.item.old_room?.name }}</span>
+                                                </div>
+                                                <div class="pl-4 text-[10px] text-slate-300">
+                                                    Lemari {{ slotProps.item.old_cabinet?.name }}
+                                                    <span v-if="slotProps.item.old_cabinet_slot">, Slot {{ slotProps.item.old_cabinet_slot?.name }}</span>
+                                                </div>
+                                            </div>
+                                            <div v-else class="flex items-center gap-1.5 mb-2 text-slate-400 italic">
+                                                <i class="pi pi-plus-circle text-[10px]"></i>
+                                                <span>Penempatan Lokasi Pertama</span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5 mb-1">
+                                                <i class="pi pi-map-marker text-[10px] text-blue-400"></i>
+                                                <span class="font-medium">Ke: {{ slotProps.item.new_floor?.name }} > {{ slotProps.item.new_room?.name }}</span>
+                                            </div>
+                                            <div class="pl-4 text-[10px] text-slate-500">
+                                                Lemari {{ slotProps.item.new_cabinet?.name }}
+                                                <span v-if="slotProps.item.new_cabinet_slot">, Slot {{ slotProps.item.new_cabinet_slot?.name }}</span>
+                                            </div>
+                                        </div>
+                                        <div v-if="slotProps.item.notes" class="mt-2 text-[11px] text-slate-500 bg-white p-2 rounded border-l-2 border-slate-200 italic">
+                                            "{{ slotProps.item.notes }}"
+                                        </div>
                                     </div>
-                                    <div class="text-xs text-slate-600">
-                                        <!-- Lokasi Lama -->
-                                        <div v-if="slotProps.item.old_floor" class="flex flex-col mb-2 pb-2 border-b border-slate-100/50">
-                                            <div class="flex items-center gap-1.5 mb-0.5">
-                                                <i class="pi pi-history text-[10px] text-slate-300"></i>
-                                                <span class="text-slate-400">Dari: {{ slotProps.item.old_floor?.name }} > {{ slotProps.item.old_room?.name }}</span>
-                                            </div>
-                                            <div class="pl-4 text-[10px] text-slate-300">
-                                                Lemari {{ slotProps.item.old_cabinet?.name }}
-                                                <span v-if="slotProps.item.old_cabinet_slot">, Slot {{ slotProps.item.old_cabinet_slot?.name }}</span>
-                                            </div>
-                                        </div>
-                                        <div v-else class="flex items-center gap-1.5 mb-2 text-slate-400 italic">
-                                            <i class="pi pi-plus-circle text-[10px]"></i>
-                                            <span>Penempatan Lokasi Pertama</span>
-                                        </div>
 
-                                        <!-- Lokasi Baru -->
-                                        <div class="flex items-center gap-1.5 mb-1">
-                                            <i class="pi pi-map-marker text-[10px] text-blue-400"></i>
-                                            <span class="font-medium">Ke: {{ slotProps.item.new_floor?.name }} > {{ slotProps.item.new_room?.name }}</span>
+                                    <!-- Checkout Event -->
+                                    <div v-else-if="slotProps.item.event_type === 'checkout'">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded">🔓 DIKELUARKAN</span>
+                                            <span class="text-[10px] text-slate-400 italic">oleh {{ slotProps.item.actor_user?.name }}</span>
                                         </div>
-                                        <div class="pl-4 text-[10px] text-slate-500">
-                                            Lemari {{ slotProps.item.new_cabinet?.name }}
-                                            <span v-if="slotProps.item.new_cabinet_slot">, Slot {{ slotProps.item.new_cabinet_slot?.name }}</span>
+                                        <div class="text-xs text-slate-600">
+                                            <div class="mb-1"><strong>Peminjam:</strong> {{ slotProps.item.borrower_name }}</div>
+                                            <div class="mb-1"><strong>Alasan:</strong> {{ slotProps.item.reason }}</div>
+                                            <div><strong>Rencana Kembali:</strong> {{ formatDate(slotProps.item.planned_return_date) }}</div>
+                                        </div>
+                                        <div v-if="slotProps.item.notes" class="mt-2 text-[11px] text-slate-500 bg-white p-2 rounded border-l-2 border-slate-200 italic">
+                                            "{{ slotProps.item.notes }}"
                                         </div>
                                     </div>
-                                    <div v-if="slotProps.item.notes" class="mt-2 text-[11px] text-slate-500 bg-white p-2 rounded border-l-2 border-slate-200 italic">
-                                        "{{ slotProps.item.notes }}"
+
+                                    <!-- Checkin Event -->
+                                    <div v-else-if="slotProps.item.event_type === 'checkin'">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-green-50 text-green-600 rounded">🔒 DIKEMBALIKAN</span>
+                                            <span class="text-[10px] text-slate-400 italic">oleh {{ slotProps.item.actor_user?.name }}</span>
+                                        </div>
+                                        <div class="text-xs text-slate-600">
+                                            <div><strong>Tanggal Kembali:</strong> {{ formatDate(slotProps.item.actual_return_date) }}</div>
+                                        </div>
                                     </div>
                                 </div>
                             </template>
@@ -232,7 +293,7 @@
 
                         <div v-else class="flex flex-col items-center justify-center py-20 text-slate-300">
                             <i class="pi pi-history text-5xl mb-4 opacity-20"></i>
-                            <p class="italic">Belum ada riwayat pemindahan.</p>
+                            <p class="italic">Belum ada riwayat.</p>
                         </div>
                     </div>
 
@@ -269,21 +330,35 @@
                 :disabled="needsAccess"
             />
         </template>
+
+        <!-- Checkout Dialog -->
+        <CheckoutDialog 
+            v-model="showCheckoutDialog" 
+            :archive="archive" 
+            @checked-out="handleCheckedOut"
+        />
+
+        <!-- Confirm Dialog for Checkin -->
+        <ConfirmDialog />
     </Dialog>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { previewArchive, downloadArchive, requestOtp, verifyOtp, fetchArchiveLocationHistories } from '@/api/archiveApi'
+import { checkinArchive, getCheckoutHistory } from '@/api/archiveCheckoutApi'
 import { useAuthStore } from '@/store/auth'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import InputOtp from 'primevue/inputotp'
 import ProgressSpinner from 'primevue/progressspinner'
 import Timeline from 'primevue/timeline'
+import ConfirmDialog from 'primevue/confirmdialog'
 import LocationVisualizer from '@/components/LocationVisualizer.vue'
+import CheckoutDialog from '@/components/CheckoutDialog.vue'
 
 const props = defineProps({
     modelValue: Boolean,
@@ -294,9 +369,10 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'archive-updated'])
 const toast = useToast()
 const authStore = useAuthStore()
+const confirm = useConfirm()
 
 const visible = computed({
     get: () => props.modelValue,
@@ -312,7 +388,10 @@ const loadingPreview = ref(false)
 const previewUrl = ref(null)
 
 const locationHistories = ref([])
+const checkoutHistories = ref([])
+const combinedHistory = ref([])
 const loadingHistory = ref(false)
+const showCheckoutDialog = ref(false)
 
 // Computed
 const needsAccess = computed(() => {
@@ -336,6 +415,16 @@ const hasPhysicalLocation = computed(() => {
 
 const canDownload = computed(() => {
     return props.archive?.archive_type !== 'placeholder'
+})
+
+const canModifyCheckout = computed(() => {
+    const user = authStore.user
+    if (!user || !props.archive) return false
+    
+    const isPic = props.archive.pic_user_id === user.id
+    const isAdminOrRoot = ['admin', 'root'].includes(user.role)
+    
+    return isPic || isAdminOrRoot
 })
 
 const isPdf = computed(() => {
@@ -393,8 +482,28 @@ const toggleHistoryMode = () => {
 const loadHistory = async () => {
     loadingHistory.value = true
     try {
-        const res = await fetchArchiveLocationHistories(props.archive.id)
-        locationHistories.value = res.data.data
+        const [locationRes, checkoutRes] = await Promise.all([
+            fetchArchiveLocationHistories(props.archive.id),
+            getCheckoutHistory(props.archive.id)
+        ])
+        
+        locationHistories.value = locationRes.data.data
+        checkoutHistories.value = checkoutRes.data.data
+        
+        // Combine and sort by created_at
+        const locationEvents = locationHistories.value.map(item => ({
+            ...item,
+            event_type: 'location_move'
+        }))
+        
+        const checkoutEvents = checkoutHistories.value.map(item => ({
+            ...item,
+            event_type: item.action // 'checkout' or 'checkin'
+        }))
+        
+        combinedHistory.value = [...locationEvents, ...checkoutEvents].sort((a, b) => 
+            new Date(b.created_at) - new Date(a.created_at)
+        )
     } catch (err) {
         console.error('Failed to load history', err)
     } finally {
@@ -463,6 +572,31 @@ const handleDownload = async () => {
 
 const onClose = () => {
     resetState()
+}
+
+const handleCheckedOut = (updatedArchive) => {
+    emit('archive-updated', updatedArchive)
+}
+
+const confirmCheckin = () => {
+    confirm.require({
+        message: 'Apakah Anda yakin ingin menandai arsip ini sudah kembali?',
+        header: 'Konfirmasi Pengembalian',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Ya, Tandai Kembali',
+        rejectLabel: 'Batal',
+        accept: () => handleCheckin()
+    })
+}
+
+const handleCheckin = async () => {
+    try {
+        const res = await checkinArchive(props.archive.id)
+        toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Arsip berhasil ditandai kembali', life: 3000 })
+        emit('archive-updated', res.data.data)
+    } catch (err) {
+        toast.add({ severity: 'error', summary: 'Gagal', detail: err.response?.data?.message || 'Gagal menandai pengembalian', life: 3000 })
+    }
 }
 
 // Helpers

@@ -48,5 +48,10 @@ Route::prefix('v1')->group(function () {
         Route::get('archives/{archive}/location-histories', [\App\Http\Controllers\ArchiveController::class, 'locationHistories']);
         Route::post('archives/{archive}/move-location', [\App\Http\Controllers\ArchiveController::class, 'moveLocation']);
         Route::get('location-histories', [\App\Http\Controllers\LocationHistoryController::class, 'index']);
+
+        // Archive Checkout
+        Route::post('archives/{archive}/checkout', [\App\Http\Controllers\ArchiveCheckoutController::class, 'checkout']);
+        Route::post('archives/{archive}/checkin', [\App\Http\Controllers\ArchiveCheckoutController::class, 'checkin']);
+        Route::get('archives/{archive}/checkout-history', [\App\Http\Controllers\ArchiveCheckoutController::class, 'history']);
     });
 });

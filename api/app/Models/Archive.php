@@ -33,6 +33,8 @@ class Archive extends Model
         'cabinet_id',
         'cabinet_slot_id',
         'created_by',
+        'is_checked_out',
+        'checked_out_at',
     ];
 
     protected $casts = [
@@ -104,5 +106,25 @@ class Archive extends Model
     public function locationLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ArchiveLocationLog::class);
+    }
+
+    public function checkoutLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ArchiveCheckoutLog::class);
+    }
+
+    public function lastCheckout(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ArchiveCheckoutLog::class)->ofMany(
+            ['id' => 'max'],
+            function ($query) {
+                $query->where('action', 'checkout');
+            }
+        );
+    }
+
+    public function scopeCheckedOut($query)
+    {
+        return $query->where('is_checked_out', true);
     }
 }
