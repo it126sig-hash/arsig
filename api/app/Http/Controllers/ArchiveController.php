@@ -12,6 +12,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+use App\Http\Requests\MoveArchiveLocationRequest;
+use App\Models\ArchiveLocationLog;
+
 class ArchiveController extends BaseController
 {
     public function __construct(
@@ -146,5 +149,31 @@ class ArchiveController extends BaseController
         }
 
         return $this->successResponse(null, 'OTP berhasil diverifikasi. Akses diberikan.');
+    }
+
+    public function moveLocation(MoveArchiveLocationRequest $request, Archive $archive): JsonResponse
+    {
+        $this->authorize('update', $archive);
+
+        $updated = $this->service->moveLocation($archive, $request->validated());
+
+        return $this->successResponse($updated, 'Lokasi fisik arsip berhasil dipindahkan.');
+    }
+
+    public function locationHistories(Archive $archive): JsonResponse
+    {
+        $this->authorize('view', $archive);
+
+        $histories = ArchiveLocationLog::where('archive_id', $archive->id)
+            ->with([
+                'movedBy', 
+                'oldFloor', 'oldRoom', 'oldCabinet', 'oldCabinetSlot',
+                'newFloor', 'newRoom', 'newCabinet', 'newCabinetSlot'
+            ])
+            ->orderByDesc('created_at')
+            ->limit(10) // Increase a bit from 3 for better list
+            ->get();
+
+        return $this->successResponse($histories, 'Riwayat lokasi arsip berhasil diambil.');
     }
 }
