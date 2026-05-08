@@ -34,6 +34,7 @@ class ArchiveRequestService
                 'otp_code' => $otp,
                 'otp_expires_at' => now()->addMinutes(15),
                 'reviewed_by_user_id' => $reviewer->id,
+                'is_verified' => false,
             ]);
 
             // TODO: Dispatch SendFcmNotification Job

@@ -272,22 +272,6 @@
       @moved="onMoveSuccess" 
     />
 
-    <!-- Edit Archive Dialog -->
-    <ArchiveEditDialog
-      v-if="editDialog"
-      :visible="editDialog"
-      :archive="selectedArchive"
-      @update:visible="editDialog = $event"
-      @edit-success="onEditSuccess"
-    />
-
-    <!-- Move Location Dialog -->
-    <MoveLocationDialog 
-      v-model="moveLocationDialog" 
-      :archive="selectedArchive" 
-      @moved="onMoveSuccess" 
-    />
-
     <!-- Action Menu Overlay -->
     <Menu ref="actionMenu" id="overlay_menu" :model="actionMenuItems" :popup="true" />
 
@@ -588,7 +572,6 @@ const handleTableVerifyOtp = async (archive) => {
     isVerifying.value[archive.id] = true
     try {
         await verifyOtp(archive.id, otp)
-<<<<<<< feat/location-visualization
         
         // Force reactivity by re-assigning the Set
         const newSet = new Set(unlockedArchives.value)
@@ -607,12 +590,7 @@ const handleTableVerifyOtp = async (archive) => {
 
         // Automatically open the detail modal
         viewDetail(archive)
-=======
-        unlockedArchives.value.add(archive.id)
-        toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Akses terbuka! Anda sekarang dapat melihat detail berkas.', life: 3000 })
-        // Clear input
-        delete otpInputs.value[archive.id]
->>>>>>> main
+ main
     } catch (err) {
         toast.add({ severity: 'error', summary: 'Gagal', detail: 'Kode OTP tidak valid.', life: 3000 })
     } finally {
