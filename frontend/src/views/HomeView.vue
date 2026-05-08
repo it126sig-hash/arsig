@@ -101,6 +101,11 @@
         <Button label="Reset Filter" icon="pi pi-refresh" severity="secondary" outlined @click="resetFilters" />
         <Button label="Cari" icon="pi pi-search" @click="search" :loading="loading" />
       </div>
+
+      <div class="flex justify-end gap-3 mt-6">
+        <Button label="Reset Filter" icon="pi pi-refresh" severity="secondary" outlined @click="resetFilters" />
+        <Button label="Cari" icon="pi pi-search" @click="search" :loading="loading" />
+      </div>
     </div>
 
     <!-- Results Section -->
@@ -250,6 +255,22 @@
 
     <!-- Enhanced Detail Modal -->
     <ArchiveDetailModal v-model="detailDialog" :archive="selectedArchive" :already-unlocked="selectedArchive ? unlockedArchives.has(selectedArchive.id) : false" />
+
+    <!-- Edit Archive Dialog -->
+    <ArchiveEditDialog
+      v-if="editDialog"
+      :visible="editDialog"
+      :archive="selectedArchive"
+      @update:visible="editDialog = $event"
+      @edit-success="onEditSuccess"
+    />
+
+    <!-- Move Location Dialog -->
+    <MoveLocationDialog 
+      v-model="moveLocationDialog" 
+      :archive="selectedArchive" 
+      @moved="onMoveSuccess" 
+    />
 
     <!-- Edit Archive Dialog -->
     <ArchiveEditDialog
@@ -567,6 +588,7 @@ const handleTableVerifyOtp = async (archive) => {
     isVerifying.value[archive.id] = true
     try {
         await verifyOtp(archive.id, otp)
+<<<<<<< feat/location-visualization
         
         // Force reactivity by re-assigning the Set
         const newSet = new Set(unlockedArchives.value)
@@ -585,6 +607,12 @@ const handleTableVerifyOtp = async (archive) => {
 
         // Automatically open the detail modal
         viewDetail(archive)
+=======
+        unlockedArchives.value.add(archive.id)
+        toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Akses terbuka! Anda sekarang dapat melihat detail berkas.', life: 3000 })
+        // Clear input
+        delete otpInputs.value[archive.id]
+>>>>>>> main
     } catch (err) {
         toast.add({ severity: 'error', summary: 'Gagal', detail: 'Kode OTP tidak valid.', life: 3000 })
     } finally {
