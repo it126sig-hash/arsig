@@ -1,17 +1,19 @@
 <template>
-    <div>
+    <div class="p-2 md:p-0">
         <!-- Page Header -->
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">Manajemen Perusahaan (PT)</h1>
-                <p class="text-sm text-slate-500 mt-1">Kelola data perusahaan / PT yang terdaftar dalam sistem.</p>
+                <h1 class="text-xl md:text-2xl font-bold text-slate-800">Manajemen PT</h1>
+                <p class="text-xs md:text-sm text-slate-500 mt-1">Kelola data perusahaan / PT yang terdaftar.</p>
             </div>
-            <Button label="Tambah Perusahaan" icon="pi pi-plus" @click="openCreate" />
+            <Button label="Tambah PT" icon="pi pi-plus" @click="openCreate" class="w-full md:w-auto !rounded-xl shadow-md" />
         </div>
 
-        <!-- Data Table -->
-        <div class="bg-white shadow-sm border border-slate-200 rounded-lg overflow-hidden">
+        <!-- Data Table (Desktop) / List (Mobile) -->
+        <div class="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
+            <!-- Desktop View -->
             <DataTable
+                v-if="!isMobile"
                 :value="companies"
                 :loading="isLoading"
                 responsiveLayout="scroll"
@@ -43,34 +45,54 @@
                 <Column header="Aksi" style="width: 140px">
                     <template #body="{ data }">
                         <div class="flex gap-2">
-                            <Button
-                                icon="pi pi-pencil"
-                                class="p-button-sm p-button-outlined"
-                                v-tooltip.top="'Edit'"
-                                @click="openEdit(data)"
-                            />
-                            <Button
-                                icon="pi pi-trash"
-                                class="p-button-sm p-button-outlined p-button-danger"
-                                v-tooltip.top="'Hapus'"
-                                @click="confirmDelete(data)"
-                            />
+                            <Button icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(data)" />
+                            <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(data)" />
                         </div>
                     </template>
                 </Column>
             </DataTable>
+
+            <!-- Mobile View (List) -->
+            <div v-else class="flex flex-col divide-y divide-slate-100">
+                <div v-if="isLoading" class="p-10 flex flex-col items-center justify-center gap-3">
+                    <ProgressSpinner style="width: 30px; height: 30px" />
+                    <p class="text-xs text-slate-400">Memuat data...</p>
+                </div>
+                <div v-else-if="companies.length === 0" class="p-10 text-center text-slate-400 italic text-sm">
+                    Belum ada data perusahaan.
+                </div>
+                <div v-for="company in companies" :key="company.id" class="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-slate-800">{{ company.name }}</span>
+                        <span class="text-[10px] text-slate-400 mt-0.5 truncate max-w-[200px]">{{ company.description || 'Tanpa deskripsi' }}</span>
+                    </div>
+                    <div class="flex gap-1">
+                        <Button icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(company)" />
+                        <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(company)" />
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Dialog: Tambah / Edit -->
         <Dialog
             v-model:visible="showDialog"
-            :header="isEditing ? 'Edit Perusahaan' : 'Tambah Perusahaan Baru'"
             :modal="true"
             class="w-full max-w-md"
+            :maximized="isMobile"
+            :showHeader="true"
         >
-            <div class="flex flex-col gap-4 mt-2">
+            <template #header>
+                <div class="flex items-center justify-between w-full pr-8 md:pr-0">
+                    <h3 class="text-base md:text-xl font-bold text-slate-800">
+                        {{ isEditing ? 'Edit PT' : 'Tambah PT' }}
+                    </h3>
+                </div>
+            </template>
+
+            <div class="flex flex-col gap-4 mt-2 p-2 md:p-0">
                 <div class="flex flex-col gap-1">
-                    <label for="company-name" class="text-sm font-medium text-slate-700">
+                    <label for="company-name" class="text-sm font-semibold text-slate-700">
                         Nama Perusahaan <span class="text-red-500">*</span>
                     </label>
                     <InputText
@@ -78,6 +100,7 @@
                         v-model="form.name"
                         placeholder="Contoh: PT Maju Jaya"
                         autofocus
+                        class="!rounded-xl"
                         @keyup.enter="handleSubmit"
                         :class="{ 'p-invalid': formErrors.name }"
                     />
@@ -85,25 +108,29 @@
                 </div>
 
                 <div class="flex flex-col gap-1">
-                    <label for="company-desc" class="text-sm font-medium text-slate-700">Deskripsi</label>
+                    <label for="company-desc" class="text-sm font-semibold text-slate-700">Deskripsi</label>
                     <Textarea
                         id="company-desc"
                         v-model="form.description"
                         placeholder="Deskripsi singkat perusahaan (opsional)"
                         rows="3"
                         autoResize
+                        class="!rounded-xl"
                     />
                 </div>
             </div>
 
             <template #footer>
-                <Button label="Batal" icon="pi pi-times" class="p-button-text" @click="closeDialog" />
-                <Button
-                    :label="isEditing ? 'Simpan Perubahan' : 'Buat Perusahaan'"
-                    icon="pi pi-check"
-                    :loading="isSaving"
-                    @click="handleSubmit"
-                />
+                <div class="flex justify-end gap-2 p-2 md:p-0">
+                    <Button label="Batal" icon="pi pi-times" text severity="secondary" @click="closeDialog" class="hidden md:flex" />
+                    <Button
+                        :label="isEditing ? 'Simpan' : 'Buat PT'"
+                        icon="pi pi-check"
+                        :loading="isSaving"
+                        @click="handleSubmit"
+                        class="!rounded-xl px-6"
+                    />
+                </div>
             </template>
         </Dialog>
 
@@ -114,7 +141,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
 import { fetchCompanies, createCompany, updateCompany, deleteCompany } from '@/api/companyApi'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
@@ -126,6 +153,7 @@ import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Toast from 'primevue/toast'
+import ProgressSpinner from 'primevue/progressspinner'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -136,6 +164,13 @@ const showDialog = ref(false)
 const isSaving = ref(false)
 const isEditing = ref(false)
 const editingId = ref(null)
+
+// Mobile detection
+const windowWidth = ref(window.innerWidth)
+const updateWidth = () => { windowWidth.value = window.innerWidth }
+onMounted(() => window.addEventListener('resize', updateWidth))
+onUnmounted(() => window.removeEventListener('resize', updateWidth))
+const isMobile = computed(() => windowWidth.value < 768)
 
 const form = reactive({ name: '', description: '' })
 const formErrors = reactive({ name: '' })

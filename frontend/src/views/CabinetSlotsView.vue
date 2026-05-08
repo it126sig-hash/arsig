@@ -2,12 +2,12 @@
   <div>
     <!-- Manage Cabinet Slots Page -->
     <!-- Page Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Cabinet Slots (Pintu Lemari)</h1>
-        <p class="text-slate-500 text-sm mt-0.5">Kelola pintu/slot penyimpanan dokumen dalam lemari</p>
+        <h1 class="text-xl md:text-2xl font-bold text-slate-800">Pintu Lemari (Slots)</h1>
+        <p class="text-xs md:text-sm text-slate-500 mt-1">Kelola pintu/slot penyimpanan dokumen dalam lemari</p>
       </div>
-      <Button label="Tambah Data" icon="pi pi-plus" @click="openNew" class="shadow-sm" />
+      <Button label="Tambah Data" icon="pi pi-plus" @click="openNew" class="w-full md:w-auto !rounded-xl shadow-md" />
     </div>
 
     <!-- Cabinet Selector for Door Grid -->
@@ -44,25 +44,34 @@
     </div>
 
     <!-- DataTable Card -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-      <!-- Table Toolbar -->
-      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <!-- Table Toolbar (Desktop Search) -->
+      <div class="hidden md:flex items-center justify-between px-5 py-4 border-b border-slate-100">
         <span class="text-sm font-semibold text-slate-700">
           <i class="pi pi-inbox mr-2 text-purple-500"></i>Daftar Slot Lemari
         </span>
-        <span class="p-input-icon-left">
-          <i class="pi pi-search" />
+        <IconField>
+          <InputIcon class="pi pi-search" />
           <InputText
-            id="slots-global-search"
             v-model="globalFilter"
             placeholder="Cari slot..."
-            class="text-sm"
+            class="!rounded-lg text-sm"
             style="width: 240px;"
           />
-        </span>
+        </IconField>
       </div>
 
+      <!-- Mobile Search Bar -->
+      <div class="md:hidden p-4 border-b border-slate-100">
+        <IconField class="w-full">
+            <InputIcon class="pi pi-search" />
+            <InputText v-model="globalFilter" placeholder="Cari slot..." class="w-full !rounded-xl" />
+        </IconField>
+      </div>
+
+      <!-- Desktop View -->
       <DataTable
+        v-if="!isMobile"
         :value="locationStore.cabinetSlots"
         :paginator="true"
         :rows="10"
@@ -71,10 +80,8 @@
         :loading="locationStore.loading"
         :globalFilterFields="['id', 'name', 'keterangan', 'cabinet.name', 'cabinet.room.name']"
         :filters="filters"
-        :showGridlines="false"
         stripedRows
         responsiveLayout="scroll"
-        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
       >
         <template #empty>
           <div class="text-center py-12 text-slate-400">
@@ -148,17 +155,82 @@
         <Column header="Aksi" style="width: 120px;" :exportable="false">
           <template #body="slotProps">
             <div class="flex items-center gap-2">
-              <Button icon="pi pi-pencil" outlined rounded size="small" severity="info" @click="editCabinetSlot(slotProps.data)" v-tooltip.top="'Edit'" />
-              <Button icon="pi pi-trash" outlined rounded size="small" severity="danger" @click="confirmDeleteCabinetSlot(slotProps.data)" v-tooltip.top="'Hapus'" />
+              <Button icon="pi pi-pencil" text rounded severity="secondary" @click="editCabinetSlot(slotProps.data)" />
+              <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDeleteCabinetSlot(slotProps.data)" />
             </div>
           </template>
         </Column>
       </DataTable>
+
+      <!-- Mobile View (List) -->
+      <div v-else class="flex flex-col divide-y divide-slate-100">
+        <div v-if="locationStore.loading" class="p-10 flex flex-col items-center justify-center gap-3">
+            <ProgressSpinner style="width: 30px; height: 30px" />
+            <p class="text-xs text-slate-400">Memuat data...</p>
+        </div>
+        <div v-else-if="filteredSlots.length === 0" class="p-10 text-center text-slate-400 italic text-sm">
+            Tidak ada data slot.
+        </div>
+        <div v-for="data in filteredSlots" :key="data.id" class="p-4 flex flex-col gap-3 hover:bg-slate-50">
+            <div class="flex items-center justify-between">
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold text-slate-800">Slot {{ data.name }}</span>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                        <i class="pi pi-server text-[10px] text-orange-500"></i>
+                        <span class="text-[10px] font-bold text-orange-600 uppercase">{{ data.cabinet?.name }}</span>
+                        <span class="text-slate-300 text-[10px]">•</span>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">{{ data.cabinet?.room?.name }}</span>
+                    </div>
+                </div>
+                <span
+                  :class="[
+                    'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight',
+                    statusClass(data.status)
+                  ]"
+                >
+                  {{ statusLabel(data.status) }}
+                </span>
+            </div>
+
+            <!-- PIC & Tags Section -->
+            <div class="flex flex-wrap gap-2">
+                <div v-if="data.pic_users && data.pic_users.length > 0" class="flex flex-wrap gap-1">
+                    <span v-for="pic in data.pic_users" :key="pic.id" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-medium border border-blue-100">
+                        {{ pic.name }}
+                    </span>
+                </div>
+                <div v-if="data.tags && data.tags.length > 0" class="flex flex-wrap gap-1">
+                    <span v-for="tag in data.tags" :key="tag.id" class="text-[9px] text-slate-400">#{{ tag.nama }}</span>
+                </div>
+            </div>
+
+            <p v-if="data.keterangan" class="text-[10px] text-slate-500 line-clamp-2 italic">{{ data.keterangan }}</p>
+
+            <!-- Actions Row -->
+            <div class="flex gap-2 border-t border-slate-50 pt-2">
+                <Button label="Edit" icon="pi pi-pencil" size="small" text severity="secondary" class="flex-1 !bg-slate-50 !rounded-lg" @click="editCabinetSlot(data)" />
+                <Button label="Hapus" icon="pi pi-trash" size="small" text severity="danger" class="flex-1 !bg-red-50 !rounded-lg" @click="confirmDeleteCabinetSlot(data)" />
+            </div>
+        </div>
+      </div>
     </div>
 
     <!-- Create/Edit Dialog -->
-    <Dialog v-model:visible="slotDialog" :style="{ width: '550px' }" :header="slot.id ? `Edit Pintu #${slot.name}` : 'Tambah Slot Lemari'" :modal="true" :draggable="false">
-      <div class="flex flex-col gap-5">
+    <Dialog 
+        v-model:visible="slotDialog" 
+        :modal="true" 
+        class="w-full max-w-lg"
+        :maximized="isMobile"
+        :showHeader="true"
+    >
+      <template #header>
+          <div class="flex items-center justify-between w-full pr-8 md:pr-0">
+              <h3 class="text-base md:text-xl font-bold text-slate-800">
+                  {{ slot.id ? `Edit Pintu #${slot.name}` : 'Tambah Slot Lemari' }}
+              </h3>
+          </div>
+      </template>
+      <div class="flex flex-col gap-5 mt-2 p-2 md:p-0">
         <!-- Cabinet Dropdown -->
         <div class="flex flex-col gap-1.5">
           <label for="slot-cabinet" class="text-sm font-semibold text-slate-700">
@@ -172,7 +244,7 @@
             optionValue="id"
             placeholder="Pilih lemari..."
             :invalid="submitted && !slot.cabinet_id"
-            class="w-full"
+            class="w-full !rounded-xl"
           >
             <template #option="slotProps">
               <span>{{ slotProps.option.name }} <span class="text-slate-400 text-xs">({{ slotProps.option.room?.name }})</span></span>
@@ -186,7 +258,7 @@
           <label for="slot-name" class="text-sm font-semibold text-slate-700">
             Nama/Nomor Pintu <span class="text-red-500">*</span>
           </label>
-          <InputText id="slot-name" v-model.trim="slot.name" placeholder="Contoh: 01 atau A1" :invalid="submitted && !slot.name" autofocus />
+          <InputText id="slot-name" v-model.trim="slot.name" placeholder="Contoh: 01 atau A1" :invalid="submitted && !slot.name" class="!rounded-xl" autofocus />
           <small v-if="submitted && !slot.name" class="text-red-500 text-xs">Nama slot wajib diisi.</small>
         </div>
 
@@ -200,7 +272,7 @@
             optionLabel="label"
             optionValue="value"
             placeholder="Pilih status..."
-            class="w-full"
+            class="w-full !rounded-xl"
           />
         </div>
 
@@ -217,7 +289,7 @@
             optionValue="id"
             placeholder="Pilih user..."
             display="chip"
-            class="w-full"
+            class="w-full !rounded-xl"
             :maxSelectedLabels="5"
           />
         </div>
@@ -227,7 +299,7 @@
           <label for="slot-keterangan" class="text-sm font-semibold text-slate-700">
             Keterangan <span class="text-slate-400 font-normal text-xs ml-1">opsional</span>
           </label>
-          <Textarea id="slot-keterangan" v-model="slot.keterangan" placeholder="Catatan tambahan (opsional)" rows="2" class="w-full" />
+          <Textarea id="slot-keterangan" v-model="slot.keterangan" placeholder="Catatan tambahan (opsional)" rows="2" class="w-full !rounded-xl" />
         </div>
 
         <!-- Tags -->
@@ -243,15 +315,17 @@
             optionValue="id"
             placeholder="Pilih tag..."
             display="chip"
-            class="w-full"
+            class="w-full !rounded-xl"
             :maxSelectedLabels="5"
           />
         </div>
       </div>
 
       <template #footer>
-        <Button label="Batal" icon="pi pi-times" text severity="secondary" @click="hideDialog" />
-        <Button label="Simpan" icon="pi pi-check" @click="saveCabinetSlot" :loading="locationStore.loading" />
+        <div class="flex justify-end gap-2 p-2 md:p-0">
+            <Button label="Batal" icon="pi pi-times" text severity="secondary" @click="hideDialog" class="hidden md:flex" />
+            <Button label="Simpan" icon="pi pi-check" @click="saveCabinetSlot" :loading="locationStore.loading" class="!rounded-xl px-6" />
+        </div>
       </template>
     </Dialog>
 
@@ -261,7 +335,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { FilterMatchMode } from '@primevue/core/api'
 import { useLocationStore } from '../store/location'
 import { useToast } from 'primevue/usetoast'
@@ -276,13 +350,23 @@ import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import Dropdown from 'primevue/dropdown'
 import MultiSelect from 'primevue/multiselect'
-import Toast from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
+import Tag from 'primevue/tag'
+import ProgressSpinner from 'primevue/progressspinner'
 import CabinetDoorGrid from '../components/CabinetDoorGrid.vue'
 
 const locationStore = useLocationStore()
 const toast         = useToast()
 const confirm       = useConfirm()
+
+// Mobile detection
+const windowWidth = ref(window.innerWidth)
+const updateWidth = () => { windowWidth.value = window.innerWidth }
+onMounted(() => window.addEventListener('resize', updateWidth))
+onUnmounted(() => window.removeEventListener('resize', updateWidth))
+const isMobile = computed(() => windowWidth.value < 768)
 
 const slotDialog       = ref(false)
 const slot             = ref({})
@@ -300,6 +384,17 @@ const statusOptions = [
 
 const filters = ref({ global: { value: null, matchMode: FilterMatchMode.CONTAINS } })
 watch(globalFilter, (val) => { filters.value.global.value = val })
+
+const filteredSlots = computed(() => {
+    if (!globalFilter.value) return locationStore.cabinetSlots
+    const q = globalFilter.value.toLowerCase()
+    return locationStore.cabinetSlots.filter(s => 
+        s.name?.toLowerCase().includes(q) || 
+        s.cabinet?.name?.toLowerCase().includes(q) ||
+        s.cabinet?.room?.name?.toLowerCase().includes(q) ||
+        s.keterangan?.toLowerCase().includes(q)
+    )
+})
 
 const selectedCabinet = computed(() => {
   if (!selectedCabinetId.value) return null

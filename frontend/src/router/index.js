@@ -73,6 +73,11 @@ const routes = [
                 path: 'location-histories',
                 name: 'location-histories',
                 component: () => import('../views/LocationHistoryView.vue')
+            },
+            {
+                path: 'profile',
+                name: 'profile',
+                component: () => import('../views/ProfileView.vue')
             }
         ]
     }

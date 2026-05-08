@@ -1,22 +1,49 @@
 <template>
     <div>
         <!-- Page Header -->
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">Manajemen Tag (Hashtag)</h1>
-                <p class="text-sm text-slate-500 mt-1">Kelola tag untuk pencarian arsip.</p>
+                <h1 class="text-xl md:text-2xl font-bold text-slate-800">Manajemen Tag (Hashtag)</h1>
+                <p class="text-xs md:text-sm text-slate-500 mt-1">Kelola tag untuk pencarian arsip.</p>
             </div>
-            <Button label="Tambah Tag" icon="pi pi-plus" @click="openCreate" />
+            <Button label="Tambah Tag" icon="pi pi-plus" @click="openCreate" class="w-full md:w-auto !rounded-xl shadow-md" />
         </div>
 
-        <!-- Data Table -->
-        <div class="bg-white shadow-sm border border-slate-200 rounded-lg overflow-hidden">
+        <!-- Data Table Card -->
+        <div class="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
+            <!-- Table Toolbar (Desktop Search) -->
+            <div class="hidden md:flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                <span class="text-sm font-semibold text-slate-700">
+                    <i class="pi pi-hashtag mr-2 text-indigo-500"></i>Daftar Tag
+                </span>
+                <IconField>
+                    <InputIcon class="pi pi-search" />
+                    <InputText
+                        v-model="globalFilter"
+                        placeholder="Cari tag..."
+                        class="!rounded-lg text-sm"
+                        style="width: 240px;"
+                    />
+                </IconField>
+            </div>
+
+            <!-- Mobile Search Bar -->
+            <div class="md:hidden p-4 border-b border-slate-100">
+                <IconField class="w-full">
+                    <InputIcon class="pi pi-search" />
+                    <InputText v-model="globalFilter" placeholder="Cari tag..." class="w-full !rounded-xl" />
+                </IconField>
+            </div>
+
+            <!-- Desktop View -->
             <DataTable
+                v-if="!isMobile"
                 :value="tags"
                 :loading="isLoading"
                 responsiveLayout="scroll"
                 stripedRows
                 class="w-full"
+                :filters="filters"
             >
                 <template #empty>
                     <div class="text-center py-12 text-slate-400">
@@ -49,32 +76,58 @@
                 <Column header="Aksi" style="width: 140px">
                     <template #body="{ data }">
                         <div class="flex gap-2">
-                            <Button
-                                icon="pi pi-pencil"
-                                class="p-button-sm p-button-outlined"
-                                v-tooltip.top="'Edit'"
-                                @click="openEdit(data)"
-                            />
-                            <Button
-                                icon="pi pi-trash"
-                                class="p-button-sm p-button-outlined p-button-danger"
-                                v-tooltip.top="'Hapus'"
-                                @click="confirmDelete(data)"
-                            />
+                            <Button icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(data)" />
+                            <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(data)" />
                         </div>
                     </template>
                 </Column>
             </DataTable>
+
+            <!-- Mobile View (List) -->
+            <div v-else class="flex flex-col divide-y divide-slate-100">
+                <div v-if="isLoading" class="p-10 flex flex-col items-center justify-center gap-3">
+                    <ProgressSpinner style="width: 30px; height: 30px" />
+                    <p class="text-xs text-slate-400">Memuat data...</p>
+                </div>
+                <div v-else-if="filteredTags.length === 0" class="p-10 text-center text-slate-400 italic text-sm">
+                    Tidak ada data tag.
+                </div>
+                <div v-for="tag in filteredTags" :key="tag.id" class="p-4 flex flex-col gap-3 hover:bg-slate-50">
+                    <div class="flex items-center justify-between">
+                        <div class="flex flex-col">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 w-fit">
+                                #{{ tag.nama }}
+                            </span>
+                            <div class="flex flex-col mt-2">
+                                <span class="text-[10px] text-slate-400">Oleh: {{ tag.creator?.name || '—' }}</span>
+                                <span class="text-[10px] text-slate-400">Dibuat: {{ formatDate(tag.created_at) }}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-1 self-start">
+                             <Button icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(tag)" />
+                             <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(tag)" />
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Dialog: Tambah / Edit -->
         <Dialog
             v-model:visible="showDialog"
-            :header="isEditing ? 'Edit Tag' : 'Tambah Tag Baru'"
             :modal="true"
             class="w-full max-w-md"
+            :maximized="isMobile"
+            :showHeader="true"
         >
-            <div class="flex flex-col gap-4 mt-2">
+            <template #header>
+                <div class="flex items-center justify-between w-full pr-8 md:pr-0">
+                    <h3 class="text-base md:text-xl font-bold text-slate-800">
+                        {{ isEditing ? 'Edit Tag' : 'Tambah Tag Baru' }}
+                    </h3>
+                </div>
+            </template>
+            <div class="flex flex-col gap-4 mt-2 p-2 md:p-0">
                 <div class="flex flex-col gap-1">
                     <label for="tag-nama" class="text-sm font-medium text-slate-700">
                         Nama Tag <span class="text-red-500">*</span>
@@ -85,6 +138,7 @@
                         placeholder="Contoh: kontrak, sertifikat, penting"
                         autofocus
                         @keyup.enter="handleSubmit"
+                        class="!rounded-xl"
                         :class="{ 'p-invalid': formErrors.nama }"
                     />
                     <small class="text-red-500" v-if="formErrors.nama">{{ formErrors.nama }}</small>
@@ -92,13 +146,16 @@
             </div>
 
             <template #footer>
-                <Button label="Batal" icon="pi pi-times" class="p-button-text" @click="closeDialog" />
-                <Button
-                    :label="isEditing ? 'Simpan Perubahan' : 'Buat Tag'"
-                    icon="pi pi-check"
-                    :loading="isSaving"
-                    @click="handleSubmit"
-                />
+                <div class="flex justify-end gap-2 p-2 md:p-0">
+                    <Button label="Batal" icon="pi pi-times" text severity="secondary" @click="closeDialog" class="hidden md:flex" />
+                    <Button
+                        :label="isEditing ? 'Simpan' : 'Buat'"
+                        icon="pi pi-check"
+                        :loading="isSaving"
+                        @click="handleSubmit"
+                        class="!rounded-xl px-6"
+                    />
+                </div>
             </template>
         </Dialog>
 
@@ -109,7 +166,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
+import { FilterMatchMode } from '@primevue/core/api'
 import { fetchTags, createTag, updateTag, deleteTag } from '@/api/tagApi'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
@@ -118,11 +176,21 @@ import Column from 'primevue/column'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
+import ProgressSpinner from 'primevue/progressspinner'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Toast from 'primevue/toast'
 
 const toast = useToast()
 const confirm = useConfirm()
+
+// Mobile detection
+const windowWidth = ref(window.innerWidth)
+const updateWidth = () => { windowWidth.value = window.innerWidth }
+onMounted(() => window.addEventListener('resize', updateWidth))
+onUnmounted(() => window.removeEventListener('resize', updateWidth))
+const isMobile = computed(() => windowWidth.value < 768)
 
 const tags = ref([])
 const isLoading = ref(false)
@@ -130,6 +198,19 @@ const showDialog = ref(false)
 const isSaving = ref(false)
 const isEditing = ref(false)
 const editingId = ref(null)
+const globalFilter = ref('')
+
+const filters = ref({ global: { value: null, matchMode: FilterMatchMode.CONTAINS } })
+watch(globalFilter, (val) => { filters.value.global.value = val })
+
+const filteredTags = computed(() => {
+    if (!globalFilter.value) return tags.value
+    const q = globalFilter.value.toLowerCase()
+    return tags.value.filter(t => 
+        t.nama?.toLowerCase().includes(q) || 
+        t.id?.toString().includes(q)
+    )
+})
 
 const form = reactive({ nama: '' })
 const formErrors = reactive({ nama: '' })
