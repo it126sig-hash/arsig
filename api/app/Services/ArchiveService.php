@@ -7,6 +7,9 @@ use App\Models\Archive;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 
+use App\Models\ArchiveLocationLog;
+use Illuminate\Pagination\LengthAwarePaginator;
+
 class ArchiveService
 {
     public function list(
@@ -19,7 +22,7 @@ class ArchiveService
         array $tagIds = []
     ) {
         return Archive::query()
-            ->with(['tags', 'accessDepartments', 'accessUsers', 'category', 'company'])
+            ->with(['tags', 'accessDepartments', 'accessUsers', 'category', 'company', 'pic', 'floor', 'room', 'cabinet', 'cabinetSlot'])
             ->when($companyId, fn ($q) => $q->where('company_id', $companyId))
             ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId))
             ->when($archiveType, fn ($q) => $q->where('archive_type', $archiveType))
@@ -46,7 +49,7 @@ class ArchiveService
             $year = date('Y', strtotime($data['issue_date']));
             $path = "archives/{$data['company_id']}/{$year}";
             $data['file_path'] = $file->store($path, 'local');
-            $data['file_type'] = $file->extension();
+            $data['file_type'] = $file->getClientOriginalExtension();
         }
 
         $data['created_by'] = Auth::id() ?? 1; // Fallback for testing
@@ -67,6 +70,10 @@ class ArchiveService
 
     public function update(Archive $archive, array $data, ?UploadedFile $file): Archive
     {
+        // Lokasi fisik TIDAK boleh diubah lewat endpoint edit archive.
+        // Gunakan endpoint "Pindah Lokasi" yang terpisah.
+        unset($data['floor_id'], $data['room_id'], $data['cabinet_id'], $data['cabinet_slot_id']);
+
         if ($file && in_array($data['archive_type'], ['full', 'digital_only'])) {
             // Delete old file if exists
             if ($archive->file_path && \Illuminate\Support\Facades\Storage::disk('local')->exists($archive->file_path)) {
@@ -76,7 +83,7 @@ class ArchiveService
             $year = date('Y', strtotime($data['issue_date']));
             $path = "archives/{$data['company_id']}/{$year}";
             $data['file_path'] = $file->store($path, 'local');
-            $data['file_type'] = $file->extension();
+            $data['file_type'] = $file->getClientOriginalExtension();
         }
 
         $archive->update($data);
@@ -105,5 +112,54 @@ class ArchiveService
                 $archive->privacyTargets()->create(['user_id' => (int) $userId]);
             }
         }
+    }
+
+    public function moveLocation(Archive $archive, array $data): Archive
+    {
+        // Record log
+        ArchiveLocationLog::create([
+            'archive_id' => $archive->id,
+            'user_id' => Auth::id(),
+            'old_floor_id' => $archive->floor_id,
+            'old_room_id' => $archive->room_id,
+            'old_cabinet_id' => $archive->cabinet_id,
+            'old_cabinet_slot_id' => $archive->cabinet_slot_id,
+            'new_floor_id' => $data['new_floor_id'],
+            'new_room_id' => $data['new_room_id'],
+            'new_cabinet_id' => $data['new_cabinet_id'],
+            'new_cabinet_slot_id' => $data['new_cabinet_slot_id'] ?? null,
+            'notes' => $data['notes'] ?? null,
+        ]);
+
+        // Update archive
+        $archive->update([
+            'floor_id' => $data['new_floor_id'],
+            'room_id' => $data['new_room_id'],
+            'cabinet_id' => $data['new_cabinet_id'],
+            'cabinet_slot_id' => $data['new_cabinet_slot_id'] ?? null,
+        ]);
+
+        return $archive->load(['floor', 'room', 'cabinet', 'cabinetSlot']);
+    }
+
+    public function getLocationHistories(array $filters = []): LengthAwarePaginator
+    {
+        return ArchiveLocationLog::query()
+            ->with([
+                'archive', 
+                'movedBy', 
+                'oldFloor', 'oldRoom', 'oldCabinet', 'oldCabinetSlot',
+                'newFloor', 'newRoom', 'newCabinet', 'newCabinetSlot'
+            ])
+            ->when($filters['q'] ?? null, function ($query, $q) {
+                $query->whereHas('archive', function ($sub) use ($q) {
+                    $sub->where('name', 'like', "%{$q}%")
+                        ->orWhere('file_number', 'like', "%{$q}%");
+                });
+            })
+            ->when($filters['date_from'] ?? null, fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
+            ->when($filters['date_to'] ?? null, fn ($q, $date) => $q->whereDate('created_at', '<=', $date))
+            ->orderByDesc('created_at')
+            ->paginate(15);
     }
 }

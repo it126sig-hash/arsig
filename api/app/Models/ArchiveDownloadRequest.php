@@ -17,11 +17,13 @@ class ArchiveDownloadRequest extends Model
         'reviewed_by_user_id',
         'signed_url',
         'signed_url_expires_at',
+        'is_verified',
     ];
 
     protected $casts = [
         'otp_expires_at' => 'datetime',
         'signed_url_expires_at' => 'datetime',
+        'is_verified' => 'boolean',
     ];
 
     public function archive(): BelongsTo

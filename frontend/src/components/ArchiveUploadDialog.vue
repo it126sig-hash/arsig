@@ -207,6 +207,7 @@ import { fetchUsers } from '@/api/userApi'
 import { fetchDepartments } from '@/api/departmentApi'
 import { fetchTags } from '@/api/tagApi'
 import { fetchFloors, fetchRoomsByFloor, fetchCabinetsByRoom, fetchSlotsByCabinet } from '@/api/locationApi'
+import { useAuthStore } from '@/store/auth'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
@@ -228,6 +229,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'upload-success'])
 
+const authStore = useAuthStore()
 const isUploading = ref(false)
 const users = ref([])
 const allUsers = ref([])
@@ -323,7 +325,7 @@ const loadInitialData = async () => {
         
         // Default PIC to current user or first user
         if (users.value.length > 0) {
-            form.pic_user_id = users.value[0].id
+            form.pic_user_id = authStore.user?.id || users.value[0].id
         }
     } catch (e) {
         console.error('Failed to load initial data', e)
@@ -500,7 +502,8 @@ const resetForm = () => {
         floor_id: null,
         room_id: null,
         cabinet_id: null,
-        cabinet_slot_id: null
+        cabinet_slot_id: null,
+        pic_user_id: authStore.user?.id || (users.value.length > 0 ? users.value[0].id : null)
     })
     selectedFile.value = null
 }

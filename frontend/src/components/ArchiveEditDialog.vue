@@ -86,31 +86,34 @@
                 />
             </div>
 
-            <!-- Physical Location (Conditional) -->
+            <!-- Physical Location (Read-Only during Edit) -->
             <div v-if="['full', 'physical_only'].includes(form.archive_type)" class="col-span-12 grid grid-cols-12 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
                 <h4 class="col-span-12 text-sm font-bold text-slate-800 flex items-center gap-2">
                     <i class="pi pi-map-marker text-red-500"></i>
                     Lokasi Fisik
+                    <span class="ml-2 text-xs font-normal text-slate-400 bg-slate-200 rounded px-2 py-0.5">
+                        <i class="pi pi-lock text-xs mr-1"></i>Hanya bisa diubah lewat Pindah Lokasi
+                    </span>
                 </h4>
-                
+
                 <div class="col-span-12 md:col-span-3">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Lantai</label>
-                    <Select v-model="form.floor_id" :options="floors" optionLabel="name" optionValue="id" placeholder="Pilih Lantai" class="w-full p-fluid" />
+                    <Select v-model="form.floor_id" :options="floors" optionLabel="name" optionValue="id" placeholder="—" class="w-full p-fluid" disabled />
                 </div>
                 <div class="col-span-12 md:col-span-3">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Ruangan</label>
-                    <Select v-model="form.room_id" :options="rooms" optionLabel="name" optionValue="id" placeholder="Pilih Ruangan" class="w-full" :disabled="!form.floor_id" />
+                    <Select v-model="form.room_id" :options="rooms" optionLabel="name" optionValue="id" placeholder="—" class="w-full" disabled />
                 </div>
                 <div class="col-span-12 md:col-span-3">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Kabinet</label>
-                    <Select v-model="form.cabinet_id" :options="cabinets" optionLabel="name" optionValue="id" placeholder="Pilih Kabinet" class="w-full" :disabled="!form.room_id" />
+                    <Select v-model="form.cabinet_id" :options="cabinets" optionLabel="name" optionValue="id" placeholder="—" class="w-full" disabled />
                 </div>
                 <div class="col-span-12 md:col-span-3">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Slot</label>
-                    <Select v-model="form.cabinet_slot_id" :options="slots" optionLabel="name" optionValue="id" placeholder="Pilih Slot" class="w-full" :disabled="!form.cabinet_id" />
+                    <Select v-model="form.cabinet_slot_id" :options="slots" optionLabel="name" optionValue="id" placeholder="—" class="w-full" disabled />
                 </div>
 
-                <!-- Floor Plan Image -->
+                <!-- Floor Plan Image (Read-Only) -->
                 <div v-if="selectedFloor?.floor_plan_image" class="col-span-12 md:col-span-6 flex flex-col gap-1">
                     <label class="text-xs font-medium text-slate-500 italic">Denah Lantai</label>
                     <div class="h-80">
@@ -122,7 +125,7 @@
                     </div>
                 </div>
 
-                <!-- Cabinet Visual -->
+                <!-- Cabinet Visual (Read-Only) -->
                 <div v-if="selectedCabinet" class="col-span-12 md:col-span-6 flex flex-col gap-1">
                     <label class="text-xs font-medium text-slate-500 italic">Visual Kabinet</label>
                     <div class="border rounded bg-white p-4 h-80 overflow-auto">
@@ -130,7 +133,6 @@
                             :doorCount="selectedCabinet.door_count || 1" 
                             :slots="slots" 
                             :highlightedSlotId="form.cabinet_slot_id"
-                            @slot-click="form.cabinet_slot_id = $event.id"
                         />
                     </div>
                 </div>
@@ -369,48 +371,7 @@ watch(() => form.privacy_type, (newVal, oldVal) => {
     }
 })
 
-// Location Watchers
-watch(() => form.floor_id, async (newId, oldId) => {
-    if (isInitializing.value) return
-
-    if (oldId !== undefined && newId !== oldId) {
-        form.room_id = null
-        form.cabinet_id = null
-        form.cabinet_slot_id = null
-        rooms.value = []
-    }
-    if (newId) {
-        const res = await fetchRoomsByFloor(newId)
-        rooms.value = res.data.data
-    }
-})
-
-watch(() => form.room_id, async (newId, oldId) => {
-    if (isInitializing.value) return
-
-    if (oldId !== undefined && newId !== oldId) {
-        form.cabinet_id = null
-        form.cabinet_slot_id = null
-        cabinets.value = []
-    }
-    if (newId) {
-        const res = await fetchCabinetsByRoom(newId)
-        cabinets.value = res.data.data
-    }
-})
-
-watch(() => form.cabinet_id, async (newId, oldId) => {
-    if (isInitializing.value) return
-
-    if (oldId !== undefined && newId !== oldId) {
-        form.cabinet_slot_id = null
-        slots.value = []
-    }
-    if (newId) {
-        const res = await fetchSlotsByCabinet(newId)
-        slots.value = res.data.data
-    }
-})
+// Location watchers dihapus — lokasi fisik hanya bisa diubah via Pindah Lokasi
 
 const onFileSelect = (event) => {
     selectedFile.value = event.files[0]
@@ -477,13 +438,7 @@ const handleSubmit = async () => {
             form.user_ids.forEach(id => formData.append('user_ids[]', id))
         }
 
-        // Location
-        if (['full', 'physical_only'].includes(form.archive_type)) {
-            if (form.floor_id) formData.append('floor_id', form.floor_id)
-            if (form.room_id) formData.append('room_id', form.room_id)
-            if (form.cabinet_id) formData.append('cabinet_id', form.cabinet_id)
-            if (form.cabinet_slot_id) formData.append('cabinet_slot_id', form.cabinet_slot_id)
-        }
+        // Lokasi fisik TIDAK dikirim — hanya bisa diubah via Pindah Lokasi
 
         if (form.tag_ids && form.tag_ids.length) {
             form.tag_ids.forEach(id => formData.append('tag_ids[]', id))
