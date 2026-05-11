@@ -96,10 +96,12 @@
                     <span class="text-[10px] text-slate-400 uppercase font-bold">OTP: {{ data.otp_code }}</span>
                     <Button icon="pi pi-copy" severity="secondary" text rounded size="small" class="!w-6 !h-6" v-tooltip="'Salin OTP'" @click="copyToClipboard(data.otp_code)" />
                 </div>
-                <span class="text-[9px] text-slate-400">{{ data.reviewer?.name }}</span>
+                <span class="text-[9px] text-slate-400">Oleh: {{ data.reviewer?.name }}</span>
+                <span class="text-[9px] text-slate-500 font-medium">{{ formatDateTime(data.updated_at) }}</span>
             </div>
-            <div v-else class="text-xs text-slate-400 italic">
-                Ditolak oleh {{ data.reviewer?.name }}
+            <div v-else class="flex flex-col">
+                <span class="text-xs text-slate-400 italic">Ditolak oleh {{ data.reviewer?.name }}</span>
+                <span class="text-[9px] text-slate-500 font-medium">{{ formatDateTime(data.updated_at) }}</span>
             </div>
           </template>
         </Column>

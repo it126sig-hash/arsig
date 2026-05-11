@@ -126,11 +126,16 @@ class ArchiveController extends BaseController
         }
 
         // Buat request baru ke PIC
-        ArchiveDownloadRequest::create([
+        $downloadRequest = ArchiveDownloadRequest::create([
             'archive_id'          => $archive->id,
             'requester_user_id'   => $userId,
             'status'              => 'pending',
         ]);
+
+        // Kirim notifikasi ke PIC
+        if ($archive->pic) {
+            $archive->pic->notify(new \App\Notifications\OtpRequestedNotification($archive, Auth::user()));
+        }
 
         return $this->successResponse(null, 'Permintaan OTP telah dikirim ke PIC. Harap tunggu persetujuan.');
     }

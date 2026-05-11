@@ -37,7 +37,12 @@ class ArchiveRequestService
                 'is_verified' => false,
             ]);
 
-            // TODO: Dispatch SendFcmNotification Job
+            // Kirim Notifikasi Email
+            if ($request->requester) {
+                $request->requester->notify(new \App\Notifications\OtpApprovedNotification($request->archive, $otp));
+            }
+
+            // TODO: Dispatch SendFcmNotification Job (Native Push)
             // dispatch(new \App\Jobs\SendFcmNotification($request->requester, "Permintaan akses disetujui. Kode OTP Anda: {$otp}"));
 
             return $request->load(['archive', 'requester', 'reviewer']);
