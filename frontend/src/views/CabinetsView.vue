@@ -364,7 +364,7 @@ const saveCabinet = async () => {
 }
 
 const editCabinet = (editData) => {
-  cabinet.value = { ...editData }
+  cabinet.value = { ...editData, points: editData.points || [] }
   submitted.value = false
   cabinetDialog.value = true
 }
