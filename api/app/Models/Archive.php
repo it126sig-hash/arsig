@@ -39,6 +39,15 @@ class Archive extends Model
     ];
 
     protected $casts = [
+        'id' => 'integer',
+        'company_id' => 'integer',
+        'category_id' => 'integer',
+        'pic_user_id' => 'integer',
+        'floor_id' => 'integer',
+        'room_id' => 'integer',
+        'cabinet_id' => 'integer',
+        'cabinet_slot_id' => 'integer',
+        'created_by' => 'integer',
         'issue_date' => 'date',
         'expire_date' => 'date',
         'reminder_date' => 'date',

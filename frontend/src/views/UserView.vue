@@ -322,7 +322,7 @@ const openEdit = (user) => {
     editingId.value = user.id
     form.name = user.name
     form.email = user.email
-    form.department_id = user.department_id
+    form.department_id = user.department_id != null ? Number(user.department_id) : null
     form.role = user.role
     showDialog.value = true
 }

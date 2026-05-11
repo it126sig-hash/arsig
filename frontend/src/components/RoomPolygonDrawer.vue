@@ -8,14 +8,20 @@
       class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50 relative select-none"
       style="height: 450px;"
     >
+      <!-- Error Loading -->
+      <div v-if="imageLoadError" class="flex flex-col items-center justify-center h-full text-red-500 text-sm gap-2">
+        <i class="pi pi-exclamation-triangle text-2xl"></i>
+        <span>Gagal memuat gambar denah (CORS/404)</span>
+      </div>
+
       <!-- Loading -->
-      <div v-if="!imageLoaded" class="flex items-center justify-center h-full text-slate-400 text-sm">
+      <div v-else-if="!imageLoaded" class="flex items-center justify-center h-full text-slate-400 text-sm">
         <i class="pi pi-spin pi-spinner mr-2"></i> Memuat gambar denah...
       </div>
 
       <!-- Konva Stage -->
       <v-stage
-        v-if="imageLoaded"
+        v-if="imageLoaded && !imageLoadError"
         ref="stageRef"
         :config="stageConfig"
         @mousedown="handleMouseDown"
@@ -181,6 +187,7 @@ const containerRef = ref(null)
 const stageRef = ref(null)
 const layerRef = ref(null)
 const imageLoaded = ref(false)
+const imageLoadError = ref(false)
 const floorImage = ref(null)
 const points = ref([])
 
@@ -249,43 +256,49 @@ const screenToImage = (screenX, screenY) => {
   }
 }
 
+const onImageReady = (img) => {
+  floorImage.value = img
+
+  const containerWidth = containerRef.value?.clientWidth || 800
+  const containerHeight = 450
+  const aspectRatio = img.height / img.width
+
+  // Fit image within container
+  let w = containerWidth
+  let h = w * aspectRatio
+  if (h > containerHeight) {
+    h = containerHeight
+    w = h / aspectRatio
+  }
+
+  imgDisplayWidth.value = w
+  imgDisplayHeight.value = h
+
+  stageConfig.value = {
+    width: containerWidth,
+    height: containerHeight
+  }
+
+  // Center image
+  scale.value = 1
+  offsetX.value = (containerWidth - w) / 2
+  offsetY.value = (containerHeight - h) / 2
+
+  imageLoaded.value = true
+}
+
 const loadImage = () => {
   if (!props.floorImageUrl) return
 
   imageLoaded.value = false
+  imageLoadError.value = false
+
   const img = new window.Image()
-  img.onload = () => {
-    floorImage.value = img
-
-    const containerWidth = containerRef.value?.clientWidth || 800
-    const containerHeight = 450
-    const aspectRatio = img.height / img.width
-
-    // Fit image within container
-    let w = containerWidth
-    let h = w * aspectRatio
-    if (h > containerHeight) {
-      h = containerHeight
-      w = h / aspectRatio
-    }
-
-    imgDisplayWidth.value = w
-    imgDisplayHeight.value = h
-
-    stageConfig.value = {
-      width: containerWidth,
-      height: containerHeight
-    }
-
-    // Center image
-    scale.value = 1
-    offsetX.value = (containerWidth - w) / 2
-    offsetY.value = (containerHeight - h) / 2
-
-    imageLoaded.value = true
-  }
+  img.onload = () => onImageReady(img)
   img.onerror = () => {
     imageLoaded.value = false
+    imageLoadError.value = true
+    console.error("Gagal memuat gambar Konva dari URL:", props.floorImageUrl)
   }
   img.src = props.floorImageUrl
 }

@@ -273,9 +273,9 @@ const form = reactive({
     cabinet_slot_id: null
 })
 
-const selectedFloor = computed(() => floors.value.find(f => f.id === form.floor_id))
-const selectedRoom = computed(() => rooms.value.find(r => r.id === form.room_id))
-const selectedCabinet = computed(() => cabinets.value.find(c => c.id === form.cabinet_id))
+const selectedFloor = computed(() => floors.value.find(f => Number(f.id) === Number(form.floor_id)))
+const selectedRoom = computed(() => rooms.value.find(r => Number(r.id) === Number(form.room_id)))
+const selectedCabinet = computed(() => cabinets.value.find(c => Number(c.id) === Number(form.cabinet_id)))
 
 const selectedRoomCoords = computed(() => {
     if (form.room_id && selectedRoom.value?.coordinates) {
@@ -322,22 +322,22 @@ watch(() => props.archive, async (newVal) => {
             name: newVal.name,
             keterangan: newVal.keterangan || '',
             file_number: newVal.file_number || '',
-            category_id: newVal.category_id,
+            category_id: newVal.category_id != null ? Number(newVal.category_id) : null,
             issue_date: newVal.issue_date ? new Date(newVal.issue_date) : null,
             archive_type: newVal.archive_type,
             privacy_type: newVal.privacy_type,
             download_policy: newVal.download_policy,
-            pic_user_id: newVal.pic_user_id,
-            tag_ids: newVal.tags?.map(t => t.id) || [],
+            pic_user_id: newVal.pic_user_id != null ? Number(newVal.pic_user_id) : null,
+            tag_ids: newVal.tags?.map(t => Number(t.id)) || [],
             expire_date: newVal.expire_date ? new Date(newVal.expire_date) : null,
             reminder_date: newVal.reminder_date ? new Date(newVal.reminder_date) : null,
-            company_id: newVal.company_id,
-            department_ids: newVal.access_departments?.map(d => d.id) || [],
-            user_ids: newVal.access_users?.map(u => u.id) || [],
-            floor_id: newVal.floor_id,
-            room_id: newVal.room_id,
-            cabinet_id: newVal.cabinet_id,
-            cabinet_slot_id: newVal.cabinet_slot_id
+            company_id: newVal.company_id != null ? Number(newVal.company_id) : null,
+            department_ids: newVal.access_departments?.map(d => Number(d.id)) || [],
+            user_ids: newVal.access_users?.map(u => Number(u.id)) || [],
+            floor_id: newVal.floor_id != null ? Number(newVal.floor_id) : null,
+            room_id: newVal.room_id != null ? Number(newVal.room_id) : null,
+            cabinet_id: newVal.cabinet_id != null ? Number(newVal.cabinet_id) : null,
+            cabinet_slot_id: newVal.cabinet_slot_id != null ? Number(newVal.cabinet_slot_id) : null
         })
 
         // Fetch dependent data in sequence
@@ -383,7 +383,7 @@ const onFileRemove = () => {
 
 const getFullImageUrl = (path) => {
     if (!path) return ''
-    const base = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+    const base = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '')
     return `${base}/storage/${path}`
 }
 

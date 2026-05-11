@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Company extends Model
 {
+    protected $casts = [
+        'id' => 'integer',
+    ];
+
     protected $fillable = [
         'name',
         'description',

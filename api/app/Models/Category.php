@@ -9,6 +9,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
+    protected $casts = [
+        'id' => 'integer',
+        'company_id' => 'integer',
+        'parent_id' => 'integer',
+    ];
+
     protected $fillable = [
         'company_id',
         'name',

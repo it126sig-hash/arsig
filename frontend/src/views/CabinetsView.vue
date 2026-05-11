@@ -290,21 +290,23 @@ const formatDoorCountShort = (dc) => {
 const filters = ref({ global: { value: null, matchMode: FilterMatchMode.CONTAINS } })
 watch(globalFilter, (val) => { filters.value.global.value = val })
 
-const appBase = import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '')
+const appBase = import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '').replace(/\/$/, '')
 
 const selectedFloorImageUrl = computed(() => {
   if (!cabinet.value.room_id) return ''
-  const room = locationStore.rooms.find(r => r.id === cabinet.value.room_id)
+  const roomId = Number(cabinet.value.room_id)
+  const room = locationStore.rooms.find(r => Number(r.id) === roomId)
   if (!room) return ''
-  const floor = locationStore.floors.find(f => f.id === room.floor_id)
+  const floor = locationStore.floors.find(f => Number(f.id) === Number(room.floor_id))
   if (!floor || !floor.floor_plan_image) return ''
   return `${appBase}/storage/${floor.floor_plan_image}`
 })
 
 const selectedFloorRooms = computed(() => {
   if (!cabinet.value.room_id) return []
+  const roomId = Number(cabinet.value.room_id)
   return locationStore.rooms
-    .filter(r => r.id === cabinet.value.room_id && r.points && r.points.length >= 3)
+    .filter(r => Number(r.id) === roomId && r.points && r.points.length >= 3)
     .map(r => ({ name: r.name, points: r.points }))
 })
 
@@ -364,7 +366,11 @@ const saveCabinet = async () => {
 }
 
 const editCabinet = (editData) => {
-  cabinet.value = { ...editData }
+  cabinet.value = {
+    ...editData,
+    room_id: Number(editData.room_id),
+    points: editData.points || []
+  }
   submitted.value = false
   cabinetDialog.value = true
 }

@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Department extends Model
 {
+    protected $casts = [
+        'id' => 'integer',
+    ];
+
     protected $fillable = [
         'name',
     ];

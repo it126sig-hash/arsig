@@ -18,6 +18,8 @@ class Room extends Model
     ];
 
     protected $casts = [
+        'id' => 'integer',
+        'floor_id' => 'integer',
         'points' => 'array',
         'needs_coordinate_review' => 'boolean',
     ];

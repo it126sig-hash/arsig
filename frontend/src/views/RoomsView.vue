@@ -269,9 +269,10 @@ onMounted(async () => {
 
 const selectedFloorImageUrl = computed(() => {
   if (!room.value.floor_id) return ''
-  const floor = locationStore.floors.find(f => f.id === room.value.floor_id)
+  const floorId = Number(room.value.floor_id)
+  const floor = locationStore.floors.find(f => Number(f.id) === floorId)
   if (!floor || !floor.floor_plan_image) return ''
-  const baseUrl = import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '')
+  const baseUrl = import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '').replace(/\/$/, '')
   return `${baseUrl}/storage/${floor.floor_plan_image}`
 })
 
@@ -305,7 +306,7 @@ const saveRoom = async () => {
   } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal menyimpan data ruangan', life: 3000 }) }
 }
 
-const editRoom = (editData) => { room.value = { ...editData, points: editData.points || [] }; pointsError.value = ''; roomDialog.value = true }
+const editRoom = (editData) => { room.value = { ...editData, floor_id: Number(editData.floor_id), points: editData.points || [] }; pointsError.value = ''; roomDialog.value = true }
 
 const confirmDeleteRoom = (deleteData) => {
   confirm.require({

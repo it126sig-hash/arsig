@@ -11,6 +11,11 @@ class Tag extends Model
 {
     use SoftDeletes;
 
+    protected $casts = [
+        'id' => 'integer',
+        'created_by' => 'integer',
+    ];
+
     protected $fillable = [
         'nama',
         'created_by',

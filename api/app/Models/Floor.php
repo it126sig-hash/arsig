@@ -9,6 +9,10 @@ class Floor extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'id' => 'integer',
+    ];
+
     protected $fillable = [
         'name',
         'floor_plan_image',

@@ -9,6 +9,11 @@ class CabinetSlot extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'id' => 'integer',
+        'cabinet_id' => 'integer',
+    ];
+
     protected $fillable = [
         'cabinet_id',
         'name',

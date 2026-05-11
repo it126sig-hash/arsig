@@ -19,6 +19,8 @@ class Cabinet extends Model
     ];
 
     protected $casts = [
+        'id' => 'integer',
+        'room_id' => 'integer',
         'points' => 'array',
         'needs_coordinate_review' => 'boolean',
     ];
