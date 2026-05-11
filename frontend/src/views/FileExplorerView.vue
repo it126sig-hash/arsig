@@ -85,17 +85,33 @@
         <div class="col-span-12 md:col-span-8 lg:col-span-7">
             <div class="card p-4 h-full bg-white shadow-sm border border-slate-200 rounded-lg flex flex-col">
                 <div v-if="categoryStore.selectedCategory" class="w-full h-full flex flex-col">
-                    <div class="flex items-center justify-between mb-4 border-b pb-4">
-                        <div>
-                            <p class="text-xs text-slate-400 uppercase tracking-wide">
-                                {{ selectedCompanyName }}
-                            </p>
-                            <h3 class="text-xl font-semibold text-slate-800 flex items-center gap-2">
-                                <i class="pi pi-folder text-yellow-500"></i>
-                                {{ categoryStore.selectedCategory.label }}
-                            </h3>
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 border-b pb-4 gap-4">
+                        <!-- Title Section -->
+                        <div class="flex items-center gap-3">
+                            <!-- Back Button (Mobile Only) -->
+                            <Button 
+                                v-if="categoryStore.selectedCategory" 
+                                icon="pi pi-chevron-left" 
+                                text 
+                                rounded 
+                                severity="secondary"
+                                class="md:hidden !w-10 !h-10 bg-slate-50" 
+                                @click="goBack" 
+                                v-tooltip.bottom="'Kembali'"
+                            />
+                            <div class="flex flex-col">
+                                <p class="text-[10px] md:text-xs text-slate-400 uppercase font-bold tracking-wider">
+                                    {{ selectedCompanyName }}
+                                </p>
+                                <h3 class="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+                                    <i class="pi pi-folder text-yellow-500 hidden md:block"></i>
+                                    {{ categoryStore.selectedCategory.label }}
+                                </h3>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2">
+
+                        <!-- Actions (Desktop Only) -->
+                        <div class="hidden md:flex items-center gap-2">
                             <Button
                                 label="Edit Kategori"
                                 icon="pi pi-pencil"
@@ -262,6 +278,12 @@
             @edit-success="onEditSuccess"
         />
 
+        <!-- Mobile Sticky Bottom Bar -->
+        <div v-if="categoryStore.selectedCategory" class="md:hidden fixed bottom-16 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 flex gap-2 z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+            <Button label="Edit Kategori" icon="pi pi-pencil" severity="secondary" outlined class="flex-1 !rounded-xl !text-xs !py-3" @click="openEditCategory" />
+            <Button label="Upload Arsip" icon="pi pi-upload" class="flex-1 !rounded-xl !text-xs !py-3" @click="showUploadDialog = true" />
+        </div>
+
         <Toast />
     </div>
 </template>
@@ -366,6 +388,34 @@ const selectCategoryNode = (node) => {
     categoryStore.setSelectedCategory(node)
     selectedKey.value = { [String(node.key)]: true }
     loadArchives()
+}
+
+const findParentNode = (nodes, targetKey, parent = null) => {
+    if (!Array.isArray(nodes)) return null
+    for (const node of nodes) {
+        if (String(node.key) === String(targetKey)) {
+            return parent
+        }
+        if (node.children) {
+            const found = findParentNode(node.children, targetKey, node)
+            if (found) return found
+        }
+    }
+    return null
+}
+
+const goBack = () => {
+    const current = categoryStore.selectedCategory
+    if (!current) return
+    
+    const parent = findParentNode(categoryStore.categoryTree, current.key)
+    if (parent) {
+        selectCategoryNode(parent)
+    } else {
+        // If no parent, it's a root category, so we unselect to go back to "Choose Company" state or root list
+        onNodeUnselect()
+        selectedKey.value = null
+    }
 }
 
 const loadArchives = async () => {

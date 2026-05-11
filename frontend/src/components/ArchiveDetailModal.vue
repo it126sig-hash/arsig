@@ -2,12 +2,20 @@
     <Dialog 
         v-model:visible="visible" 
         modal 
-        :header="`Detail Arsip: ${archive?.name || ''}`" 
         :style="{ width: '90vw', maxWidth: '1200px' }"
         :breakpoints="{ '960px': '95vw' }"
+        :maximized="isMobile"
         class="archive-detail-dialog"
         @hide="onClose"
+        :showHeader="true"
     >
+        <template #header>
+            <div class="flex items-center justify-between w-full pr-8 md:pr-0">
+                <h3 class="text-base md:text-xl font-bold text-slate-800 truncate">
+                    Detail Arsip: {{ archive?.name }}
+                </h3>
+            </div>
+        </template>
         <div v-if="archive" class="grid grid-cols-12 gap-6 min-h-[500px]">
             <!-- Left Column: Details Sidebar -->
             <div class="col-span-12 lg:col-span-4 flex flex-col gap-5 bg-slate-50/50 p-5 rounded-xl border border-slate-100">
@@ -195,8 +203,8 @@
                     </div>
 
                     <!-- Location Mode -->
-                    <div v-else-if="viewMode === 'location'" class="w-full h-full flex flex-col p-4 animate-fade-in">
-                        <div class="flex-1 bg-white border border-slate-200 rounded-lg overflow-hidden relative">
+                    <div v-else-if="viewMode === 'location'" class="w-full h-[350px] md:h-full flex flex-col p-2 md:p-4 animate-fade-in">
+                        <div class="flex-1 bg-white border border-slate-200 rounded-lg overflow-hidden relative shadow-inner">
                             <LocationVisualizer 
                                 :floor="archive.floor" 
                                 :room="archive.room" 
@@ -221,70 +229,120 @@
                         </div>
 
                         <Timeline v-else-if="combinedHistory.length > 0" :value="combinedHistory" class="customized-timeline">
-                            <template #opposite="slotProps">
-                                <small class="text-slate-400 font-medium whitespace-nowrap">{{ formatDateTimeShort(slotProps.item.created_at) }}</small>
+                            <template #marker="slotProps">
+                                <span class="flex items-center justify-center w-8 h-8 rounded-full shadow-sm border-2" :class="{
+                                    'bg-blue-50 border-blue-200 text-blue-500': slotProps.item.event_type === 'location_move',
+                                    'bg-orange-50 border-orange-200 text-orange-500': slotProps.item.event_type === 'checkout',
+                                    'bg-green-50 border-green-200 text-green-500': slotProps.item.event_type === 'checkin'
+                                }">
+                                    <i :class="{
+                                        'pi pi-box': slotProps.item.event_type === 'location_move',
+                                        'pi pi-external-link': slotProps.item.event_type === 'checkout',
+                                        'pi pi-check-circle': slotProps.item.event_type === 'checkin'
+                                    }" class="text-sm"></i>
+                                </span>
                             </template>
                             <template #content="slotProps">
-                                <div class="flex flex-col mb-6 bg-slate-50/50 p-3 rounded-xl border border-slate-100 shadow-sm">
-                                    <!-- Location Move Event -->
-                                    <div v-if="slotProps.item.event_type === 'location_move'">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">📦 PINDAH LOKASI</span>
-                                            <span class="text-[10px] text-slate-400 italic">oleh {{ slotProps.item.moved_by?.name }}</span>
-                                        </div>
-                                        <div class="text-xs text-slate-600">
-                                            <div v-if="slotProps.item.old_floor" class="flex flex-col mb-2 pb-2 border-b border-slate-100/50">
-                                                <div class="flex items-center gap-1.5 mb-0.5">
-                                                    <i class="pi pi-history text-[10px] text-slate-300"></i>
-                                                    <span class="text-slate-400">Dari: {{ slotProps.item.old_floor?.name }} > {{ slotProps.item.old_room?.name }}</span>
-                                                </div>
-                                                <div class="pl-4 text-[10px] text-slate-300">
-                                                    Lemari {{ slotProps.item.old_cabinet?.name }}
-                                                    <span v-if="slotProps.item.old_cabinet_slot">, Slot {{ slotProps.item.old_cabinet_slot?.name }}</span>
-                                                </div>
-                                            </div>
-                                            <div v-else class="flex items-center gap-1.5 mb-2 text-slate-400 italic">
-                                                <i class="pi pi-plus-circle text-[10px]"></i>
-                                                <span>Penempatan Lokasi Pertama</span>
-                                            </div>
-                                            <div class="flex items-center gap-1.5 mb-1">
-                                                <i class="pi pi-map-marker text-[10px] text-blue-400"></i>
-                                                <span class="font-medium">Ke: {{ slotProps.item.new_floor?.name }} > {{ slotProps.item.new_room?.name }}</span>
-                                            </div>
-                                            <div class="pl-4 text-[10px] text-slate-500">
-                                                Lemari {{ slotProps.item.new_cabinet?.name }}
-                                                <span v-if="slotProps.item.new_cabinet_slot">, Slot {{ slotProps.item.new_cabinet_slot?.name }}</span>
-                                            </div>
-                                        </div>
-                                        <div v-if="slotProps.item.notes" class="mt-2 text-[11px] text-slate-500 bg-white p-2 rounded border-l-2 border-slate-200 italic">
-                                            "{{ slotProps.item.notes }}"
-                                        </div>
+                                <div class="flex flex-col mb-6 ml-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                    <!-- Card Header -->
+                                    <div class="flex items-center justify-between px-4 py-2 border-b border-slate-50 bg-slate-50/30">
+                                        <span class="text-[10px] font-black uppercase tracking-widest" :class="{
+                                            'text-blue-600': slotProps.item.event_type === 'location_move',
+                                            'text-orange-600': slotProps.item.event_type === 'checkout',
+                                            'text-green-600': slotProps.item.event_type === 'checkin'
+                                        }">
+                                            {{ slotProps.item.event_type === 'location_move' ? 'Pindah Lokasi' : 
+                                               slotProps.item.event_type === 'checkout' ? 'Dikeluarkan' : 'Dikembalikan' }}
+                                        </span>
+                                        <span class="text-[10px] font-medium text-slate-400">
+                                            {{ formatDateTimeShort(slotProps.item.created_at) }}
+                                        </span>
                                     </div>
 
-                                    <!-- Checkout Event -->
-                                    <div v-else-if="slotProps.item.event_type === 'checkout'">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded">🔓 DIKELUARKAN</span>
-                                            <span class="text-[10px] text-slate-400 italic">oleh {{ slotProps.item.actor_user?.name }}</span>
-                                        </div>
-                                        <div class="text-xs text-slate-600">
-                                            <div class="mb-1"><strong>Peminjam:</strong> {{ slotProps.item.borrower_name }}</div>
-                                            <div class="mb-1"><strong>Alasan:</strong> {{ slotProps.item.reason }}</div>
-                                            <div><strong>Rencana Kembali:</strong> {{ formatDate(slotProps.item.planned_return_date) }}</div>
-                                        </div>
-                                        <div v-if="slotProps.item.notes" class="mt-2 text-[11px] text-slate-500 bg-white p-2 rounded border-l-2 border-slate-200 italic">
-                                            "{{ slotProps.item.notes }}"
-                                        </div>
-                                    </div>
+                                    <!-- Card Body -->
+                                    <div class="p-4">
+                                        <!-- Location Move Event -->
+                                        <div v-if="slotProps.item.event_type === 'location_move'">
+                                            <div class="flex flex-col gap-3">
+                                                <!-- From -->
+                                                <div v-if="slotProps.item.old_floor" class="flex gap-3">
+                                                    <div class="flex flex-col items-center">
+                                                        <div class="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1"></div>
+                                                        <div class="w-px h-full bg-slate-200 my-1"></div>
+                                                    </div>
+                                                    <div class="flex flex-col">
+                                                        <span class="text-[9px] uppercase font-bold text-slate-400">Dari</span>
+                                                        <span class="text-xs text-slate-500">{{ slotProps.item.old_floor?.name }} > {{ slotProps.item.old_room?.name }}</span>
+                                                        <span class="text-[10px] text-slate-400">Lemari {{ slotProps.item.old_cabinet?.name }}, Slot {{ slotProps.item.old_cabinet_slot?.name }}</span>
+                                                    </div>
+                                                </div>
+                                                <div v-else class="text-[11px] text-slate-400 italic flex items-center gap-2 mb-1">
+                                                    <i class="pi pi-plus-circle text-[10px]"></i> Penempatan Pertama
+                                                </div>
 
-                                    <!-- Checkin Event -->
-                                    <div v-else-if="slotProps.item.event_type === 'checkin'">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-green-50 text-green-600 rounded">🔒 DIKEMBALIKAN</span>
-                                            <span class="text-[10px] text-slate-400 italic">oleh {{ slotProps.item.actor_user?.name }}</span>
+                                                <!-- To -->
+                                                <div class="flex gap-3">
+                                                    <div class="flex flex-col items-center">
+                                                        <div class="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1"></div>
+                                                    </div>
+                                                    <div class="flex flex-col">
+                                                        <span class="text-[9px] uppercase font-bold text-blue-500">Ke</span>
+                                                        <span class="text-xs font-bold text-slate-700">{{ slotProps.item.new_floor?.name }} > {{ slotProps.item.new_room?.name }}</span>
+                                                        <span class="text-[10px] text-slate-500 font-medium">Lemari {{ slotProps.item.new_cabinet?.name }}, Slot {{ slotProps.item.new_cabinet_slot?.name }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3 flex items-center gap-2 pt-3 border-t border-slate-50">
+                                                <div class="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] text-slate-500 font-bold">
+                                                    {{ slotProps.item.moved_by?.name?.charAt(0) }}
+                                                </div>
+                                                <span class="text-[10px] text-slate-400">Oleh <span class="text-slate-600 font-medium">{{ slotProps.item.moved_by?.name }}</span></span>
+                                            </div>
                                         </div>
-                                        <div class="text-xs text-slate-600">
-                                            <div><strong>Tanggal Kembali:</strong> {{ formatDate(slotProps.item.actual_return_date) }}</div>
+
+                                        <!-- Checkout Event -->
+                                        <div v-else-if="slotProps.item.event_type === 'checkout'" class="flex flex-col gap-3">
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div class="flex flex-col">
+                                                    <span class="text-[9px] uppercase font-bold text-slate-400">Peminjam</span>
+                                                    <span class="text-xs font-bold text-slate-700">{{ slotProps.item.borrower_name }}</span>
+                                                </div>
+                                                <div class="flex flex-col">
+                                                    <span class="text-[9px] uppercase font-bold text-slate-400">Rencana Kembali</span>
+                                                    <span class="text-xs text-slate-600">{{ formatDate(slotProps.item.planned_return_date) }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="text-[9px] uppercase font-bold text-slate-400">Alasan</span>
+                                                <span class="text-xs text-slate-600">{{ slotProps.item.reason }}</span>
+                                            </div>
+                                            <div class="mt-1 flex items-center gap-2 pt-3 border-t border-slate-50">
+                                                <div class="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] text-slate-500 font-bold">
+                                                    {{ slotProps.item.actor_user?.name?.charAt(0) }}
+                                                </div>
+                                                <span class="text-[10px] text-slate-400">Diproses oleh <span class="text-slate-600 font-medium">{{ slotProps.item.actor_user?.name }}</span></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Checkin Event -->
+                                        <div v-else-if="slotProps.item.event_type === 'checkin'" class="flex flex-col gap-2">
+                                            <div class="flex items-center gap-2 text-green-600">
+                                                <i class="pi pi-check-circle text-xs"></i>
+                                                <span class="text-xs font-bold">Telah Kembali</span>
+                                            </div>
+                                            <span class="text-[10px] text-slate-500">Dikembalikan pada {{ formatDate(slotProps.item.actual_return_date) }}</span>
+                                            <div class="mt-2 flex items-center gap-2 pt-3 border-t border-slate-50">
+                                                <div class="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] text-slate-500 font-bold">
+                                                    {{ slotProps.item.actor_user?.name?.charAt(0) }}
+                                                </div>
+                                                <span class="text-[10px] text-slate-400">Oleh <span class="text-slate-600 font-medium">{{ slotProps.item.actor_user?.name }}</span></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Global Notes -->
+                                        <div v-if="slotProps.item.notes" class="mt-3 bg-slate-50 p-2.5 rounded-lg text-[10px] text-slate-500 border-l-4 border-slate-200">
+                                            <i class="pi pi-info-circle mr-1 opacity-50"></i>
+                                            "{{ slotProps.item.notes }}"
                                         </div>
                                     </div>
                                 </div>
@@ -317,6 +375,26 @@
                 </template>
 
             </div>
+
+            <!-- Mobile Sticky Bottom Bar -->
+            <div v-if="isMobile && !needsAccess" class="fixed bottom-16 left-0 right-0 p-4 bg-white border-t border-slate-200 flex gap-2 z-50">
+                <Button 
+                    v-if="canDownload"
+                    label="Download" 
+                    icon="pi pi-download" 
+                    severity="success" 
+                    class="flex-1 !rounded-xl"
+                    @click="handleDownload" 
+                />
+                <Button 
+                    v-if="canModifyCheckout"
+                    :label="archive.is_checked_out ? 'Kembalikan' : 'Keluarkan'" 
+                    :icon="archive.is_checked_out ? 'pi pi-check-circle' : 'pi pi-external-link'" 
+                    severity="warning" 
+                    class="flex-1 !rounded-xl"
+                    @click="archive.is_checked_out ? confirmCheckin() : (showCheckoutDialog = true)"
+                />
+            </div>
         </div>
 
         <template #footer>
@@ -344,7 +422,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { previewArchive, downloadArchive, requestOtp, verifyOtp, fetchArchiveLocationHistories } from '@/api/archiveApi'
 import { checkinArchive, getCheckoutHistory } from '@/api/archiveCheckoutApi'
 import { useAuthStore } from '@/store/auth'
@@ -359,6 +437,13 @@ import Timeline from 'primevue/timeline'
 import ConfirmDialog from 'primevue/confirmdialog'
 import LocationVisualizer from '@/components/LocationVisualizer.vue'
 import CheckoutDialog from '@/components/CheckoutDialog.vue'
+
+// Mobile Check
+const windowWidth = ref(window.innerWidth)
+const updateWidth = () => { windowWidth.value = window.innerWidth }
+onMounted(() => window.addEventListener('resize', updateWidth))
+onUnmounted(() => window.removeEventListener('resize', updateWidth))
+const isMobile = computed(() => windowWidth.value < 768)
 
 const props = defineProps({
     modelValue: Boolean,
@@ -666,6 +751,21 @@ const getPrivacySeverity = (type) => {
 
 .animate-fade-in {
     animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Timeline Custom Styles */
+.customized-timeline :deep(.p-timeline-event-opposite) {
+    display: none;
+}
+.customized-timeline :deep(.p-timeline-event-content) {
+    padding-left: 0.5rem;
+}
+.customized-timeline :deep(.p-timeline-event-separator) {
+    align-items: center;
+}
+.customized-timeline :deep(.p-timeline-event-connector) {
+    width: 2px;
+    background-color: #f1f5f9;
 }
 
 @keyframes fadeIn {

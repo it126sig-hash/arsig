@@ -56,49 +56,51 @@
         </div>
       </div>
 
-      <!-- SEARCH HERO -->
-      <div class="bg-gradient-to-br from-primary-900 via-primary-700 to-primary-500 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-lg shadow-blue-900/10">
-        <!-- Abstract Decorations -->
-        <div class="absolute -top-20 -right-20 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-primary-400/10 rounded-full blur-3xl"></div>
-        
-        <div class="relative z-10 flex flex-col items-center text-center max-w-3xl mx-auto">
-          <h1 class="text-2xl md:text-3xl font-extrabold text-white mb-6 leading-tight">
-            Temukan Dokumen <span class="text-blue-300">dengan Cepat</span>
-          </h1>
+      <!-- SEARCH HERO (Sticky on mobile) -->
+      <div class="sticky top-0 z-30 -mx-4 px-4 py-2 md:static md:mx-0 md:px-0 md:py-0 bg-slate-50/80 backdrop-blur-md md:bg-transparent">
+        <div class="bg-gradient-to-br from-primary-900 via-primary-700 to-primary-500 rounded-2xl md:rounded-3xl p-4 md:p-8 relative overflow-hidden shadow-lg shadow-blue-900/10">
+          <!-- Abstract Decorations -->
+          <div class="absolute -top-20 -right-20 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+          <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-primary-400/10 rounded-full blur-3xl"></div>
           
-          <div class="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-1.5 flex flex-col md:flex-row gap-2 focus-within:ring-2 focus-within:ring-blue-400/50 transition-all">
-            <div class="flex-1 flex items-center px-4 py-2">
-              <i class="pi pi-search text-white/40 mr-3"></i>
-              <input 
-                v-model="filters.q" 
-                type="text" 
-                placeholder="Cari berdasarkan nama, nomor, atau keterangan..." 
-                class="bg-transparent border-none outline-none text-white placeholder:text-white/40 w-full text-base"
-                @input="debouncedSearch"
-                @keyup.enter="search"
+          <div class="relative z-10 flex flex-col items-center text-center max-w-3xl mx-auto">
+            <h1 class="hidden md:block text-2xl md:text-3xl font-extrabold text-white mb-6 leading-tight">
+              Temukan Dokumen <span class="text-blue-300">dengan Cepat</span>
+            </h1>
+            
+            <div class="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl md:rounded-2xl p-1 md:p-1.5 flex flex-col md:flex-row gap-2 focus-within:ring-2 focus-within:ring-blue-400/50 transition-all">
+              <div class="flex-1 flex items-center px-3 md:px-4 py-1.5 md:py-2">
+                <i class="pi pi-search text-white/40 mr-2 md:mr-3 text-sm md:text-base"></i>
+                <input 
+                  v-model="filters.q" 
+                  type="text" 
+                  placeholder="Cari nama, nomor, atau hashtag..." 
+                  class="bg-transparent border-none outline-none text-white placeholder:text-white/40 w-full text-sm md:text-base"
+                  @input="debouncedSearch"
+                  @keyup.enter="search"
+                />
+              </div>
+              <Button 
+                label="Cari" 
+                icon="pi pi-search" 
+                class="!bg-white !text-primary-800 !border-none !rounded-lg md:!rounded-xl !px-6 md:!px-8 !font-bold hover:!bg-blue-50 transition-colors hidden md:flex"
+                :loading="loading"
+                @click="search"
               />
             </div>
-            <Button 
-              label="Cari" 
-              icon="pi pi-search" 
-              class="!bg-white !text-primary-800 !border-none !rounded-xl !px-8 !font-bold hover:!bg-blue-50 transition-colors"
-              :loading="loading"
-              @click="search"
-            />
-          </div>
 
-          <div class="flex flex-wrap justify-center gap-4 mt-6 text-white/50 text-[10px] uppercase tracking-widest">
-            <div class="flex items-center gap-1.5"><i class="pi pi-building"></i> <strong>{{ companies.length }}</strong> PT</div>
-            <div class="flex items-center gap-1.5"><i class="pi pi-tags"></i> <strong>{{ tags.length }}</strong> Hashtags</div>
-            <div class="flex items-center gap-1.5"><i class="pi pi-history"></i> Update 5m ago</div>
+            <div class="hidden md:flex flex-wrap justify-center gap-4 mt-6 text-white/50 text-[10px] uppercase tracking-widest">
+              <div class="flex items-center gap-1.5"><i class="pi pi-building"></i> <strong>{{ companies.length }}</strong> PT</div>
+              <div class="flex items-center gap-1.5"><i class="pi pi-tags"></i> <strong>{{ tags.length }}</strong> Hashtags</div>
+              <div class="flex items-center gap-1.5"><i class="pi pi-history"></i> Update 5m ago</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- FILTER BAR -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm flex flex-wrap items-center gap-3">
-        <div class="flex items-center gap-2 px-3 border-r border-slate-100 hidden lg:flex">
+      <!-- FILTER BAR (Horizontal Scroll on Mobile) -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-2 md:p-3 shadow-sm flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <div class="flex items-center gap-2 px-3 border-r border-slate-100 hidden md:flex shrink-0">
           <i class="pi pi-filter text-slate-400"></i>
           <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Filter</span>
         </div>
@@ -108,8 +110,8 @@
           :options="companies" 
           optionLabel="name" 
           optionValue="id" 
-          placeholder="Semua PT" 
-          class="flex-1 min-w-[150px] p-select-sm" 
+          placeholder="PT" 
+          class="shrink-0 w-[120px] md:flex-1 md:min-w-[150px] p-select-sm" 
           showClear
           @change="onCompanyChange"
         />
@@ -117,8 +119,8 @@
         <TreeSelect 
           v-model="filters.category_id" 
           :options="categories" 
-          placeholder="Semua Kategori" 
-          class="flex-1 min-w-[200px] p-select-sm" 
+          placeholder="Kategori" 
+          class="shrink-0 w-[140px] md:flex-1 md:min-w-[200px] p-select-sm" 
           :disabled="!filters.company_id"
           showClear
           filter
@@ -130,8 +132,8 @@
           :options="archiveTypes" 
           optionLabel="label" 
           optionValue="value" 
-          placeholder="Semua Tipe" 
-          class="flex-1 min-w-[150px] p-select-sm" 
+          placeholder="Tipe" 
+          class="shrink-0 w-[120px] md:flex-1 md:min-w-[150px] p-select-sm" 
           showClear
           @change="search"
         />
@@ -141,16 +143,15 @@
           :options="tags" 
           optionLabel="nama" 
           optionValue="id" 
-          placeholder="Hashtag" 
+          placeholder="Tag" 
           :maxSelectedLabels="1" 
-          class="flex-1 min-w-[150px] p-select-sm"
+          class="shrink-0 w-[100px] md:flex-1 md:min-w-[150px] p-select-sm"
           filter
           @change="search"
         />
 
-        <div class="flex gap-2 ml-auto">
-          <Button icon="pi pi-refresh" severity="secondary" text @click="resetFilters" v-tooltip="'Reset'" />
-          <Button label="Export" icon="pi pi-download" severity="secondary" size="small" outlined class="hidden sm:flex" />
+        <div class="flex gap-1 ml-auto shrink-0 pl-2">
+          <Button icon="pi pi-refresh" severity="secondary" text @click="resetFilters" size="small" />
         </div>
       </div>
 
@@ -756,6 +757,13 @@ const getFileColor = (type) => {
 </script>
 
 <style scoped>
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 :deep(.p-datatable .p-datatable-tbody > tr.opacity-60) {
   background: #f8fafc;
 }

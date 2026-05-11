@@ -9,9 +9,11 @@
             <Button label="Tambah User" icon="pi pi-plus" @click="openCreate" />
         </div>
 
-        <!-- Data Table -->
-        <div class="bg-white shadow-sm border border-slate-200 rounded-lg overflow-hidden">
+        <!-- Data Table (Desktop) / List (Mobile) -->
+        <div class="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
+            <!-- Desktop View -->
             <DataTable
+                v-if="!isMobile"
                 :value="users"
                 :loading="isLoading"
                 responsiveLayout="scroll"
@@ -42,11 +44,11 @@
                 <Column field="role" header="Role" style="width: 120px">
                     <template #body="{ data }">
                         <span
-                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white uppercase tracking-tight"
                             :class="{
-                                'bg-red-100 text-red-800': data.role === 'root',
-                                'bg-amber-100 text-amber-800': data.role === 'admin',
-                                'bg-green-100 text-green-800': data.role === 'user',
+                                'bg-red-500': data.role === 'root',
+                                'bg-blue-600': data.role === 'admin',
+                                'bg-slate-500': data.role === 'user',
                             }"
                         >
                             {{ data.role }}
@@ -72,18 +74,66 @@
                     </template>
                 </Column>
             </DataTable>
+
+            <!-- Mobile View (List) -->
+            <div v-else class="flex flex-col divide-y divide-slate-100">
+                <div v-if="isLoading" class="p-10 flex flex-col items-center justify-center gap-3">
+                    <ProgressSpinner style="width: 30px; height: 30px" />
+                    <p class="text-xs text-slate-400">Memuat data...</p>
+                </div>
+                <div v-else-if="users.length === 0" class="p-10 text-center text-slate-400">
+                    <p class="text-sm italic">Belum ada data user.</p>
+                </div>
+                <div v-for="user in users" :key="user.id" class="p-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold">
+                            {{ user.name.charAt(0) }}
+                        </div>
+                        <div class="flex flex-col">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-bold text-slate-800">{{ user.name }}</span>
+                                <span 
+                                    class="text-[8px] px-1 py-0.5 rounded-sm font-bold uppercase"
+                                    :class="{
+                                        'bg-red-100 text-red-700': user.role === 'root',
+                                        'bg-blue-100 text-blue-700': user.role === 'admin',
+                                        'bg-slate-100 text-slate-700': user.role === 'user',
+                                    }"
+                                >
+                                    {{ user.role }}
+                                </span>
+                            </div>
+                            <span class="text-xs text-slate-400">{{ user.email }}</span>
+                            <span v-if="user.department" class="text-[10px] text-blue-500 mt-0.5">{{ user.department.name }}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-1">
+                        <Button icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(user)" />
+                        <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(user)" />
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Dialog: Tambah / Edit -->
         <Dialog
             v-model:visible="showDialog"
-            :header="isEditing ? 'Edit User' : 'Tambah User Baru'"
             :modal="true"
             class="w-full max-w-lg"
+            :maximized="isMobile"
+            :showHeader="true"
         >
-            <div class="flex flex-col gap-4 mt-2">
+            <template #header>
+                <div class="flex items-center justify-between w-full pr-8 md:pr-0">
+                    <h3 class="text-base md:text-xl font-bold text-slate-800">
+                        {{ isEditing ? 'Edit User' : 'Tambah User' }}
+                    </h3>
+                </div>
+            </template>
+
+            <div class="flex flex-col gap-4 mt-2 p-2 md:p-0">
                 <div class="flex flex-col gap-1">
-                    <label for="user-name" class="text-sm font-medium text-slate-700">
+                    <label for="user-name" class="text-sm font-semibold text-slate-700">
                         Nama <span class="text-red-500">*</span>
                     </label>
                     <InputText
@@ -91,26 +141,28 @@
                         v-model="form.name"
                         placeholder="Nama lengkap"
                         autofocus
+                        class="!rounded-xl"
                         :class="{ 'p-invalid': formErrors.name }"
                     />
                     <small class="text-red-500" v-if="formErrors.name">{{ formErrors.name }}</small>
                 </div>
 
                 <div class="flex flex-col gap-1">
-                    <label for="user-email" class="text-sm font-medium text-slate-700">
+                    <label for="user-email" class="text-sm font-semibold text-slate-700">
                         Email <span class="text-red-500">*</span>
                     </label>
                     <InputText
                         id="user-email"
                         v-model="form.email"
                         placeholder="email@contoh.com"
+                        class="!rounded-xl"
                         :class="{ 'p-invalid': formErrors.email }"
                     />
                     <small class="text-red-500" v-if="formErrors.email">{{ formErrors.email }}</small>
                 </div>
 
                 <div class="flex flex-col gap-1">
-                    <label for="user-password" class="text-sm font-medium text-slate-700">
+                    <label for="user-password" class="text-sm font-semibold text-slate-700">
                         Password <span class="text-red-500" v-if="!isEditing">*</span>
                     </label>
                     <Password
@@ -120,28 +172,28 @@
                         toggleMask
                         :feedback="false"
                         :class="{ 'p-invalid': formErrors.password }"
-                        inputClass="w-full"
+                        inputClass="w-full !rounded-xl"
                         class="w-full"
                     />
                     <small class="text-red-500" v-if="formErrors.password">{{ formErrors.password }}</small>
                 </div>
 
                 <div class="flex flex-col gap-1">
-                    <label for="user-dept" class="text-sm font-medium text-slate-700">Departemen</label>
+                    <label for="user-dept" class="text-sm font-semibold text-slate-700">Departemen</label>
                     <Select
                         id="user-dept"
                         v-model="form.department_id"
                         :options="departmentOptions"
                         optionLabel="name"
                         optionValue="id"
-                        placeholder="Pilih departemen (opsional)"
+                        placeholder="Pilih departemen"
                         showClear
-                        class="w-full"
+                        class="w-full !rounded-xl"
                     />
                 </div>
 
                 <div class="flex flex-col gap-1">
-                    <label for="user-role" class="text-sm font-medium text-slate-700">
+                    <label for="user-role" class="text-sm font-semibold text-slate-700">
                         Role <span class="text-red-500">*</span>
                     </label>
                     <Select
@@ -151,7 +203,7 @@
                         optionLabel="label"
                         optionValue="value"
                         placeholder="Pilih role"
-                        class="w-full"
+                        class="w-full !rounded-xl"
                         :class="{ 'p-invalid': formErrors.role }"
                     />
                     <small class="text-red-500" v-if="formErrors.role">{{ formErrors.role }}</small>
@@ -159,13 +211,16 @@
             </div>
 
             <template #footer>
-                <Button label="Batal" icon="pi pi-times" class="p-button-text" @click="closeDialog" />
-                <Button
-                    :label="isEditing ? 'Simpan Perubahan' : 'Buat User'"
-                    icon="pi pi-check"
-                    :loading="isSaving"
-                    @click="handleSubmit"
-                />
+                <div class="flex justify-end gap-2 p-2 md:p-0">
+                    <Button label="Batal" icon="pi pi-times" text severity="secondary" @click="closeDialog" class="hidden md:flex" />
+                    <Button
+                        :label="isEditing ? 'Simpan' : 'Buat User'"
+                        icon="pi pi-check"
+                        :loading="isSaving"
+                        @click="handleSubmit"
+                        class="!rounded-xl px-6"
+                    />
+                </div>
             </template>
         </Dialog>
 
@@ -176,7 +231,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { fetchUsers, createUser, updateUser, deleteUser } from '@/api/userApi'
 import { fetchDepartments } from '@/api/departmentApi'
 import { useToast } from 'primevue/usetoast'
@@ -188,6 +243,7 @@ import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Select from 'primevue/select'
+import ProgressSpinner from 'primevue/progressspinner'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Toast from 'primevue/toast'
 
@@ -201,6 +257,11 @@ const showDialog = ref(false)
 const isSaving = ref(false)
 const isEditing = ref(false)
 const editingId = ref(null)
+const isMobile = ref(window.innerWidth < 768)
+
+const onResize = () => {
+    isMobile.value = window.innerWidth < 768
+}
 
 const roleOptions = [
     { label: 'Root', value: 'root' },
@@ -353,6 +414,11 @@ const confirmDelete = (user) => {
 }
 
 onMounted(async () => {
+    window.addEventListener('resize', onResize)
     await Promise.all([loadUsers(), loadDepartments()])
+})
+
+onUnmounted(() => {
+    window.removeEventListener('resize', onResize)
 })
 </script>

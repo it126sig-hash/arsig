@@ -36,6 +36,7 @@
                 : 'text-slate-400 hover:bg-slate-800 hover:text-white'
             ]"
             :title="collapsed ? item.label : ''"
+            @click="$emit('menu-click')"
           >
             <i :class="['flex-shrink-0 text-lg', item.icon]"></i>
             <span
@@ -106,10 +107,9 @@ defineProps({
     default: false
   }
 })
-defineEmits(['toggle-collapse'])
-
 const route = useRoute()
 const authStore = useAuthStore()
+const emit = defineEmits(['toggle-collapse', 'menu-click'])
 
 // Check if a route is active (exact match or starts with for nested)
 const isActive = (path) => {
