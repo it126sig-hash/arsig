@@ -478,7 +478,8 @@ const dummyStats = reactive({
 const actionMenuItems = computed(() => {
     const archive = selectedArchive.value
     const user = authStore.user
-    const isPicOrAdmin = archive && user && (user.role === 'admin' || archive.pic_user_id === user.id)
+    const isPicOrAdmin = archive && user && (user.role === 'admin' || archive.pic_user_id == user.id) // tidak menggunakan === karena error ketika di deploy ke hosting
+    
 
     const items = [
         { label: 'Pindah Lokasi Fisik', icon: 'pi pi-arrows-alt', command: () => { moveLocationDialog.value = true } },
@@ -635,15 +636,15 @@ const hasAccess = (archive) => {
   if (!user) return false
   
   if (user.role === 'admin') return true
-  if (archive.created_by === user.id) return true
-  if (archive.pic_user_id === user.id) return true
+  if (Number(archive.created_by) === Number(user.id)) return true
+  if (Number(archive.pic_user_id) === Number(user.id)) return true
 
   if (archive.privacy_type === 'department') {
-    return archive.access_departments?.some(d => d.id === user.department_id)
+    return archive.access_departments?.some(d => Number(d.id) === Number(user.department_id))
   }
 
   if (archive.privacy_type === 'user') {
-    return archive.access_users?.some(u => u.id === user.id)
+    return archive.access_users?.some(u => Number(u.id) === Number(user.id))
   }
 
   if (unlockedArchives.value.has(archive.id)) return true

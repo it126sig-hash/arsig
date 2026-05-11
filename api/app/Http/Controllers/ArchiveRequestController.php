@@ -25,7 +25,7 @@ class ArchiveRequestController extends BaseController
     {
         // Simple authorization check: only PIC or Admin
         $user = Auth::user();
-        if ($user->role !== 'admin' && $archiveRequest->archive->pic_user_id !== $user->id) {
+        if ($user->role !== 'admin' && (int) $archiveRequest->archive->pic_user_id !== (int) $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk menyetujui permintaan ini.');
         }
 
@@ -40,7 +40,7 @@ class ArchiveRequestController extends BaseController
     public function reject(ArchiveDownloadRequest $archiveRequest): JsonResponse
     {
         $user = Auth::user();
-        if ($user->role !== 'admin' && $archiveRequest->archive->pic_user_id !== $user->id) {
+        if ($user->role !== 'admin' && (int) $archiveRequest->archive->pic_user_id !== (int) $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk menolak permintaan ini.');
         }
 
