@@ -53,5 +53,7 @@ Route::prefix('v1')->group(function () {
         Route::post('archives/{archive}/checkout', [\App\Http\Controllers\ArchiveCheckoutController::class, 'checkout']);
         Route::post('archives/{archive}/checkin', [\App\Http\Controllers\ArchiveCheckoutController::class, 'checkin']);
         Route::get('archives/{archive}/checkout-history', [\App\Http\Controllers\ArchiveCheckoutController::class, 'history']);
+        // Dashboard Stats
+        Route::get('dashboard/stats', [\App\Http\Controllers\DashboardController::class, 'getStats']);
     });
 });

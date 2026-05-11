@@ -11,14 +11,14 @@
         <div class="flex-1">
           <p class="text-sm text-orange-800">
             <span class="font-bold">{{ dummyStats.expiring }} dokumen akan kadaluarsa</span> dalam waktu dekat.
-            <a href="#" class="font-bold underline ml-2 hover:text-orange-900">Lihat dokumen &rarr;</a>
+            <a href="#" class="font-bold underline ml-2 hover:text-orange-900" @click.prevent="filterByExpiring">Lihat dokumen &rarr;</a>
           </p>
         </div>
       </div>
 
       <!-- STATS ROW -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 cursor-pointer hover:border-blue-300 transition-colors" @click="resetFilters">
           <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
             <i class="pi pi-file text-xl"></i>
           </div>
@@ -27,7 +27,7 @@
             <div class="text-xs text-slate-500 font-medium uppercase tracking-wider">Total Arsip</div>
           </div>
         </div>
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 cursor-pointer hover:border-green-300 transition-colors" @click="filterByInCabinet">
           <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
             <i class="pi pi-check-circle text-xl"></i>
           </div>
@@ -36,7 +36,7 @@
             <div class="text-xs text-slate-500 font-medium uppercase tracking-wider">Ada di Lemari</div>
           </div>
         </div>
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 cursor-pointer hover:border-red-300 transition-colors" @click="filterByBorrowed">
           <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
             <i class="pi pi-external-link text-xl"></i>
           </div>
@@ -45,7 +45,7 @@
             <div class="text-xs text-slate-500 font-medium uppercase tracking-wider">Sedang Keluar</div>
           </div>
         </div>
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 cursor-pointer hover:border-orange-300 transition-colors" @click="filterByExpiring">
           <div class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
             <i class="pi pi-clock text-xl"></i>
           </div>
@@ -197,6 +197,7 @@
                     <div class="flex flex-col">
                       <span class="font-bold text-slate-800 leading-tight">{{ data.name }}</span>
                       <span class="text-[10px] font-mono text-slate-500 mt-1 uppercase tracking-tighter">{{ data.file_number }}</span>
+                      <span class="text-[9px] text-blue-500 font-bold uppercase mt-1">PIC: {{ data.pic?.name || '-' }}</span>
                     </div>
                   </div>
                   
@@ -284,6 +285,7 @@
                   <div class="flex flex-col">
                     <span class="font-bold text-slate-800 leading-tight">{{ archive.name }}</span>
                     <span class="text-[10px] font-mono text-slate-500 uppercase">{{ archive.file_number }}</span>
+                    <span class="text-[9px] text-blue-500 font-bold uppercase mt-1">PIC: {{ archive.pic?.name || '-' }}</span>
                   </div>
                 </div>
                 <Tag v-if="hasAccess(archive)" :value="archive.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(archive.privacy_type)" class="!text-[9px]" />
@@ -395,6 +397,7 @@ import { fetchArchives, downloadArchive as downloadApi, requestOtp, verifyOtp } 
 import { fetchCompanies } from '@/api/companyApi'
 import { fetchCategoryTree } from '@/api/categoryApi'
 import { fetchTags } from '@/api/tagApi'
+import { fetchDashboardStats } from '@/api/dashboardApi'
 import { useAuthStore } from '@/store/auth'
 import ProgressSpinner from 'primevue/progressspinner'
 import IconField from 'primevue/iconfield'
@@ -442,7 +445,10 @@ const filters = reactive({
   archive_type: null,
   date_from: null,
   date_to: null,
-  tag_ids: []
+  tag_ids: [],
+  filter_expiring: false,
+  filter_borrowed: false,
+  filter_in_cabinet: false
 })
 
 const toast = useToast()
@@ -461,12 +467,12 @@ const isRequesting = ref({}) // { archiveId: true }
 const isVerifying = ref({}) // { archiveId: true }
 const unlockedArchives = ref(new Set()) // Set of archive IDs
 
-// Dummy Stats for UI
+// Stats
 const dummyStats = reactive({
-  total: 2847,
-  inCabinet: 2641,
-  borrowed: 206,
-  expiring: 18
+  total: 0,
+  inCabinet: 0,
+  borrowed: 0,
+  expiring: 0
 })
 
 const actionMenuItems = computed(() => {
@@ -501,9 +507,19 @@ onMounted(async () => {
   await Promise.all([
     loadCompanies(),
     loadTags(),
+    loadStats(),
     search()
   ])
 })
+
+const loadStats = async () => {
+  try {
+    const res = await fetchDashboardStats()
+    Object.assign(dummyStats, res.data.data)
+  } catch (err) {
+    console.error('Failed to load dashboard stats', err)
+  }
+}
 
 const loadCompanies = async () => {
   try {
@@ -578,7 +594,7 @@ const debouncedSearch = () => {
   }, 500)
 }
 
-const resetFilters = () => {
+const resetFilters = (triggerSearch = true) => {
   filters.q = ''
   filters.company_id = null
   filters.category_id = null
@@ -586,8 +602,29 @@ const resetFilters = () => {
   filters.date_from = null
   filters.date_to = null
   filters.tag_ids = []
+  filters.filter_expiring = false
+  filters.filter_borrowed = false
+  filters.filter_in_cabinet = false
   dateRange.value = null
   categories.value = []
+  if (triggerSearch) search()
+}
+
+const filterByExpiring = () => {
+  resetFilters(false)
+  filters.filter_expiring = true
+  search()
+}
+
+const filterByBorrowed = () => {
+  resetFilters(false)
+  filters.filter_borrowed = true
+  search()
+}
+
+const filterByInCabinet = () => {
+  resetFilters(false)
+  filters.filter_in_cabinet = true
   search()
 }
 

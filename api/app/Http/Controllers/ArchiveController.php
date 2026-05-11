@@ -30,7 +30,10 @@ class ArchiveController extends BaseController
             archiveType: $request->string('archive_type')->toString() ?: null,
             dateFrom: $request->string('date_from')->toString() ?: null,
             dateTo: $request->string('date_to')->toString() ?: null,
-            tagIds: $request->input('tag_ids', [])
+            tagIds: $request->input('tag_ids', []),
+            filterExpiring: $request->boolean('filter_expiring'),
+            filterBorrowed: $request->boolean('filter_borrowed'),
+            filterInCabinet: $request->boolean('filter_in_cabinet')
         );
 
         return $this->successResponse($archives, 'Daftar arsip berhasil diambil.');

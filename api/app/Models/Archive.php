@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Models;
@@ -41,6 +42,7 @@ class Archive extends Model
         'issue_date' => 'date',
         'expire_date' => 'date',
         'reminder_date' => 'date',
+        'is_checked_out' => 'boolean',
     ];
 
     public function category(): BelongsTo

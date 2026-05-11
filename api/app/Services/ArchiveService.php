@@ -19,7 +19,10 @@ class ArchiveService
         ?string $archiveType = null,
         ?string $dateFrom = null,
         ?string $dateTo = null,
-        array $tagIds = []
+        array $tagIds = [],
+        ?bool $filterExpiring = null,
+        ?bool $filterBorrowed = null,
+        ?bool $filterInCabinet = null
     ) {
         return Archive::query()
             ->with(['tags', 'accessDepartments', 'accessUsers', 'category', 'company', 'pic', 'floor', 'room', 'cabinet', 'cabinetSlot', 'lastCheckout'])
@@ -28,6 +31,15 @@ class ArchiveService
             ->when($archiveType, fn ($q) => $q->where('archive_type', $archiveType))
             ->when($dateFrom, fn ($q) => $q->whereDate('issue_date', '>=', $dateFrom))
             ->when($dateTo, fn ($q) => $q->whereDate('issue_date', '<=', $dateTo))
+            ->when($filterExpiring, function ($query) {
+                $query->whereNotNull('expire_date')
+                    ->where(function ($sub) {
+                        $sub->whereDate('reminder_date', '<=', \Carbon\Carbon::now())
+                            ->orWhereDate('expire_date', '<=', \Carbon\Carbon::now()->addDays(30));
+                    });
+            })
+            ->when($filterBorrowed, fn ($q) => $q->where('is_checked_out', true))
+            ->when($filterInCabinet, fn ($q) => $q->where('is_checked_out', false))
             ->when($q, function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
                     $sub->where('name', 'like', "%{$q}%")
