@@ -20,7 +20,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
           <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-            <i class="pi pi-archive text-xl"></i>
+            <i class="pi pi-file text-xl"></i>
           </div>
           <div>
             <div class="text-2xl font-bold text-slate-800">{{ dummyStats.total.toLocaleString() }}</div>

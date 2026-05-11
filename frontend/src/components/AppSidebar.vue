@@ -6,18 +6,7 @@
       collapsed ? 'w-16' : 'w-64'
     ]"
   >
-    <!-- Logo Area -->
-    <div class="flex items-center h-16 px-4 border-b border-slate-700 gap-3 overflow-hidden">
-      <div class="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-        <i class="pi pi-server text-white text-sm"></i>
-      </div>
-      <span
-        v-show="!collapsed"
-        class="font-bold text-lg tracking-tight whitespace-nowrap transition-opacity duration-200"
-      >
-        ARSIG
-      </span>
-    </div>
+    
 
     <!-- Navigation Menu -->
     <nav class="flex-1 py-4 overflow-y-auto overflow-x-hidden">
