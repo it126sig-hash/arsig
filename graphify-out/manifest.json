@@ -1,0 +1,547 @@
+{
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\capacitor.config.json": {
+    "mtime": 1778476904.5606897,
+    "ast_hash": "acdc93e5db83801a2ee1e0542c2c9747",
+    "semantic_hash": "acdc93e5db83801a2ee1e0542c2c9747"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\package.json": {
+    "mtime": 1778478296.1265743,
+    "ast_hash": "54f440aa8ce167b235c887f80cab91d5",
+    "semantic_hash": "54f440aa8ce167b235c887f80cab91d5"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\postcss.config.js": {
+    "mtime": 1778476904.5658135,
+    "ast_hash": "5b84f4567208c7c747079c0477373231",
+    "semantic_hash": "5b84f4567208c7c747079c0477373231"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\tailwind.config.js": {
+    "mtime": 1778476904.6165178,
+    "ast_hash": "a6ddd6ba70de00bfcde35b6d0241fd21",
+    "semantic_hash": "a6ddd6ba70de00bfcde35b6d0241fd21"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\vite.config.js": {
+    "mtime": 1778476904.6165178,
+    "ast_hash": "476b8999294b9024099c7a09e4b9f04d",
+    "semantic_hash": "476b8999294b9024099c7a09e4b9f04d"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\.vscode\\extensions.json": {
+    "mtime": 1778476904.4775774,
+    "ast_hash": "42f3854edd48c8cd22c8bef246810290",
+    "semantic_hash": "42f3854edd48c8cd22c8bef246810290"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\build.gradle": {
+    "mtime": 1778476904.551318,
+    "ast_hash": "ca5f0fa0ea4c3997363777d8a2b6467b",
+    "semantic_hash": "ca5f0fa0ea4c3997363777d8a2b6467b"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\capacitor.settings.gradle": {
+    "mtime": 1778476904.552826,
+    "ast_hash": "311efd0ceada1b14e8087634578f0686",
+    "semantic_hash": "311efd0ceada1b14e8087634578f0686"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\gradlew": {
+    "mtime": 1778476904.5585675,
+    "ast_hash": "f2d3d383787f61a4a99710ee8d780434",
+    "semantic_hash": "f2d3d383787f61a4a99710ee8d780434"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\settings.gradle": {
+    "mtime": 1778476904.5596602,
+    "ast_hash": "c609df618dbeec637255380c9f707ccf",
+    "semantic_hash": "c609df618dbeec637255380c9f707ccf"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\variables.gradle": {
+    "mtime": 1778476904.5606897,
+    "ast_hash": "32293aeff620cc10298866858c22ddc9",
+    "semantic_hash": "32293aeff620cc10298866858c22ddc9"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\build.gradle": {
+    "mtime": 1778476904.4834416,
+    "ast_hash": "b35ed3389ad1ec6fc56c04a266b3e7ed",
+    "semantic_hash": "b35ed3389ad1ec6fc56c04a266b3e7ed"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\capacitor.build.gradle": {
+    "mtime": 1778476904.4846988,
+    "ast_hash": "0dfbbbc953f189ffbb7a6438db60454f",
+    "semantic_hash": "0dfbbbc953f189ffbb7a6438db60454f"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\androidTest\\java\\com\\getcapacitor\\myapp\\ExampleInstrumentedTest.java": {
+    "mtime": 1778476904.4894593,
+    "ast_hash": "c777a4127ae7213f7da22c4105bdfeab",
+    "semantic_hash": "c777a4127ae7213f7da22c4105bdfeab"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\assets\\capacitor.config.json": {
+    "mtime": 1777951646.403799,
+    "ast_hash": "634fac789ee298203c4c42fc49a17cf0",
+    "semantic_hash": "634fac789ee298203c4c42fc49a17cf0"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\assets\\capacitor.plugins.json": {
+    "mtime": 1777951646.5907438,
+    "ast_hash": "9efd37cf5ab6acfd5f65ce2486a38dbf",
+    "semantic_hash": "9efd37cf5ab6acfd5f65ce2486a38dbf"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\assets\\public\\cordova.js": {
+    "mtime": 1777951646.612167,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\assets\\public\\cordova_plugins.js": {
+    "mtime": 1777951646.6126964,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\assets\\public\\assets\\index-Cvd4nogV.js": {
+    "mtime": 1777951631.5180657,
+    "ast_hash": "d66fce270db82409bae3ee91048d8559",
+    "semantic_hash": "d66fce270db82409bae3ee91048d8559"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\java\\com\\arsig\\app\\MainActivity.java": {
+    "mtime": 1778476904.495587,
+    "ast_hash": "c3d661239dc49339e7d483ac3f3ea09f",
+    "semantic_hash": "c3d661239dc49339e7d483ac3f3ea09f"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\test\\java\\com\\getcapacitor\\myapp\\ExampleUnitTest.java": {
+    "mtime": 1778476904.551318,
+    "ast_hash": "3f8a2768101e4de10f606ea4516fd339",
+    "semantic_hash": "3f8a2768101e4de10f606ea4516fd339"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\capacitor-cordova-android-plugins\\build.gradle": {
+    "mtime": 1777951646.6438506,
+    "ast_hash": "2af61653d70c95d20802c8b5c433ba90",
+    "semantic_hash": "2af61653d70c95d20802c8b5c433ba90"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\capacitor-cordova-android-plugins\\cordova.variables.gradle": {
+    "mtime": 1777951646.6448922,
+    "ast_hash": "d2372a0ae9aa60abb8d03e7f06bf9194",
+    "semantic_hash": "d2372a0ae9aa60abb8d03e7f06bf9194"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\App.vue": {
+    "mtime": 1778476904.5691738,
+    "ast_hash": "6822f7652bade8ab3b142e18c44cf874",
+    "semantic_hash": "6822f7652bade8ab3b142e18c44cf874"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\main.js": {
+    "mtime": 1778476904.597687,
+    "ast_hash": "8f5b2f8418058138c17dd50560cccc74",
+    "semantic_hash": "8f5b2f8418058138c17dd50560cccc74"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\api\\archiveApi.js": {
+    "mtime": 1778478296.129588,
+    "ast_hash": "173f350ab360270b4f5dfbc29a677e18",
+    "semantic_hash": "173f350ab360270b4f5dfbc29a677e18"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\api\\archiveCheckoutApi.js": {
+    "mtime": 1778476904.5713353,
+    "ast_hash": "b6db95be8bb1a346750bccb695f7c4fd",
+    "semantic_hash": "b6db95be8bb1a346750bccb695f7c4fd"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\api\\archiveRequestApi.js": {
+    "mtime": 1778476904.5723417,
+    "ast_hash": "e99812ca4fc4d4ee6ecffc32eebcff20",
+    "semantic_hash": "e99812ca4fc4d4ee6ecffc32eebcff20"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\api\\categoryApi.js": {
+    "mtime": 1778476904.5723417,
+    "ast_hash": "7ee1318f8fba9e4d42134a3bbdf467d9",
+    "semantic_hash": "7ee1318f8fba9e4d42134a3bbdf467d9"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\api\\companyApi.js": {
+    "mtime": 1778476904.5733502,
+    "ast_hash": "f29b664372bf04099f3302d8e09abd5a",
+    "semantic_hash": "f29b664372bf04099f3302d8e09abd5a"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\api\\dashboardApi.js": {
+    "mtime": 1778479215.7854717,
+    "ast_hash": "0b49d439a6ef8859b1402b777fd828ba",
+    "semantic_hash": "0b49d439a6ef8859b1402b777fd828ba"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\api\\departmentApi.js": {
+    "mtime": 1778476904.574353,
+    "ast_hash": "8f891d69d0ae02aebd253914539bdc6e",
+    "semantic_hash": "8f891d69d0ae02aebd253914539bdc6e"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\api\\locationApi.js": {
+    "mtime": 1778476904.574353,
+    "ast_hash": "c15b8769fbc3aef888dfbcb66f039a57",
+    "semantic_hash": "c15b8769fbc3aef888dfbcb66f039a57"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\api\\locationHistoryApi.js": {
+    "mtime": 1778476904.5758898,
+    "ast_hash": "7289b8291916c569dcf589ab484c7f0c",
+    "semantic_hash": "7289b8291916c569dcf589ab484c7f0c"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\api\\tagApi.js": {
+    "mtime": 1778476904.5770748,
+    "ast_hash": "9b1c809b5a87304553a22d32dcf74797",
+    "semantic_hash": "9b1c809b5a87304553a22d32dcf74797"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\api\\userApi.js": {
+    "mtime": 1778476904.5780783,
+    "ast_hash": "f5f45c6d2d146510bd1b348e2374031e",
+    "semantic_hash": "f5f45c6d2d146510bd1b348e2374031e"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\components\\AppSidebar.vue": {
+    "mtime": 1779350872.4537468,
+    "ast_hash": "1364c221bc1d90fe104dca0dcca138f4",
+    "semantic_hash": "1364c221bc1d90fe104dca0dcca138f4"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\components\\AppTopbar.vue": {
+    "mtime": 1778478296.1320968,
+    "ast_hash": "a089c54c08e6653ef2d54b9e2e0f98f8",
+    "semantic_hash": "a089c54c08e6653ef2d54b9e2e0f98f8"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\components\\ArchiveDetailModal.vue": {
+    "mtime": 1780040941.139345,
+    "ast_hash": "8007db79e48873959dd099644178ecf7",
+    "semantic_hash": "8007db79e48873959dd099644178ecf7"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\components\\ArchiveEditDialog.vue": {
+    "mtime": 1778491532.4208155,
+    "ast_hash": "dd5e69107afccdf553e750d69d5efc13",
+    "semantic_hash": "dd5e69107afccdf553e750d69d5efc13"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\components\\ArchiveUploadDialog.vue": {
+    "mtime": 1778562061.5447545,
+    "ast_hash": "d42e7e62cbbbca184f6344170b7d323e",
+    "semantic_hash": "d42e7e62cbbbca184f6344170b7d323e"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\components\\BottomNavigationBar.vue": {
+    "mtime": 1778476904.5885305,
+    "ast_hash": "22290a36745dcf9d3356ab469cca8ad4",
+    "semantic_hash": "22290a36745dcf9d3356ab469cca8ad4"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\components\\CabinetDoorGrid.vue": {
+    "mtime": 1778560832.4625027,
+    "ast_hash": "5a87fc3a2b5999bed900b0f11569073c",
+    "semantic_hash": "5a87fc3a2b5999bed900b0f11569073c"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\components\\CabinetPolygonDrawer.vue": {
+    "mtime": 1778489711.4972153,
+    "ast_hash": "3241dcb7bf4b37117bfc85aae5c39f96",
+    "semantic_hash": "3241dcb7bf4b37117bfc85aae5c39f96"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\components\\CheckoutDialog.vue": {
+    "mtime": 1778476904.5905766,
+    "ast_hash": "a66b07d77aabdfcded0c72d7771b17df",
+    "semantic_hash": "a66b07d77aabdfcded0c72d7771b17df"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\components\\FloorPlanViewer.vue": {
+    "mtime": 1778478296.1376498,
+    "ast_hash": "1a750605312944bc5b0d075b6db76523",
+    "semantic_hash": "1a750605312944bc5b0d075b6db76523"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\components\\HelloWorld.vue": {
+    "mtime": 1778476904.5926392,
+    "ast_hash": "62c791a7db877bc0a7e88a22a2359820",
+    "semantic_hash": "62c791a7db877bc0a7e88a22a2359820"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\components\\LocationVisualizer.vue": {
+    "mtime": 1778478296.138652,
+    "ast_hash": "83f9dbf129a63b220c0b01d4d11a16db",
+    "semantic_hash": "83f9dbf129a63b220c0b01d4d11a16db"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\components\\MoveLocationDialog.vue": {
+    "mtime": 1778478296.1399255,
+    "ast_hash": "b682b4a9160696f5b7a677bd3ddc4913",
+    "semantic_hash": "b682b4a9160696f5b7a677bd3ddc4913"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\components\\RoomPolygonDrawer.vue": {
+    "mtime": 1778489695.9976938,
+    "ast_hash": "69cedecf5f0b9cfb1ac89bbee11b7190",
+    "semantic_hash": "69cedecf5f0b9cfb1ac89bbee11b7190"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\layouts\\AppLayout.vue": {
+    "mtime": 1778476904.5966685,
+    "ast_hash": "f704311977d7451dffe70e0f9fd089d4",
+    "semantic_hash": "f704311977d7451dffe70e0f9fd089d4"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\router\\index.js": {
+    "mtime": 1778479467.586584,
+    "ast_hash": "ac3cb9ca046d426c4a601aaaf5303eb9",
+    "semantic_hash": "ac3cb9ca046d426c4a601aaaf5303eb9"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\services\\api.js": {
+    "mtime": 1778501386.6416006,
+    "ast_hash": "cbeab53d936b393e1432acb363faeebd",
+    "semantic_hash": "cbeab53d936b393e1432acb363faeebd"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\store\\auth.js": {
+    "mtime": 1778476904.6013184,
+    "ast_hash": "74ca2a487f1f209658fd4fb79d848dc8",
+    "semantic_hash": "74ca2a487f1f209658fd4fb79d848dc8"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\store\\category.js": {
+    "mtime": 1778476904.6013184,
+    "ast_hash": "6d5ae3ec4d9ae9c3d0ebf5c61bb8acf8",
+    "semantic_hash": "6d5ae3ec4d9ae9c3d0ebf5c61bb8acf8"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\store\\location.js": {
+    "mtime": 1778559574.1600957,
+    "ast_hash": "739da44e0fdc72b4fa04ab895be48d24",
+    "semantic_hash": "739da44e0fdc72b4fa04ab895be48d24"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\views\\CabinetSlotsView.vue": {
+    "mtime": 1778563295.3680654,
+    "ast_hash": "c260b097e627edbeca4d36dd572f7c0c",
+    "semantic_hash": "c260b097e627edbeca4d36dd572f7c0c"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\views\\CabinetsView.vue": {
+    "mtime": 1778491189.9464734,
+    "ast_hash": "f04c9a5b10e33d75f5fda3de29a71220",
+    "semantic_hash": "f04c9a5b10e33d75f5fda3de29a71220"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\views\\CompanyView.vue": {
+    "mtime": 1778476904.6073782,
+    "ast_hash": "d3d2395ffb0aa944486b48a18ffeab25",
+    "semantic_hash": "d3d2395ffb0aa944486b48a18ffeab25"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\views\\DepartmentView.vue": {
+    "mtime": 1778476904.6073782,
+    "ast_hash": "5137669ce9b1856126e329f2d1c17ba0",
+    "semantic_hash": "5137669ce9b1856126e329f2d1c17ba0"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\views\\FileExplorerView.vue": {
+    "mtime": 1778476904.6085942,
+    "ast_hash": "1ed5f75e1261bdfe9bda133089599d2d",
+    "semantic_hash": "1ed5f75e1261bdfe9bda133089599d2d"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\views\\FloorsView.vue": {
+    "mtime": 1778476904.609604,
+    "ast_hash": "05fc8b585a57e399838f21fe2c9bbccf",
+    "semantic_hash": "05fc8b585a57e399838f21fe2c9bbccf"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\views\\HomeView.vue": {
+    "mtime": 1778504475.5128617,
+    "ast_hash": "c8e924e71271bf2b94a7cfd43a99e219",
+    "semantic_hash": "c8e924e71271bf2b94a7cfd43a99e219"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\views\\LocationHistoryView.vue": {
+    "mtime": 1778476904.6111798,
+    "ast_hash": "b9d1777cfb32842cf0e0118773b885a7",
+    "semantic_hash": "b9d1777cfb32842cf0e0118773b885a7"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\views\\LoginView.vue": {
+    "mtime": 1778476904.6121807,
+    "ast_hash": "ea4ceac61a1cf327274bb05ebf4e792e",
+    "semantic_hash": "ea4ceac61a1cf327274bb05ebf4e792e"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\views\\ProfileView.vue": {
+    "mtime": 1778476904.6126876,
+    "ast_hash": "08382b1c3607241af9b99542ce0f7c65",
+    "semantic_hash": "08382b1c3607241af9b99542ce0f7c65"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\views\\RequestApprovalView.vue": {
+    "mtime": 1778481103.1138904,
+    "ast_hash": "43007b8b4cebc0ecb9b629c94e2cd3db",
+    "semantic_hash": "43007b8b4cebc0ecb9b629c94e2cd3db"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\views\\RoomsView.vue": {
+    "mtime": 1778491201.936953,
+    "ast_hash": "edfc440dee02e5660ad5ae69ffad7da0",
+    "semantic_hash": "edfc440dee02e5660ad5ae69ffad7da0"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\views\\TagView.vue": {
+    "mtime": 1778476904.6153512,
+    "ast_hash": "3f4305933c09e493bdb3c7db2f964549",
+    "semantic_hash": "3f4305933c09e493bdb3c7db2f964549"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\views\\UserView.vue": {
+    "mtime": 1778491515.3801298,
+    "ast_hash": "09608d0e0c90d461829238c8aa545130",
+    "semantic_hash": "09608d0e0c90d461829238c8aa545130"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\index.html": {
+    "mtime": 1778476904.5621965,
+    "ast_hash": "8c5d69ad28e4e09d17677f1fd94fc843",
+    "semantic_hash": "8c5d69ad28e4e09d17677f1fd94fc843"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\README.md": {
+    "mtime": 1778477026.7707925,
+    "ast_hash": "fc11f87b82e6493b60192e0792227cde",
+    "semantic_hash": "fc11f87b82e6493b60192e0792227cde"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\assets\\public\\index.html": {
+    "mtime": 1777951631.5201755,
+    "ast_hash": "e0bde45158bb78d70af9da5be9c14972",
+    "semantic_hash": "e0bde45158bb78d70af9da5be9c14972"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\assets\\public\\favicon.svg": {
+    "mtime": 1777951536.7557652,
+    "ast_hash": "7e840862161341271697daa99a40d76b",
+    "semantic_hash": "7e840862161341271697daa99a40d76b"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\assets\\public\\icons.svg": {
+    "mtime": 1777951536.7769434,
+    "ast_hash": "3b4fcfcf393eca4d264dca4a4663bc37",
+    "semantic_hash": "3b4fcfcf393eca4d264dca4a4663bc37"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\assets\\public\\assets\\hero-CLDdwZDr.png": {
+    "mtime": 1777951631.5185797,
+    "ast_hash": "aead493361b27e7510691c5d7072dfc1",
+    "semantic_hash": "aead493361b27e7510691c5d7072dfc1"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\assets\\public\\assets\\vite-BF8QNONU.svg": {
+    "mtime": 1777951631.5201755,
+    "ast_hash": "9960a24288958394ac50e57ff638b036",
+    "semantic_hash": "9960a24288958394ac50e57ff638b036"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\drawable\\splash.png": {
+    "mtime": 1778476904.5180202,
+    "ast_hash": "acc976d4a36479233371a53021525c0c",
+    "semantic_hash": "acc976d4a36479233371a53021525c0c"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\drawable-land-hdpi\\splash.png": {
+    "mtime": 1778476904.4979048,
+    "ast_hash": "f7a80786dd355bd39014e58027aa6e19",
+    "semantic_hash": "f7a80786dd355bd39014e58027aa6e19"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\drawable-land-mdpi\\splash.png": {
+    "mtime": 1778476904.4994755,
+    "ast_hash": "acc976d4a36479233371a53021525c0c",
+    "semantic_hash": "acc976d4a36479233371a53021525c0c"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\drawable-land-xhdpi\\splash.png": {
+    "mtime": 1778476904.5009818,
+    "ast_hash": "b8c72969bc1f78aab71a76035360d4af",
+    "semantic_hash": "b8c72969bc1f78aab71a76035360d4af"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\drawable-land-xxhdpi\\splash.png": {
+    "mtime": 1778476904.5031774,
+    "ast_hash": "f87e988387b07d843905f38b084929fb",
+    "semantic_hash": "f87e988387b07d843905f38b084929fb"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\drawable-land-xxxhdpi\\splash.png": {
+    "mtime": 1778476904.5057325,
+    "ast_hash": "055a69553b16b0bf5f72094a2e459fc7",
+    "semantic_hash": "055a69553b16b0bf5f72094a2e459fc7"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\drawable-port-hdpi\\splash.png": {
+    "mtime": 1778476904.5072398,
+    "ast_hash": "5eb10d16c81338abe8bbc033d49638a8",
+    "semantic_hash": "5eb10d16c81338abe8bbc033d49638a8"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\drawable-port-mdpi\\splash.png": {
+    "mtime": 1778476904.5093293,
+    "ast_hash": "d855a76a5070c8e6fcfd83a27549bdce",
+    "semantic_hash": "d855a76a5070c8e6fcfd83a27549bdce"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\drawable-port-xhdpi\\splash.png": {
+    "mtime": 1778476904.5105722,
+    "ast_hash": "df100b2a36bdb98b711cca58941728de",
+    "semantic_hash": "df100b2a36bdb98b711cca58941728de"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\drawable-port-xxhdpi\\splash.png": {
+    "mtime": 1778476904.5125935,
+    "ast_hash": "2c1b668364e815256f67b71dcdfa4d6e",
+    "semantic_hash": "2c1b668364e815256f67b71dcdfa4d6e"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\drawable-port-xxxhdpi\\splash.png": {
+    "mtime": 1778476904.5149188,
+    "ast_hash": "b5b1b22b59abe686c1df0d74a423d034",
+    "semantic_hash": "b5b1b22b59abe686c1df0d74a423d034"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-hdpi\\ic_launcher.png": {
+    "mtime": 1778476904.5237226,
+    "ast_hash": "1956941339dd5fe36d5c66601c89a08d",
+    "semantic_hash": "1956941339dd5fe36d5c66601c89a08d"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-hdpi\\ic_launcher_foreground.png": {
+    "mtime": 1778476904.5247252,
+    "ast_hash": "73b1e06d769fa08a9c3b8328cc15fd75",
+    "semantic_hash": "73b1e06d769fa08a9c3b8328cc15fd75"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-hdpi\\ic_launcher_round.png": {
+    "mtime": 1778476904.5257366,
+    "ast_hash": "f43e5674865a00186dd76183cf1f2f8e",
+    "semantic_hash": "f43e5674865a00186dd76183cf1f2f8e"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-mdpi\\ic_launcher.png": {
+    "mtime": 1778476904.5267477,
+    "ast_hash": "7ed1b3739b83215d0c4a0b4a7f2dcab4",
+    "semantic_hash": "7ed1b3739b83215d0c4a0b4a7f2dcab4"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-mdpi\\ic_launcher_foreground.png": {
+    "mtime": 1778476904.5282562,
+    "ast_hash": "5b77e8aec8b17eed320a97567c7cb8bf",
+    "semantic_hash": "5b77e8aec8b17eed320a97567c7cb8bf"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-mdpi\\ic_launcher_round.png": {
+    "mtime": 1778476904.5297878,
+    "ast_hash": "a49547a32c7d9b529af607b033811d81",
+    "semantic_hash": "a49547a32c7d9b529af607b033811d81"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-xhdpi\\ic_launcher.png": {
+    "mtime": 1778476904.5322518,
+    "ast_hash": "5689511ee4e41a367d0342f37ac48bdf",
+    "semantic_hash": "5689511ee4e41a367d0342f37ac48bdf"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-xhdpi\\ic_launcher_foreground.png": {
+    "mtime": 1778476904.5333278,
+    "ast_hash": "15cdded29b9877ac98c5931024c5da5d",
+    "semantic_hash": "15cdded29b9877ac98c5931024c5da5d"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-xhdpi\\ic_launcher_round.png": {
+    "mtime": 1778476904.5349402,
+    "ast_hash": "c890fa4af62a63486d5dea62441ce7ab",
+    "semantic_hash": "c890fa4af62a63486d5dea62441ce7ab"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-xxhdpi\\ic_launcher.png": {
+    "mtime": 1778476904.5359426,
+    "ast_hash": "a3285eeaedda8201f04e7737b9df8421",
+    "semantic_hash": "a3285eeaedda8201f04e7737b9df8421"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-xxhdpi\\ic_launcher_foreground.png": {
+    "mtime": 1778476904.53732,
+    "ast_hash": "4e9584ecc16d1fc75afb798688ce576f",
+    "semantic_hash": "4e9584ecc16d1fc75afb798688ce576f"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-xxhdpi\\ic_launcher_round.png": {
+    "mtime": 1778476904.538326,
+    "ast_hash": "14cde87848553e24d7106f56eb8ceb6f",
+    "semantic_hash": "14cde87848553e24d7106f56eb8ceb6f"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-xxxhdpi\\ic_launcher.png": {
+    "mtime": 1778476904.53933,
+    "ast_hash": "9e029293ab1ae8e3a6a7b7d0b7177e46",
+    "semantic_hash": "9e029293ab1ae8e3a6a7b7d0b7177e46"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-xxxhdpi\\ic_launcher_foreground.png": {
+    "mtime": 1778476904.5423636,
+    "ast_hash": "ed3696b7c52d9747411a475dbe3fa34a",
+    "semantic_hash": "ed3696b7c52d9747411a475dbe3fa34a"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\android\\app\\src\\main\\res\\mipmap-xxxhdpi\\ic_launcher_round.png": {
+    "mtime": 1778476904.5438716,
+    "ast_hash": "85addb4159ecd3f76f02fbacd5ec86de",
+    "semantic_hash": "85addb4159ecd3f76f02fbacd5ec86de"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\public\\favicon.svg": {
+    "mtime": 1778476904.5675817,
+    "ast_hash": "7e840862161341271697daa99a40d76b",
+    "semantic_hash": "7e840862161341271697daa99a40d76b"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\public\\icons.svg": {
+    "mtime": 1778476904.5686498,
+    "ast_hash": "21c7473c592c67dc87223d49892c8f0a",
+    "semantic_hash": "21c7473c592c67dc87223d49892c8f0a"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\assets\\hero.png": {
+    "mtime": 1778476904.57959,
+    "ast_hash": "aead493361b27e7510691c5d7072dfc1",
+    "semantic_hash": "aead493361b27e7510691c5d7072dfc1"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\assets\\logo.svg": {
+    "mtime": 1778476904.5801766,
+    "ast_hash": "dee55c767de4316c9c770928f1dafe54",
+    "semantic_hash": "dee55c767de4316c9c770928f1dafe54"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\assets\\vite.svg": {
+    "mtime": 1778476904.582538,
+    "ast_hash": "6d5180a782d64c8cf51ba01c2a2184d8",
+    "semantic_hash": "6d5180a782d64c8cf51ba01c2a2184d8"
+  },
+  "C:\\Users\\Salivs\\Data\\laragon\\www\\arsig-vibe\\frontend\\src\\assets\\vue.svg": {
+    "mtime": 1778476904.582538,
+    "ast_hash": "081c348d068770af78fcd90980521318",
+    "semantic_hash": "081c348d068770af78fcd90980521318"
+  }
+}

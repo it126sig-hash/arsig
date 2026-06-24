@@ -110,7 +110,9 @@ export const useLocationStore = defineStore('location', {
     async updateRoom(id, data) {
       this.loading = true
       try {
-        const response = await api.put(`/rooms/${id}`, data)
+        // Method spoofing for PUT request - needed for shared hosting compatibility
+        const formData = { ...data, _method: 'PUT' }
+        const response = await api.post(`/rooms/${id}`, formData)
         const index = this.rooms.findIndex(r => r.id === id)
         if (index !== -1) {
           this.rooms[index] = response.data.data
@@ -161,7 +163,9 @@ export const useLocationStore = defineStore('location', {
     async updateCabinet(id, data) {
       this.loading = true
       try {
-        const response = await api.put(`/cabinets/${id}`, data)
+        // Method spoofing for PUT request - needed for shared hosting compatibility
+        const formData = { ...data, _method: 'PUT' }
+        const response = await api.post(`/cabinets/${id}`, formData)
         const index = this.cabinets.findIndex(c => c.id === id)
         if (index !== -1) {
           this.cabinets[index] = response.data.data
@@ -212,7 +216,9 @@ export const useLocationStore = defineStore('location', {
     async updateCabinetSlot(id, data) {
       this.loading = true
       try {
-        const response = await api.put(`/cabinet-slots/${id}`, data)
+        // Method spoofing for PUT request - needed for shared hosting compatibility
+        const formData = { ...data, _method: 'PUT' }
+        const response = await api.post(`/cabinet-slots/${id}`, formData)
         const index = this.cabinetSlots.findIndex(c => c.id === id)
         if (index !== -1) {
           this.cabinetSlots[index] = response.data.data

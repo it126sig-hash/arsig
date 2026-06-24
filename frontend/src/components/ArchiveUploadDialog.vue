@@ -381,7 +381,7 @@ watch(() => form.cabinet_id, async (newId) => {
     slots.value = []
     if (newId) {
         const res = await fetchSlotsByCabinet(newId)
-        slots.value = res.data.data
+        slots.value = res.data.data.sort((a, b) => a.id - b.id)
     }
 })
 

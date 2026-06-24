@@ -8,6 +8,6 @@ export function checkinArchive(archiveId) {
     return api.post(`/archives/${archiveId}/checkin`)
 }
 
-export function getCheckoutHistory(archiveId) {
-    return api.get(`/archives/${archiveId}/checkout-history`)
+export function getCheckoutHistory(archiveId, params = {}) {
+    return api.get(`/archives/${archiveId}/checkout-history`, { params })
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\CheckoutRequest;
 use App\Models\Archive;
 use App\Services\ArchiveCheckoutService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ArchiveCheckoutController extends BaseController
@@ -37,9 +38,18 @@ class ArchiveCheckoutController extends BaseController
         return $this->successResponse($log, 'Arsip berhasil ditandai kembali.');
     }
 
-    public function history(Archive $archive): JsonResponse
+    public function history(Request $request, Archive $archive): JsonResponse
     {
         $this->authorize('view', $archive);
+
+        if ($request->hasAny(['page', 'per_page'])) {
+            $perPage = min(max((int) $request->integer('per_page', 10), 1), 25);
+
+            return $this->successResponse(
+                $this->service->getPaginatedHistory($archive, $perPage),
+                'Riwayat checkout arsip berhasil diambil.'
+            );
+        }
 
         $history = $this->service->getHistory($archive);
 

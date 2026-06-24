@@ -403,7 +403,9 @@ const selectedCabinet = computed(() => {
 
 const selectedCabinetSlots = computed(() => {
   if (!selectedCabinetId.value) return []
-  return locationStore.cabinetSlots.filter(s => s.cabinet_id === selectedCabinetId.value)
+  return locationStore.cabinetSlots
+    .filter(s => s.cabinet_id === selectedCabinetId.value)
+    .sort((a, b) => a.id - b.id)
 })
 
 const statusClass = (status) => {
@@ -466,6 +468,7 @@ const saveCabinetSlot = async () => {
   if (!slot.value.name?.trim() || !slot.value.cabinet_id) return
   try {
     const data = {
+      id: slot.value.id,
       cabinet_id: slot.value.cabinet_id,
       name: slot.value.name,
       status: slot.value.status || 'aktif',
@@ -488,6 +491,7 @@ const saveCabinetSlot = async () => {
 const editCabinetSlot = (editData) => {
   slot.value = {
     ...editData,
+    cabinet_id: editData.cabinet?.id || editData.cabinet_id,
     pic_user_ids: editData.pic_users ? editData.pic_users.map(u => u.id) : [],
     tag_ids: editData.tags ? editData.tags.map(t => t.id) : []
   }

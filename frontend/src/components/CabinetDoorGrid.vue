@@ -51,7 +51,7 @@
             :key="tag.id"
             class="inline-flex items-center px-1 py-0 rounded bg-violet-50 text-violet-600 text-[9px] font-medium"
           >
-            #{{ tag.nama }}
+            #{{ tag.nama }} 
           </span>
         </div>
       </div>
@@ -103,7 +103,10 @@ const normalizedSlots = computed(() => {
   const result = []
   for (let i = 0; i < total; i++) {
     if (props.slots[i]) {
-      result.push(props.slots[i])
+      result.push({
+        ...props.slots[i],
+        status: props.slots[i].status || 'aktif'
+      })
     } else {
       result.push({
         id: null,

@@ -170,19 +170,28 @@ class ArchiveController extends BaseController
         return $this->successResponse($updated, 'Lokasi fisik arsip berhasil dipindahkan.');
     }
 
-    public function locationHistories(Archive $archive): JsonResponse
+    public function locationHistories(Request $request, Archive $archive): JsonResponse
     {
         $this->authorize('view', $archive);
 
-        $histories = ArchiveLocationLog::where('archive_id', $archive->id)
+        $query = ArchiveLocationLog::where('archive_id', $archive->id)
             ->with([
                 'movedBy', 
                 'oldFloor', 'oldRoom', 'oldCabinet', 'oldCabinetSlot',
                 'newFloor', 'newRoom', 'newCabinet', 'newCabinetSlot'
             ])
-            ->orderByDesc('created_at')
-            ->limit(10) // Increase a bit from 3 for better list
-            ->get();
+            ->orderByDesc('created_at');
+
+        if ($request->hasAny(['page', 'per_page'])) {
+            $perPage = min(max((int) $request->integer('per_page', 10), 1), 25);
+
+            return $this->successResponse(
+                $query->paginate($perPage),
+                'Riwayat lokasi arsip berhasil diambil.'
+            );
+        }
+
+        $histories = $query->limit(10)->get();
 
         return $this->successResponse($histories, 'Riwayat lokasi arsip berhasil diambil.');
     }

@@ -6,6 +6,7 @@ use App\Models\Archive;
 use App\Models\ArchiveCheckoutLog;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ArchiveCheckoutService
 {
@@ -68,5 +69,13 @@ class ArchiveCheckoutService
             ->with('actorUser')
             ->orderBy('created_at', 'desc')
             ->get();
+    }
+
+    public function getPaginatedHistory(Archive $archive, int $perPage = 10): LengthAwarePaginator
+    {
+        return ArchiveCheckoutLog::where('archive_id', $archive->id)
+            ->with('actorUser')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
     }
 }
