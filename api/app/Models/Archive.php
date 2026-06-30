@@ -22,6 +22,7 @@ class Archive extends Model
         'file_type',
         'privacy_type',
         'download_policy',
+        'is_confidential',
         'status',
         'pic_user_id',
         'file_path',
@@ -51,6 +52,7 @@ class Archive extends Model
         'issue_date' => 'date',
         'expire_date' => 'date',
         'reminder_date' => 'date',
+        'is_confidential' => 'boolean',
         'is_checked_out' => 'boolean',
     ];
 

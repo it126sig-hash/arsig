@@ -22,6 +22,8 @@ class UpdateDepartmentRequest extends FormRequest
                 'max:255',
                 Rule::unique('departments', 'name')->ignore($this->route('department')),
             ],
+            'head_user_ids' => ['sometimes', 'array'],
+            'head_user_ids.*' => ['integer', 'exists:users,id'],
         ];
     }
 }

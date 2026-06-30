@@ -29,7 +29,7 @@ class DepartmentController extends BaseController
     public function update(UpdateDepartmentRequest $request, Department $department): JsonResponse
     {
         $this->service->update($department, $request->validated());
-        return $this->successResponse($department->fresh(), 'Departemen berhasil diperbarui.');
+        return $this->successResponse($department->fresh('heads'), 'Departemen berhasil diperbarui.');
     }
 
     public function destroy(Department $department): JsonResponse

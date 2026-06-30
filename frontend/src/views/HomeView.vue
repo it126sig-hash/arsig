@@ -159,9 +159,10 @@
       <div class="flex-1 flex flex-col gap-4">
         <!-- Results Header -->
         <div class="flex items-center justify-between px-2">
-          <div class="text-sm text-slate-500">
+          <div v-if="hasSearched" class="text-sm text-slate-500">
             Menampilkan <span class="font-bold text-slate-800">{{ archives.length }}</span> hasil
           </div>
+          <div v-else></div>
           <div class="flex items-center gap-3">
              <!-- Placeholder for view switcher or sort if needed -->
           </div>
@@ -171,6 +172,15 @@
         <div v-if="loading" class="flex-1 flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-slate-200">
           <ProgressSpinner style="width: 50px; height: 50px" strokeWidth="4" />
           <p class="mt-4 text-slate-500 font-medium">Mencari arsip...</p>
+        </div>
+
+        <!-- Search-First Prompt -->
+        <div v-else-if="!hasSearched" class="flex-1 flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-slate-200 text-center px-4">
+          <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+            <i class="pi pi-search text-3xl text-slate-300"></i>
+          </div>
+          <h3 class="text-xl font-bold text-slate-700">Mulai pencarian</h3>
+          <p class="text-slate-500 max-w-sm mt-2">Ketik kata kunci, pilih kategori, atau gunakan filter untuk menemukan arsip.</p>
         </div>
 
         <!-- Empty State -->
@@ -228,7 +238,10 @@
 
               <Column header="PRIVACY" style="width: 120px">
                 <template #body="{ data }">
-                  <Tag :value="data.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(data.privacy_type)" class="!text-[9px] !px-2" :class="{ 'opacity-50': isMuted(data) }" />
+                  <div class="flex flex-col gap-1 items-start" :class="{ 'opacity-50': isMuted(data) }">
+                    <Tag :value="data.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(data.privacy_type)" class="!text-[9px] !px-2" />
+                    <Tag v-if="data.is_confidential" value="CONFIDENTIAL" severity="warn" class="!text-[9px] !px-2" />
+                  </div>
                 </template>
               </Column>
 
@@ -288,7 +301,10 @@
                     <span class="text-[9px] text-blue-500 font-bold uppercase mt-1">PIC: {{ archive.pic?.name || '-' }}</span>
                   </div>
                 </div>
-                <Tag v-if="hasAccess(archive)" :value="archive.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(archive.privacy_type)" class="!text-[9px]" />
+                <div v-if="hasAccess(archive)" class="flex flex-col gap-1 items-end">
+                  <Tag :value="archive.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(archive.privacy_type)" class="!text-[9px]" />
+                  <Tag v-if="archive.is_confidential" value="CONFIDENTIAL" severity="warn" class="!text-[9px]" />
+                </div>
                 <i v-else class="pi pi-lock text-red-400"></i>
               </div>
 
@@ -428,6 +444,7 @@ const vTooltip = Tooltip
 const authStore = useAuthStore()
 const confirm = useConfirm()
 const loading = ref(false)
+const hasSearched = ref(false)
 const archives = ref([])
 const companies = ref([])
 const categories = ref([])
@@ -478,11 +495,11 @@ const dummyStats = reactive({
 const actionMenuItems = computed(() => {
     const archive = selectedArchive.value
     const user = authStore.user
-    const isPicOrAdmin = archive && user && (user.role === 'admin' || archive.pic_user_id == user.id) // tidak menggunakan === karena error ketika di deploy ke hosting
+    const isPicOrAdmin = archive && user && (['admin', 'root'].includes(user.role) || archive.pic_user_id == user.id) // tidak menggunakan === karena error ketika di deploy ke hosting
+    const canMoveLocation = archive?.can_move_location !== false
     
 
     const items = [
-        { label: 'Pindah Lokasi Fisik', icon: 'pi pi-arrows-alt', command: () => { moveLocationDialog.value = true } },
         { 
             label: archive?.is_checked_out ? 'Tandai Sudah Kembali' : 'Keluarkan Arsip', 
             icon: archive?.is_checked_out ? 'pi pi-check-circle' : 'pi pi-external-link', 
@@ -496,6 +513,10 @@ const actionMenuItems = computed(() => {
         }
     ]
 
+    if (canMoveLocation) {
+        items.unshift({ label: 'Pindah Lokasi Fisik', icon: 'pi pi-arrows-alt', command: () => { moveLocationDialog.value = true } })
+    }
+
     if (isPicOrAdmin) {
         items.unshift({ label: 'Ubah Arsip', icon: 'pi pi-pencil', command: () => { editDialog.value = true } })
     }
@@ -508,8 +529,7 @@ onMounted(async () => {
   await Promise.all([
     loadCompanies(),
     loadTags(),
-    loadStats(),
-    search()
+    loadStats()
   ])
 })
 
@@ -572,6 +592,7 @@ const formatTreeData = (data, parentPath = '') => {
 
 const search = async () => {
   loading.value = true
+  hasSearched.value = true
   try {
     const params = { ...filters }
     if (typeof params.category_id === 'object' && params.category_id !== null) {

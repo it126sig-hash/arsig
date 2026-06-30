@@ -119,10 +119,12 @@ class ArchiveController extends BaseController
 
         if ($existingRequest) {
             $message = $existingRequest->status === 'pending'
-                ? 'Permintaan OTP Anda sedang diproses oleh PIC. Harap tunggu persetujuan.'
+                ? ($existingRequest->approval_stage === 'department'
+                    ? 'Permintaan OTP Anda sedang menunggu persetujuan kepala departemen.'
+                    : 'Permintaan OTP Anda sedang diproses oleh PIC. Harap tunggu persetujuan.')
                 : 'Kode OTP sebelumnya masih aktif. Silakan gunakan OTP yang telah dikirimkan.';
 
-            return $this->errorResponse($message, 400);
+            return $this->errorResponse($message, null, 400);
         }
 
         // Buat request baru ke PIC
@@ -130,6 +132,8 @@ class ArchiveController extends BaseController
             'archive_id'          => $archive->id,
             'requester_user_id'   => $userId,
             'status'              => 'pending',
+            'requires_department_approval' => (bool) $archive->is_confidential,
+            'approval_stage'      => 'pic',
         ]);
 
         // Kirim notifikasi ke PIC
@@ -163,7 +167,7 @@ class ArchiveController extends BaseController
 
     public function moveLocation(MoveArchiveLocationRequest $request, Archive $archive): JsonResponse
     {
-        $this->authorize('update', $archive);
+        $this->authorize('moveLocation', $archive);
 
         $updated = $this->service->moveLocation($archive, $request->validated());
 
@@ -172,7 +176,7 @@ class ArchiveController extends BaseController
 
     public function locationHistories(Request $request, Archive $archive): JsonResponse
     {
-        $this->authorize('view', $archive);
+        $this->authorize('viewLocation', $archive);
 
         $query = ArchiveLocationLog::where('archive_id', $archive->id)
             ->with([

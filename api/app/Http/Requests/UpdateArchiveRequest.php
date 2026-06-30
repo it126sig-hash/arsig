@@ -23,6 +23,7 @@ class UpdateArchiveRequest extends FormRequest
             'archive_type'    => 'required|in:full,physical_only,digital_only,placeholder',
             'privacy_type'    => 'required|in:public,private,department,user',
             'download_policy' => 'required|in:direct_download,request_to_pic',
+            'is_confidential' => 'sometimes|boolean',
             'pic_user_id'     => 'required|exists:users,id',
             'file'            => 'nullable|file|max:20480',
             'expire_date'     => 'nullable|date',

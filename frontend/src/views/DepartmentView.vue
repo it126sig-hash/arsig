@@ -57,6 +57,16 @@
 
                 <Column field="id" header="ID" style="width: 80px" />
                 <Column field="name" header="Nama Departemen" />
+                <Column header="Kepala Departemen">
+                    <template #body="{ data }">
+                        <div v-if="data.heads?.length" class="flex flex-wrap gap-1">
+                            <span v-for="head in data.heads" :key="head.id" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
+                                {{ head.name }}
+                            </span>
+                        </div>
+                        <span v-else class="text-slate-400">Belum diatur</span>
+                    </template>
+                </Column>
                 <Column field="users_count" header="Jumlah User" style="width: 140px">
                     <template #body="{ data }">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -93,6 +103,7 @@
                         <div class="flex flex-col">
                             <span class="text-sm font-bold text-slate-800">{{ dept.name }}</span>
                             <span class="text-[10px] text-slate-400 mt-0.5">Dibuat: {{ formatDate(dept.created_at) }}</span>
+                            <span class="text-[10px] text-amber-600 mt-0.5 font-semibold">Kepala: {{ dept.heads?.map(h => h.name).join(', ') || 'Belum diatur' }}</span>
                         </div>
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100">
                             {{ dept.users_count ?? 0 }} User
@@ -139,6 +150,23 @@
                     />
                     <small class="text-red-500" v-if="formErrors.name">{{ formErrors.name }}</small>
                 </div>
+
+                <div class="flex flex-col gap-1">
+                    <label for="dept-head" class="text-sm font-medium text-slate-700">
+                        Kepala Departemen
+                    </label>
+                    <MultiSelect
+                        id="dept-head"
+                        v-model="form.head_user_ids"
+                        :options="userOptions"
+                        optionLabel="name"
+                        optionValue="id"
+                        placeholder="Pilih kepala departemen"
+                        display="chip"
+                        showClear
+                        class="w-full !rounded-xl"
+                    />
+                </div>
             </div>
 
             <template #footer>
@@ -165,6 +193,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { FilterMatchMode } from '@primevue/core/api'
 import { fetchDepartments, createDepartment, updateDepartment, deleteDepartment } from '@/api/departmentApi'
+import { fetchUsers } from '@/api/userApi'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import DataTable from 'primevue/datatable'
@@ -172,6 +201,7 @@ import Column from 'primevue/column'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import MultiSelect from 'primevue/multiselect'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import ProgressSpinner from 'primevue/progressspinner'
@@ -189,6 +219,7 @@ onUnmounted(() => window.removeEventListener('resize', updateWidth))
 const isMobile = computed(() => windowWidth.value < 768)
 
 const departments = ref([])
+const userOptions = ref([])
 const isLoading = ref(false)
 const showDialog = ref(false)
 const isSaving = ref(false)
@@ -208,7 +239,7 @@ const filteredDepartments = computed(() => {
     )
 })
 
-const form = reactive({ name: '' })
+const form = reactive({ name: '', head_user_ids: [] })
 const formErrors = reactive({ name: '' })
 
 const formatDate = (dateStr) => {
@@ -230,8 +261,20 @@ const loadDepartments = async () => {
     }
 }
 
+const loadUsers = async () => {
+    try {
+        const res = await fetchUsers()
+        if (res.data.success) {
+            userOptions.value = res.data.data
+        }
+    } catch (e) {
+        // User list is optional for department CRUD; backend validation remains authoritative.
+    }
+}
+
 const resetForm = () => {
     form.name = ''
+    form.head_user_ids = []
     formErrors.name = ''
     editingId.value = null
 }
@@ -247,6 +290,7 @@ const openEdit = (dept) => {
     isEditing.value = true
     editingId.value = dept.id
     form.name = dept.name
+    form.head_user_ids = (dept.heads || []).map(h => Number(h.id))
     showDialog.value = true
 }
 
@@ -264,7 +308,7 @@ const handleSubmit = async () => {
 
     isSaving.value = true
     try {
-        const payload = { name: form.name.trim() }
+        const payload = { name: form.name.trim(), head_user_ids: form.head_user_ids }
         let res
 
         if (isEditing.value) {
@@ -321,5 +365,7 @@ const confirmDelete = (dept) => {
     })
 }
 
-onMounted(loadDepartments)
+onMounted(async () => {
+    await Promise.all([loadDepartments(), loadUsers()])
+})
 </script>

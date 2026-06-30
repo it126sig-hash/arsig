@@ -102,21 +102,11 @@ const normalizedSlots = computed(() => {
   if (total <= 0) return []
   const result = []
   for (let i = 0; i < total; i++) {
-    if (props.slots[i]) {
-      result.push({
-        ...props.slots[i],
-        status: props.slots[i].status || 'aktif'
-      })
-    } else {
-      result.push({
-        id: null,
-        name: String(i + 1).padStart(2, '0'),
-        status: 'aktif',
-        pic_users: [],
-        tags: [],
-        keterangan: ''
-      })
-    }
+    const s = props.slots[i]
+    result.push(s
+      ? { ...s, status: s.status || 'aktif' }
+      : { id: null, name: String(i + 1).padStart(2, '0'), status: 'aktif', pic_users: [], tags: [], keterangan: '' }
+    )
   }
   return result
 })

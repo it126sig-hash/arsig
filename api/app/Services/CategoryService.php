@@ -11,13 +11,14 @@ class CategoryService
     public function getTree(int $companyId): array
     {
         $categories = Category::where('company_id', $companyId)
-            ->whereNull('parent_id')
-            ->with(['children' => function ($query) {
-                $query->with('children');
-            }])
+            ->select(['id', 'company_id', 'name', 'parent_id'])
+            ->orderBy('parent_id')
+            ->orderBy('name')
+            ->orderBy('id')
             ->get();
+        $grouped = $categories->groupBy(fn (Category $category): string => (string) ($category->parent_id ?? 'root'));
 
-        return $this->formatTree($categories);
+        return $this->formatTree($grouped);
     }
 
     public function store(array $data): Category
@@ -45,9 +46,13 @@ class CategoryService
         return $category->delete();
     }
 
-    private function formatTree(Collection $categories): array
+    private function formatTree(Collection $grouped, ?int $parentId = null): array
     {
-        return $categories->map(function ($category) {
+        $key = $parentId === null ? 'root' : (string) $parentId;
+
+        return $grouped->get($key, collect())->map(function (Category $category) use ($grouped) {
+            $children = $this->formatTree($grouped, $category->id);
+
             return [
                 'key' => (string) $category->id,
                 'label' => $category->name,
@@ -56,9 +61,9 @@ class CategoryService
                     'name' => $category->name,
                     'company_id' => $category->company_id,
                 ],
-                'children' => $this->formatTree($category->children),
-                'icon' => $category->children->count() > 0 ? 'pi pi-fw pi-folder' : 'pi pi-fw pi-file',
+                'children' => $children,
+                'icon' => count($children) > 0 ? 'pi pi-fw pi-folder' : 'pi pi-fw pi-file',
             ];
-        })->toArray();
+        })->values()->toArray();
     }
 }

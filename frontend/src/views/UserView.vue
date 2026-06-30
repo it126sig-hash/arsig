@@ -55,6 +55,13 @@
                         </span>
                     </template>
                 </Column>
+                <Column field="level" header="Level" style="width: 140px">
+                    <template #body="{ data }">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 uppercase">
+                            {{ data.level || 'staff' }}
+                        </span>
+                    </template>
+                </Column>
                 <Column header="Aksi" style="width: 140px">
                     <template #body="{ data }">
                         <div class="flex gap-2">
@@ -105,6 +112,7 @@
                             </div>
                             <span class="text-xs text-slate-400">{{ user.email }}</span>
                             <span v-if="user.department" class="text-[10px] text-blue-500 mt-0.5">{{ user.department.name }}</span>
+                            <span class="text-[10px] text-amber-600 mt-0.5 uppercase font-semibold">{{ user.level || 'staff' }}</span>
                         </div>
                     </div>
                     <div class="flex gap-1">
@@ -208,6 +216,23 @@
                     />
                     <small class="text-red-500" v-if="formErrors.role">{{ formErrors.role }}</small>
                 </div>
+
+                <div class="flex flex-col gap-1">
+                    <label for="user-level" class="text-sm font-semibold text-slate-700">
+                        Level <span class="text-red-500">*</span>
+                    </label>
+                    <Select
+                        id="user-level"
+                        v-model="form.level"
+                        :options="levelOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Pilih level"
+                        class="w-full !rounded-xl"
+                        :class="{ 'p-invalid': formErrors.level }"
+                    />
+                    <small class="text-red-500" v-if="formErrors.level">{{ formErrors.level }}</small>
+                </div>
             </div>
 
             <template #footer>
@@ -269,8 +294,15 @@ const roleOptions = [
     { label: 'User', value: 'user' },
 ]
 
-const form = reactive({ name: '', email: '', password: '', department_id: null, role: 'user' })
-const formErrors = reactive({ name: '', email: '', password: '', role: '' })
+const levelOptions = [
+    { label: 'Staff', value: 'staff' },
+    { label: 'Supervisor', value: 'supervisor' },
+    { label: 'Manager', value: 'manager' },
+    { label: 'Direksi', value: 'direksi' },
+]
+
+const form = reactive({ name: '', email: '', password: '', department_id: null, role: 'user', level: 'staff' })
+const formErrors = reactive({ name: '', email: '', password: '', role: '', level: '' })
 
 const loadUsers = async () => {
     isLoading.value = true
@@ -303,10 +335,12 @@ const resetForm = () => {
     form.password = ''
     form.department_id = null
     form.role = 'user'
+    form.level = 'staff'
     formErrors.name = ''
     formErrors.email = ''
     formErrors.password = ''
     formErrors.role = ''
+    formErrors.level = ''
     editingId.value = null
 }
 
@@ -324,6 +358,7 @@ const openEdit = (user) => {
     form.email = user.email
     form.department_id = user.department_id != null ? Number(user.department_id) : null
     form.role = user.role
+    form.level = user.level || 'staff'
     showDialog.value = true
 }
 
@@ -337,12 +372,14 @@ const handleSubmit = async () => {
     formErrors.email = ''
     formErrors.password = ''
     formErrors.role = ''
+    formErrors.level = ''
 
     let hasError = false
     if (!form.name.trim()) { formErrors.name = 'Nama wajib diisi.'; hasError = true }
     if (!form.email.trim()) { formErrors.email = 'Email wajib diisi.'; hasError = true }
     if (!isEditing.value && !form.password) { formErrors.password = 'Password wajib diisi.'; hasError = true }
     if (!form.role) { formErrors.role = 'Role wajib dipilih.'; hasError = true }
+    if (!form.level) { formErrors.level = 'Level wajib dipilih.'; hasError = true }
     if (hasError) return
 
     isSaving.value = true
@@ -352,6 +389,7 @@ const handleSubmit = async () => {
             email: form.email.trim(),
             department_id: form.department_id || null,
             role: form.role,
+            level: form.level,
         }
         if (form.password) payload.password = form.password
 
@@ -379,6 +417,7 @@ const handleSubmit = async () => {
             if (errs.email) formErrors.email = errs.email[0]
             if (errs.password) formErrors.password = errs.password[0]
             if (errs.role) formErrors.role = errs.role[0]
+            if (errs.level) formErrors.level = errs.level[0]
         } else {
             toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Terjadi kesalahan.', life: 4000 })
         }

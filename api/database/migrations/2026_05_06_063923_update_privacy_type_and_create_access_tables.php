@@ -15,7 +15,9 @@ return new class extends Migration
         // Update ENUM for privacy_type
         // Old: ['public', 'private', 'specific_user', 'specific_department']
         // New: ['public', 'private', 'department', 'user']
-        DB::statement("ALTER TABLE archives MODIFY COLUMN privacy_type ENUM('public', 'private', 'department', 'user') NOT NULL");
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE archives MODIFY COLUMN privacy_type ENUM('public', 'private', 'department', 'user') NOT NULL");
+        }
 
         Schema::create('archive_department_access', function (Blueprint $table) {
             $table->id();
@@ -41,6 +43,8 @@ return new class extends Migration
         Schema::dropIfExists('archive_department_access');
 
         // Revert ENUM
-        DB::statement("ALTER TABLE archives MODIFY COLUMN privacy_type ENUM('public', 'private', 'specific_user', 'specific_department') NOT NULL");
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE archives MODIFY COLUMN privacy_type ENUM('public', 'private', 'specific_user', 'specific_department') NOT NULL");
+        }
     }
 };

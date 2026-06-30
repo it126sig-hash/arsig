@@ -22,6 +22,7 @@ class StoreUserRequest extends FormRequest
             'password' => ['required', 'string', Password::min(8)],
             'department_id' => ['nullable', 'integer', 'exists:departments,id'],
             'role' => ['required', Rule::in(['root', 'admin', 'user'])],
+            'level' => ['required', Rule::in(['staff', 'supervisor', 'manager', 'direksi'])],
         ];
     }
 }

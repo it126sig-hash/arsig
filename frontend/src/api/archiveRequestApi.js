@@ -4,6 +4,10 @@ export function fetchArchiveRequests() {
     return api.get('/archive-requests')
 }
 
+export function fetchMyArchiveRequests() {
+    return api.get('/archive-requests/my-requests')
+}
+
 export function approveArchiveRequest(id) {
     return api.post(`/archive-requests/${id}/approve`)
 }

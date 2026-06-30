@@ -31,6 +31,12 @@
                         :severity="archive.is_checked_out ? 'danger' : 'success'"
                         class="text-sm px-3 py-1"
                     />
+                    <Tag
+                        v-if="archive.is_confidential"
+                        value="CONFIDENTIAL"
+                        severity="warn"
+                        class="text-sm px-3 py-1"
+                    />
                     <span v-if="archive.checked_out_at" class="text-[10px] text-slate-400">
                         {{ formatDateTimeShort(archive.checked_out_at) }}
                     </span>
@@ -87,6 +93,7 @@
                         <div class="flex items-center gap-2 mt-1">
                             <Tag :value="archive.privacy_type?.toUpperCase()" :severity="getPrivacySeverity(archive.privacy_type)" />
                             <Tag v-if="archive.download_policy" :value="archive.download_policy.replace('_', ' ').toUpperCase()" severity="secondary" />
+                            <Tag v-if="archive.is_confidential" value="CONFIDENTIAL" severity="warn" />
                         </div>
                     </div>
                 </div>
@@ -197,6 +204,7 @@
                             <span>Riwayat Lokasi</span>
                         </button>
                         <button
+                            v-if="canViewLocation"
                             type="button"
                             :class="['archive-tab', { 'archive-tab--active': viewMode === 'location' }]"
                             :aria-selected="viewMode === 'location'"
@@ -543,7 +551,11 @@ const needsAccess = computed(() => {
 })
 
 const hasPhysicalLocation = computed(() => {
-    return props.archive?.floor_id && props.archive?.room_id && props.archive?.cabinet_id
+    return canViewLocation.value && props.archive?.floor_id && props.archive?.room_id && props.archive?.cabinet_id
+})
+
+const canViewLocation = computed(() => {
+    return props.archive?.can_view_location !== false
 })
 
 const canDownload = computed(() => {
@@ -612,6 +624,11 @@ const resetHistoryState = () => {
 }
 
 const activateTab = (mode) => {
+    if (mode === 'location' && !canViewLocation.value) {
+        viewMode.value = 'preview'
+        return
+    }
+
     viewMode.value = mode
 
     if (mode === 'preview' && !previewUrl.value) {
@@ -667,11 +684,15 @@ const loadHistory = async ({ reset = false } = {}) => {
     const nextPage = reset ? 1 : historyPage.value + 1
 
     try {
-        const [locationRes, checkoutRes] = await Promise.all([
-            fetchArchiveLocationHistories(props.archive.id, {
+        const locationPromise = canViewLocation.value
+            ? fetchArchiveLocationHistories(props.archive.id, {
                 page: nextPage,
                 per_page: HISTORY_PAGE_SIZE
-            }),
+            })
+            : Promise.resolve({ data: { data: [] } })
+
+        const [locationRes, checkoutRes] = await Promise.all([
+            locationPromise,
             getCheckoutHistory(props.archive.id, {
                 page: nextPage,
                 per_page: HISTORY_PAGE_SIZE

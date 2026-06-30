@@ -190,10 +190,10 @@ export const useLocationStore = defineStore('location', {
     },
 
     // --- Cabinet Slots ---
-    async fetchCabinetSlots() {
+    async fetchCabinetSlots(cabinetId = null) {
       this.loading = true
       try {
-        const response = await api.get('/cabinet-slots')
+        const response = await api.get('/cabinet-slots', { params: cabinetId ? { cabinet_id: cabinetId } : {} })
         this.cabinetSlots = response.data.data
       } catch (err) {
         throw err

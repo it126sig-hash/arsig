@@ -10,17 +10,26 @@ class DepartmentService
 {
     public function getAll(): Collection
     {
-        return Department::withCount('users')->orderBy('name')->get();
+        return Department::with('heads')->withCount('users')->orderBy('name')->get();
     }
 
     public function store(array $data): Department
     {
-        return Department::create($data);
+        $department = Department::create(['name' => $data['name']]);
+        $department->heads()->sync($data['head_user_ids'] ?? []);
+
+        return $department->load('heads');
     }
 
     public function update(Department $department, array $data): bool
     {
-        return $department->update($data);
+        $result = $department->update(['name' => $data['name']]);
+
+        if (array_key_exists('head_user_ids', $data)) {
+            $department->heads()->sync($data['head_user_ids']);
+        }
+
+        return $result;
     }
 
     public function destroy(Department $department): bool

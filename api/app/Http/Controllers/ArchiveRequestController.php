@@ -21,11 +21,16 @@ class ArchiveRequestController extends BaseController
         return $this->successResponse($requests, 'Daftar permintaan akses berhasil diambil.');
     }
 
+    public function myRequests(Request $request): JsonResponse
+    {
+        $requests = $this->service->listForRequester(Auth::user());
+        return $this->successResponse($requests, 'Riwayat permintaan akses Anda berhasil diambil.');
+    }
+
     public function approve(ArchiveDownloadRequest $archiveRequest): JsonResponse
     {
-        // Simple authorization check: only PIC or Admin
         $user = Auth::user();
-        if ($user->role !== 'admin' && (int) $archiveRequest->archive->pic_user_id !== (int) $user->id) {
+        if (! $this->service->canActOn($user, $archiveRequest)) {
             abort(403, 'Anda tidak memiliki akses untuk menyetujui permintaan ini.');
         }
 
@@ -40,7 +45,7 @@ class ArchiveRequestController extends BaseController
     public function reject(ArchiveDownloadRequest $archiveRequest): JsonResponse
     {
         $user = Auth::user();
-        if ($user->role !== 'admin' && (int) $archiveRequest->archive->pic_user_id !== (int) $user->id) {
+        if (! $this->service->canActOn($user, $archiveRequest)) {
             abort(403, 'Anda tidak memiliki akses untuk menolak permintaan ini.');
         }
 

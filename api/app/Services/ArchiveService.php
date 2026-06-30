@@ -24,8 +24,8 @@ class ArchiveService
         ?bool $filterBorrowed = null,
         ?bool $filterInCabinet = null
     ) {
-        return Archive::query()
-            ->with(['tags', 'accessDepartments', 'accessUsers', 'category', 'company', 'pic', 'floor', 'room', 'cabinet', 'cabinetSlot', 'lastCheckout'])
+        $archives = Archive::query()
+            ->with(['tags', 'accessDepartments', 'accessUsers', 'category', 'company', 'pic.department.heads', 'floor', 'room', 'cabinet', 'cabinetSlot', 'lastCheckout'])
             ->when($companyId, fn ($q) => $q->where('company_id', $companyId))
             ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId))
             ->when($archiveType, fn ($q) => $q->where('archive_type', $archiveType))
@@ -53,10 +53,35 @@ class ArchiveService
             ->orderByDesc('issue_date')
             ->orderByDesc('id')
             ->get();
+
+        $user = Auth::user();
+
+        return $archives->map(function (Archive $archive) use ($user) {
+            $canViewLocation = $user ? $user->can('viewLocation', $archive) : false;
+            $canMoveLocation = $user ? $user->can('moveLocation', $archive) : false;
+
+            $archive->setAttribute('can_view_location', $canViewLocation);
+            $archive->setAttribute('can_move_location', $canMoveLocation);
+
+            if ($archive->is_confidential && ! $canViewLocation) {
+                $archive->setRelation('floor', null);
+                $archive->setRelation('room', null);
+                $archive->setRelation('cabinet', null);
+                $archive->setRelation('cabinetSlot', null);
+                $archive->floor_id = null;
+                $archive->room_id = null;
+                $archive->cabinet_id = null;
+                $archive->cabinet_slot_id = null;
+            }
+
+            return $archive;
+        });
     }
 
     public function store(array $data, ?UploadedFile $file): Archive
     {
+        $data['is_confidential'] = (bool) ($data['is_confidential'] ?? false);
+
         if ($file && in_array($data['archive_type'], ['full', 'digital_only'])) {
             $year = date('Y', strtotime($data['issue_date']));
             $path = "archives/{$data['company_id']}/{$year}";
@@ -82,6 +107,8 @@ class ArchiveService
 
     public function update(Archive $archive, array $data, ?UploadedFile $file): Archive
     {
+        $data['is_confidential'] = (bool) ($data['is_confidential'] ?? false);
+
         // Lokasi fisik TIDAK boleh diubah lewat endpoint edit archive.
         // Gunakan endpoint "Pindah Lokasi" yang terpisah.
         unset($data['floor_id'], $data['room_id'], $data['cabinet_id'], $data['cabinet_slot_id']);

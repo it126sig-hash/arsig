@@ -43,8 +43,14 @@
       </div>
     </div>
 
+    <!-- Placeholder when no cabinet selected -->
+    <div v-if="!selectedCabinetId" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center text-slate-400">
+      <i class="pi pi-server text-4xl mb-3 block opacity-40"></i>
+      <p class="text-sm">Pilih lemari terlebih dahulu untuk melihat daftar slot.</p>
+    </div>
+
     <!-- DataTable Card -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div v-else class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <!-- Table Toolbar (Desktop Search) -->
       <div class="hidden md:flex items-center justify-between px-5 py-4 border-b border-slate-100">
         <span class="text-sm font-semibold text-slate-700">
@@ -426,9 +432,8 @@ const statusLabel = (status) => {
 
 onMounted(async () => {
   try {
-    const [, , usersRes, tagsRes] = await Promise.all([
+    const [, usersRes, tagsRes] = await Promise.all([
       locationStore.fetchCabinets(),
-      locationStore.fetchCabinetSlots(),
       fetchUsers(),
       fetchTags()
     ])
@@ -439,8 +444,17 @@ onMounted(async () => {
   }
 })
 
+watch(selectedCabinetId, async (cabinetId) => {
+  if (!cabinetId) { locationStore.cabinetSlots = []; return }
+  try {
+    await locationStore.fetchCabinetSlots(cabinetId)
+  } catch {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal memuat slot lemari', life: 3000 })
+  }
+})
+
 const openNew = () => {
-  slot.value = { status: 'aktif', pic_user_ids: [], tag_ids: [] }
+  slot.value = { cabinet_id: selectedCabinetId.value || null, status: 'aktif', pic_user_ids: [], tag_ids: [] }
   submitted.value = false
   slotDialog.value = true
 }
@@ -484,7 +498,7 @@ const saveCabinetSlot = async () => {
       toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Data slot ditambahkan', life: 3000 })
     }
     slotDialog.value = false; slot.value = {}
-    await locationStore.fetchCabinetSlots()
+    await locationStore.fetchCabinetSlots(selectedCabinetId.value)
   } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal menyimpan data slot', life: 3000 }) }
 }
 

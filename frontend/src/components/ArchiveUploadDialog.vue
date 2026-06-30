@@ -60,6 +60,16 @@
                 <Select id="download_policy" v-model="form.download_policy" :options="policyOptions" optionLabel="label" optionValue="value" class="w-full" required />
             </div>
 
+            <div class="col-span-12">
+                <div class="flex items-start gap-3 p-3 rounded-lg border border-amber-200 bg-amber-50">
+                    <Checkbox v-model="form.is_confidential" inputId="is_confidential" binary />
+                    <label for="is_confidential" class="flex flex-col gap-0.5 cursor-pointer">
+                        <span class="text-sm font-bold text-amber-800">Confidential</span>
+                        <span class="text-xs text-amber-700">Akses OTP membutuhkan persetujuan PIC dan kepala departemen.</span>
+                    </label>
+                </div>
+            </div>
+
             <!-- Department Access MultiSelect -->
             <div v-if="form.privacy_type === 'department'" class="col-span-12">
                 <label class="block text-sm font-medium text-slate-700 mb-1">Pilih Departemen yang Berhak Akses *</label>
@@ -215,6 +225,7 @@ import DatePicker from 'primevue/datepicker'
 import Select from 'primevue/select'
 import MultiSelect from 'primevue/multiselect'
 import FileUpload from 'primevue/fileupload'
+import Checkbox from 'primevue/checkbox'
 import Chips from 'primevue/chips'
 import Button from 'primevue/button'
 import CabinetDoorGrid from '@/components/CabinetDoorGrid.vue'
@@ -269,6 +280,7 @@ const form = reactive({
     archive_type: 'full',
     privacy_type: 'public',
     download_policy: 'direct_download',
+    is_confidential: false,
     pic_user_id: null,
     tag_ids: [],
     expire_date: null,
@@ -444,6 +456,7 @@ const handleSubmit = async () => {
         formData.append('archive_type', form.archive_type)
         formData.append('privacy_type', form.privacy_type)
         formData.append('download_policy', form.download_policy)
+        formData.append('is_confidential', form.is_confidential ? '1' : '0')
         formData.append('pic_user_id', form.pic_user_id)
         formData.append('company_id', form.company_id)
 
@@ -497,6 +510,7 @@ const resetForm = () => {
         expire_date: null,
         reminder_date: null,
         tag_ids: [],
+        is_confidential: false,
         department_ids: [],
         user_ids: [],
         floor_id: null,

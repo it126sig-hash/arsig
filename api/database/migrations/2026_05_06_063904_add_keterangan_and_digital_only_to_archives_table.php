@@ -16,8 +16,10 @@ return new class extends Migration
             $table->text('keterangan')->nullable()->after('name');
         });
 
-        // Update ENUM for archive_type
-        DB::statement("ALTER TABLE archives MODIFY COLUMN archive_type ENUM('full', 'physical_only', 'digital_only', 'placeholder') NOT NULL");
+        // SQLite used by tests stores enum columns as text and does not support MODIFY COLUMN.
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE archives MODIFY COLUMN archive_type ENUM('full', 'physical_only', 'digital_only', 'placeholder') NOT NULL");
+        }
     }
 
     /**
@@ -30,6 +32,8 @@ return new class extends Migration
         });
 
         // Revert ENUM (placeholder only includes what was there before)
-        DB::statement("ALTER TABLE archives MODIFY COLUMN archive_type ENUM('full', 'physical_only', 'placeholder') NOT NULL");
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE archives MODIFY COLUMN archive_type ENUM('full', 'physical_only', 'placeholder') NOT NULL");
+        }
     }
 };

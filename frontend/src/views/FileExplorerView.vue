@@ -37,14 +37,15 @@
                     <Tree
                         v-else
                         v-model:selectionKeys="selectedKey"
+                        v-model:expandedKeys="expandedKeys"
                         :value="categoryStore.categoryTree"
                         selectionMode="single"
                         :filter="true"
-                        :filterValue="filterText"
                         filterMode="lenient"
                         class="w-full border-none p-0 overflow-x-auto custom-compact-tree"
                         @node-select="onNodeSelect"
                         @node-unselect="onNodeUnselect"
+                        @filter="onTreeFilter"
                     >
                         <template #default="slotProps">
                             <div class="flex items-center gap-2 text-sm whitespace-nowrap">
@@ -318,7 +319,7 @@ const companies = ref([])
 const isLoadingCompanies = ref(false)
 const selectedCompanyId = ref(categoryStore.selectedCompanyId)
 const selectedKey = ref(null)
-const filterText = ref('')
+const expandedKeys = ref({})
 const showAddCategoryDialog = ref(false)
 const showEditCategoryDialog = ref(false)
 const showUploadDialog = ref(false)
@@ -345,12 +346,14 @@ const subcategories = computed(() => {
 
 // Lifecycle
 onMounted(async () => {
-    await loadCompanies()
+    const loadTasks = [loadCompanies()]
 
     // Auto-load tree if company was previously selected
     if (selectedCompanyId.value) {
-        await categoryStore.loadCategoryTree(selectedCompanyId.value)
+        loadTasks.push(categoryStore.loadCategoryTree(selectedCompanyId.value))
     }
+
+    await Promise.all(loadTasks)
 })
 
 const loadCompanies = async () => {
@@ -382,6 +385,32 @@ const onNodeSelect = (node) => {
 const onNodeUnselect = () => {
     categoryStore.setSelectedCategory(null)
     archives.value = []
+}
+
+// Expand ancestors of every node whose label matches the search term, so results inside sub-categories are visible
+const collectMatchAncestors = (nodes, term, acc) => {
+    if (!Array.isArray(nodes)) return false
+    let anyMatch = false
+    for (const node of nodes) {
+        const label = String(node.label || '').toLowerCase()
+        const childMatch = collectMatchAncestors(node.children, term, acc)
+        if (label.includes(term) || childMatch) {
+            anyMatch = true
+            if (childMatch) acc[node.key] = true
+        }
+    }
+    return anyMatch
+}
+
+const onTreeFilter = ({ value }) => {
+    const term = (value || '').trim().toLowerCase()
+    if (!term) {
+        expandedKeys.value = {}
+        return
+    }
+    const acc = {}
+    collectMatchAncestors(categoryStore.categoryTree, term, acc)
+    expandedKeys.value = acc
 }
 
 const selectCategoryNode = (node) => {

@@ -41,6 +41,7 @@ Route::prefix('v1')->group(function () {
 
         // Archive Access Requests (for PIC/Admin)
         Route::get('archive-requests', [\App\Http\Controllers\ArchiveRequestController::class, 'index']);
+        Route::get('archive-requests/my-requests', [\App\Http\Controllers\ArchiveRequestController::class, 'myRequests']);
         Route::post('archive-requests/{archiveRequest}/approve', [\App\Http\Controllers\ArchiveRequestController::class, 'approve']);
         Route::post('archive-requests/{archiveRequest}/reject', [\App\Http\Controllers\ArchiveRequestController::class, 'reject']);
         

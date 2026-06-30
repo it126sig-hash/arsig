@@ -6,6 +6,10 @@
         class="p-fluid max-w-4xl w-full"
     >
         <div class="grid grid-cols-12 gap-6 mt-2">
+            <div v-if="archive?.can_move_location === false" class="col-span-12 p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800">
+                Lokasi fisik arsip confidential hanya bisa diakses oleh PIC, kepala departemen, atau admin.
+            </div>
+
             <!-- Left Column: Info & Form -->
             <div class="col-span-12 lg:col-span-5 flex flex-col gap-4">
                 <!-- Current Info -->
@@ -251,7 +255,11 @@ const getFullImageUrl = (path) => {
 }
 
 const isFormValid = computed(() => {
-    return form.new_floor_id && form.new_room_id && form.new_cabinet_id && form.new_cabinet_slot_id
+    return props.archive?.can_move_location !== false
+        && form.new_floor_id
+        && form.new_room_id
+        && form.new_cabinet_id
+        && form.new_cabinet_slot_id
 })
 
 watch(() => props.modelValue, (newVal) => {
