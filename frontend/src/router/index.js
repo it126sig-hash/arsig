@@ -75,6 +75,11 @@ const routes = [
         component: () => import("../views/LocationHistoryView.vue"),
       },
       {
+        path: "download-history",
+        name: "download-history",
+        component: () => import("../views/DownloadHistoryView.vue"),
+      },
+      {
         path: "profile",
         name: "profile",
         component: () => import("../views/ProfileView.vue"),

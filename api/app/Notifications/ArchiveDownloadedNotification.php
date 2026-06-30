@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Archive;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class OtpApprovedNotification extends Notification implements ShouldQueue
+class ArchiveDownloadedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public function __construct(
         public readonly Archive $archive,
-        public readonly string $otpCode
+        public readonly User $downloader
     ) {}
 
     public function via(object $notifiable): array
@@ -27,22 +28,18 @@ class OtpApprovedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Kode OTP Akses Arsip Anda')
+            ->subject('Arsip Anda Telah Diunduh')
             ->greeting('Halo, ' . $notifiable->name)
-            ->line('Permintaan akses Anda untuk arsip berikut telah disetujui:')
+            ->line('Arsip berikut yang Anda kelola telah diunduh:')
             ->line('Nama Arsip: ' . $this->archive->name)
-            ->line('Kode OTP Anda adalah:')
-            ->line($this->otpCode)
-            ->line('Kode ini berlaku selama 15 menit.')
-            ->line('Silakan gunakan kode ini untuk memverifikasi akses Anda di aplikasi.')
-            ->line('Jika Anda tidak merasa meminta kode ini, abaikan email ini.');
+            ->line('Diunduh Oleh: ' . $this->downloader->name . ' (' . $this->downloader->email . ')');
     }
 
     public function toArray(object $notifiable): array
     {
         return [
-            'type' => 'otp_approved',
-            'message' => 'Permintaan akses arsip "' . $this->archive->name . '" disetujui. Kode OTP berlaku 15 menit.',
+            'type' => 'archive_downloaded',
+            'message' => $this->downloader->name . ' mengunduh arsip "' . $this->archive->name . '".',
             'archive_id' => $this->archive->id,
             'link' => '/file-explorer',
         ];

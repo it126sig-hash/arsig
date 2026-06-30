@@ -74,6 +74,18 @@ class ArchiveController extends BaseController
             abort(404, 'File tidak ditemukan di server.');
         }
 
+        $downloader = \Illuminate\Support\Facades\Auth::user();
+
+        \App\Models\ArchiveDownloadLog::create([
+            'archive_id' => $archive->id,
+            'user_id' => $downloader->id,
+            'created_at' => now(),
+        ]);
+
+        if ($archive->pic && (int) $archive->pic_user_id !== (int) $downloader->id) {
+            $archive->pic->notify(new \App\Notifications\ArchiveDownloadedNotification($archive, $downloader));
+        }
+
         $extension = pathinfo($archive->file_path, PATHINFO_EXTENSION);
         return \Illuminate\Support\Facades\Storage::disk('local')->download(
             $archive->file_path, 

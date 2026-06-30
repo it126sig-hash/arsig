@@ -44,7 +44,8 @@ Route::prefix('v1')->group(function () {
         Route::get('archive-requests/my-requests', [\App\Http\Controllers\ArchiveRequestController::class, 'myRequests']);
         Route::post('archive-requests/{archiveRequest}/approve', [\App\Http\Controllers\ArchiveRequestController::class, 'approve']);
         Route::post('archive-requests/{archiveRequest}/reject', [\App\Http\Controllers\ArchiveRequestController::class, 'reject']);
-        
+        Route::get('archive-downloads/history', [\App\Http\Controllers\ArchiveRequestController::class, 'downloadHistory']);
+
         // Location History
         Route::get('archives/{archive}/location-histories', [\App\Http\Controllers\ArchiveController::class, 'locationHistories']);
         Route::post('archives/{archive}/move-location', [\App\Http\Controllers\ArchiveController::class, 'moveLocation']);
@@ -56,5 +57,10 @@ Route::prefix('v1')->group(function () {
         Route::get('archives/{archive}/checkout-history', [\App\Http\Controllers\ArchiveCheckoutController::class, 'history']);
         // Dashboard Stats
         Route::get('dashboard/stats', [\App\Http\Controllers\DashboardController::class, 'getStats']);
+
+        // Notifications
+        Route::get('notifications', [\App\Http\Controllers\NotificationController::class, 'index']);
+        Route::post('notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
+        Route::post('notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
     });
 });

@@ -15,3 +15,7 @@ export function approveArchiveRequest(id) {
 export function rejectArchiveRequest(id) {
     return api.post(`/archive-requests/${id}/reject`)
 }
+
+export function fetchDownloadHistory() {
+    return api.get('/archive-downloads/history')
+}

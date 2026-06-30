@@ -134,5 +134,7 @@ const locationItems = [
   { to: '/rooms',         label: 'Rooms (Ruangan)',  icon: 'pi pi-table' },
   { to: '/cabinets',      label: 'Cabinets (Lemari)', icon: 'pi pi-server' },
   { to: '/cabinet-slots', label: 'Cabinet Slots',    icon: 'pi pi-inbox' },
+  { to: '/location-histories', label: 'Riwayat Lokasi', icon: 'pi pi-history' },
+  { to: '/download-history',   label: 'Riwayat Download', icon: 'pi pi-download' },
 ]
 </script>

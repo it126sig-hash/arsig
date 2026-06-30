@@ -22,7 +22,7 @@ class OtpRequestedNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -39,5 +39,15 @@ class OtpRequestedNotification extends Notification implements ShouldQueue
             ->line('Diminta Oleh: ' . $this->requester->name . ' (' . $this->requester->email . ')')
             ->action('Tinjau Permintaan (Approve/Reject)', $frontendUrl . '/approvals')
             ->line('Mohon segera tinjau permintaan tersebut.');
+    }
+
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'type' => 'otp_requested',
+            'message' => $this->requester->name . ' meminta akses untuk arsip "' . $this->archive->name . '".',
+            'archive_id' => $this->archive->id,
+            'link' => '/approvals',
+        ];
     }
 }

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\ArchiveDownloadLog;
 use App\Models\ArchiveDownloadRequest;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -11,6 +12,30 @@ use Illuminate\Validation\ValidationException;
 
 class ArchiveRequestService
 {
+    public function listDownloadHistory(User $user): Collection
+    {
+        $query = ArchiveDownloadLog::with(['archive.pic.department.heads', 'user'])
+            ->orderByDesc('created_at');
+
+        if (! in_array($user->role, ['root', 'admin'], true)) {
+            $query->where(function ($query) use ($user) {
+                $query->whereHas('archive', function ($q) {
+                    $q->where('is_confidential', false);
+                })->orWhereHas('archive', function ($q) use ($user) {
+                    $q->where('is_confidential', true)
+                        ->where(function ($q) use ($user) {
+                            $q->where('pic_user_id', $user->id)
+                                ->orWhereHas('pic.department.heads', function ($q) use ($user) {
+                                    $q->where('users.id', $user->id);
+                                });
+                        });
+                });
+            });
+        }
+
+        return $query->get();
+    }
+
     public function listForPic(User $user): Collection
     {
         $query = ArchiveDownloadRequest::with([

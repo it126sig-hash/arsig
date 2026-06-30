@@ -22,7 +22,7 @@ class DepartmentApprovalRequestedNotification extends Notification implements Sh
 
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -37,5 +37,15 @@ class DepartmentApprovalRequestedNotification extends Notification implements Sh
             ->line('Diminta Oleh: ' . $this->requester->name . ' (' . $this->requester->email . ')')
             ->action('Tinjau Persetujuan', $frontendUrl . '/approvals')
             ->line('Kode OTP baru akan dikirim setelah Anda menyetujui permintaan ini.');
+    }
+
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'type' => 'department_approval_requested',
+            'message' => 'Persetujuan kepala departemen dibutuhkan untuk arsip confidential "' . $this->archive->name . '".',
+            'archive_id' => $this->archive->id,
+            'link' => '/approvals',
+        ];
     }
 }

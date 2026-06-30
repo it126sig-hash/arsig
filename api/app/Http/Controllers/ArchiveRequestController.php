@@ -27,6 +27,12 @@ class ArchiveRequestController extends BaseController
         return $this->successResponse($requests, 'Riwayat permintaan akses Anda berhasil diambil.');
     }
 
+    public function downloadHistory(Request $request): JsonResponse
+    {
+        $history = $this->service->listDownloadHistory(Auth::user());
+        return $this->successResponse($history, 'Riwayat download berhasil diambil.');
+    }
+
     public function approve(ArchiveDownloadRequest $archiveRequest): JsonResponse
     {
         $user = Auth::user();
