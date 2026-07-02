@@ -23,6 +23,16 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class);
     }
 
+    public function headedDepartments(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Department::class, 'department_heads')->withTimestamps();
+    }
+
+    public function userPermissions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserPermission::class);
+    }
+
     /**
      * Get the attributes that should be cast.
      *

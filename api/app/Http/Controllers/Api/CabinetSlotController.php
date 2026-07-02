@@ -64,4 +64,19 @@ class CabinetSlotController extends Controller
 
         return response()->noContent();
     }
+
+    public function trashed()
+    {
+        return CabinetSlotResource::collection(
+            CabinetSlot::onlyTrashed()->with(['cabinet.room.floor', 'picUsers', 'tags'])->latest()->get()
+        );
+    }
+
+    public function restore(int $id)
+    {
+        $slot = CabinetSlot::onlyTrashed()->findOrFail($id);
+        $slot->restore();
+
+        return new CabinetSlotResource($slot->load(['cabinet', 'picUsers', 'tags']));
+    }
 }

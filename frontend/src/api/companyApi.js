@@ -15,3 +15,11 @@ export function updateCompany(id, data) {
 export function deleteCompany(id) {
     return api.delete(`/companies/${id}`)
 }
+
+export function fetchTrashedCompanies() {
+    return api.get('/companies/trashed')
+}
+
+export function restoreCompany(id) {
+    return api.post(`/companies/${id}/restore`)
+}

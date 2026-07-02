@@ -41,4 +41,15 @@ class TagController extends BaseController
             return $this->errorResponse($e->getMessage());
         }
     }
+
+    public function trashed(): JsonResponse
+    {
+        return $this->successResponse($this->service->trashed());
+    }
+
+    public function restore(int $id): JsonResponse
+    {
+        $tag = $this->service->restore($id);
+        return $this->successResponse($tag, 'Tag berhasil dipulihkan.');
+    }
 }

@@ -14,6 +14,7 @@ class ArchiveDownloadLog extends Model
     protected $fillable = [
         'archive_id',
         'user_id',
+        'action',
         'created_at',
     ];
 

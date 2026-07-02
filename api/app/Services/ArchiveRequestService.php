@@ -6,34 +6,42 @@ namespace App\Services;
 use App\Models\ArchiveDownloadLog;
 use App\Models\ArchiveDownloadRequest;
 use App\Models\User;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ArchiveRequestService
 {
-    public function listDownloadHistory(User $user): Collection
+    public function listDownloadHistory(User $user, array $filters = []): LengthAwarePaginator
     {
-        $query = ArchiveDownloadLog::with(['archive.pic.department.heads', 'user'])
+        $query = ArchiveDownloadLog::with([
+                'archive.tags',
+                'archive.category',
+                'archive.company',
+                'archive.pic.department.heads',
+                'archive.floor',
+                'archive.room',
+                'archive.cabinet',
+                'archive.cabinetSlot',
+                'user',
+            ])
+            ->when($filters['date_from'] ?? null, fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
+            ->when($filters['date_to'] ?? null, fn ($q, $date) => $q->whereDate('created_at', '<=', $date))
+            ->when($filters['user_id'] ?? null, fn ($q, $userId) => $q->where('user_id', $userId))
+            ->when($filters['pic_user_id'] ?? null, function ($q, $picUserId) {
+                $q->whereHas('archive', fn ($sub) => $sub->where('pic_user_id', $picUserId));
+            })
+            ->when($filters['department_id'] ?? null, function ($q, $departmentId) {
+                $q->whereHas('archive.pic', fn ($sub) => $sub->where('department_id', $departmentId));
+            })
+            ->when(array_key_exists('is_confidential', $filters) && $filters['is_confidential'] !== null, function ($q) use ($filters) {
+                $q->whereHas('archive', fn ($sub) => $sub->where('is_confidential', $filters['is_confidential']));
+            })
+            ->whereHas('archive', fn ($q) => $q->visibleInHistoryTo($user))
             ->orderByDesc('created_at');
 
-        if (! in_array($user->role, ['root', 'admin'], true)) {
-            $query->where(function ($query) use ($user) {
-                $query->whereHas('archive', function ($q) {
-                    $q->where('is_confidential', false);
-                })->orWhereHas('archive', function ($q) use ($user) {
-                    $q->where('is_confidential', true)
-                        ->where(function ($q) use ($user) {
-                            $q->where('pic_user_id', $user->id)
-                                ->orWhereHas('pic.department.heads', function ($q) use ($user) {
-                                    $q->where('users.id', $user->id);
-                                });
-                        });
-                });
-            });
-        }
-
-        return $query->get();
+        return $query->paginate(15);
     }
 
     public function listForPic(User $user): Collection

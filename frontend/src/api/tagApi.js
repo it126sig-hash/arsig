@@ -15,3 +15,11 @@ export function updateTag(id, data) {
 export function deleteTag(id) {
     return api.delete(`/tags/${id}`)
 }
+
+export function fetchTrashedTags() {
+    return api.get('/tags/trashed')
+}
+
+export function restoreTag(id) {
+    return api.post(`/tags/${id}/restore`)
+}

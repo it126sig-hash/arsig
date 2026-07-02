@@ -7,11 +7,21 @@
         <h1 class="text-xl md:text-2xl font-bold text-slate-800">Pintu Lemari (Slots)</h1>
         <p class="text-xs md:text-sm text-slate-500 mt-1">Kelola pintu/slot penyimpanan dokumen dalam lemari</p>
       </div>
-      <Button label="Tambah Data" icon="pi pi-plus" @click="openNew" class="w-full md:w-auto !rounded-xl shadow-md" />
+      <div class="flex gap-2 w-full md:w-auto">
+        <Button
+          :label="showTrashed ? 'Tampilkan Aktif' : 'Tampilkan Terhapus'"
+          :icon="showTrashed ? 'pi pi-list' : 'pi pi-trash'"
+          severity="secondary"
+          outlined
+          @click="toggleTrashed"
+          class="w-1/2 md:w-auto !rounded-xl"
+        />
+        <Button label="Tambah Data" icon="pi pi-plus" @click="openNew" class="w-1/2 md:w-auto !rounded-xl shadow-md" v-if="!showTrashed" />
+      </div>
     </div>
 
     <!-- Cabinet Selector for Door Grid -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
+    <div v-if="!showTrashed" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
       <div class="flex items-center gap-4">
         <label class="text-sm font-semibold text-slate-700 whitespace-nowrap">Pilih Lemari:</label>
         <Dropdown
@@ -44,7 +54,7 @@
     </div>
 
     <!-- Placeholder when no cabinet selected -->
-    <div v-if="!selectedCabinetId" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center text-slate-400">
+    <div v-if="!showTrashed && !selectedCabinetId" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center text-slate-400">
       <i class="pi pi-server text-4xl mb-3 block opacity-40"></i>
       <p class="text-sm">Pilih lemari terlebih dahulu untuk melihat daftar slot.</p>
     </div>
@@ -160,9 +170,12 @@
         </Column>
         <Column header="Aksi" style="width: 120px;" :exportable="false">
           <template #body="slotProps">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2" v-if="!showTrashed">
               <Button icon="pi pi-pencil" text rounded severity="secondary" @click="editCabinetSlot(slotProps.data)" />
               <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDeleteCabinetSlot(slotProps.data)" />
+            </div>
+            <div class="flex items-center gap-2" v-else>
+              <Button icon="pi pi-refresh" text rounded severity="success" @click="handleRestore(slotProps.data)" title="Pulihkan" />
             </div>
           </template>
         </Column>
@@ -213,9 +226,12 @@
             <p v-if="data.keterangan" class="text-[10px] text-slate-500 line-clamp-2 italic">{{ data.keterangan }}</p>
 
             <!-- Actions Row -->
-            <div class="flex gap-2 border-t border-slate-50 pt-2">
+            <div class="flex gap-2 border-t border-slate-50 pt-2" v-if="!showTrashed">
                 <Button label="Edit" icon="pi pi-pencil" size="small" text severity="secondary" class="flex-1 !bg-slate-50 !rounded-lg" @click="editCabinetSlot(data)" />
                 <Button label="Hapus" icon="pi pi-trash" size="small" text severity="danger" class="flex-1 !bg-red-50 !rounded-lg" @click="confirmDeleteCabinetSlot(data)" />
+            </div>
+            <div class="flex gap-2 border-t border-slate-50 pt-2" v-else>
+                <Button label="Pulihkan" icon="pi pi-refresh" size="small" text severity="success" class="flex-1 !bg-green-50 !rounded-lg" @click="handleRestore(data)" />
             </div>
         </div>
       </div>
@@ -378,6 +394,7 @@ const slotDialog       = ref(false)
 const slot             = ref({})
 const submitted        = ref(false)
 const globalFilter     = ref('')
+const showTrashed      = ref(false)
 const selectedCabinetId = ref(null)
 const users            = ref([])
 const tags             = ref([])
@@ -445,6 +462,7 @@ onMounted(async () => {
 })
 
 watch(selectedCabinetId, async (cabinetId) => {
+  if (showTrashed.value) return
   if (!cabinetId) { locationStore.cabinetSlots = []; return }
   try {
     await locationStore.fetchCabinetSlots(cabinetId)
@@ -452,6 +470,29 @@ watch(selectedCabinetId, async (cabinetId) => {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal memuat slot lemari', life: 3000 })
   }
 })
+
+const toggleTrashed = async () => {
+  showTrashed.value = !showTrashed.value
+  if (showTrashed.value) {
+    try {
+      await locationStore.fetchTrashedCabinetSlots()
+    } catch {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal memuat slot terhapus', life: 3000 })
+    }
+  } else {
+    locationStore.cabinetSlots = []
+    selectedCabinetId.value = null
+  }
+}
+
+const handleRestore = async (data) => {
+  try {
+    await locationStore.restoreCabinetSlot(data.id)
+    toast.add({ severity: 'success', summary: 'Dipulihkan', detail: 'Data slot berhasil dipulihkan', life: 3000 })
+  } catch {
+    toast.add({ severity: 'error', summary: 'Gagal', detail: 'Tidak dapat memulihkan data slot', life: 4000 })
+  }
+}
 
 const openNew = () => {
   slot.value = { cabinet_id: selectedCabinetId.value || null, status: 'aktif', pic_user_ids: [], tag_ids: [] }

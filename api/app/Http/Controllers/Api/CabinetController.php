@@ -48,4 +48,17 @@ class CabinetController extends Controller
 
         return response()->noContent();
     }
+
+    public function trashed()
+    {
+        return CabinetResource::collection(Cabinet::onlyTrashed()->with(['room.floor', 'cabinetSlots'])->latest()->get());
+    }
+
+    public function restore(int $id)
+    {
+        $cabinet = Cabinet::onlyTrashed()->findOrFail($id);
+        $cabinet->restore();
+
+        return new CabinetResource($cabinet->load('room'));
+    }
 }

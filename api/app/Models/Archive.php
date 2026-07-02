@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -139,5 +140,22 @@ class Archive extends Model
     public function scopeCheckedOut($query)
     {
         return $query->where('is_checked_out', true);
+    }
+
+    public function scopeVisibleInHistoryTo(Builder $query, User $user): Builder
+    {
+        if (in_array($user->role, ['root', 'admin'], true)) {
+            return $query;
+        }
+
+        $headedDepartmentIds = $user->headedDepartments()->pluck('departments.id');
+
+        return $query->where(function ($q) use ($user, $headedDepartmentIds) {
+            $q->where('pic_user_id', $user->id);
+
+            if ($headedDepartmentIds->isNotEmpty()) {
+                $q->orWhereHas('creator', fn ($sub) => $sub->whereIn('department_id', $headedDepartmentIds));
+            }
+        });
     }
 }

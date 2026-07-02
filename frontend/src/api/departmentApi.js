@@ -15,3 +15,11 @@ export function updateDepartment(id, data) {
 export function deleteDepartment(id) {
     return api.delete(`/departments/${id}`)
 }
+
+export function fetchTrashedDepartments() {
+    return api.get('/departments/trashed')
+}
+
+export function restoreDepartment(id) {
+    return api.post(`/departments/${id}/restore`)
+}

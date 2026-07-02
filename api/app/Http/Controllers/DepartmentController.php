@@ -41,4 +41,15 @@ class DepartmentController extends BaseController
             return $this->errorResponse($e->getMessage());
         }
     }
+
+    public function trashed(): JsonResponse
+    {
+        return $this->successResponse($this->service->trashed());
+    }
+
+    public function restore(int $id): JsonResponse
+    {
+        $department = $this->service->restore($id);
+        return $this->successResponse($department, 'Departemen berhasil dipulihkan.');
+    }
 }

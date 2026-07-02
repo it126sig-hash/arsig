@@ -7,7 +7,17 @@
         <h1 class="text-xl md:text-2xl font-bold text-slate-800">Lantai (Floors)</h1>
         <p class="text-xs md:text-sm text-slate-500 mt-1">Kelola data lantai gedung penyimpanan arsip</p>
       </div>
-      <Button label="Tambah Lantai" icon="pi pi-plus" @click="openNew" class="w-full md:w-auto !rounded-xl shadow-md" />
+      <div class="flex gap-2 w-full md:w-auto">
+        <Button
+          :label="showTrashed ? 'Tampilkan Aktif' : 'Tampilkan Terhapus'"
+          :icon="showTrashed ? 'pi pi-list' : 'pi pi-trash'"
+          severity="secondary"
+          outlined
+          @click="toggleTrashed"
+          class="w-1/2 md:w-auto !rounded-xl"
+        />
+        <Button label="Tambah Lantai" icon="pi pi-plus" @click="openNew" class="w-1/2 md:w-auto !rounded-xl shadow-md" v-if="!showTrashed" />
+      </div>
     </div>
 
     <!-- DataTable Card -->
@@ -74,9 +84,12 @@
         </Column>
         <Column header="Aksi" style="width: 120px;">
           <template #body="slotProps">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2" v-if="!showTrashed">
               <Button icon="pi pi-pencil" text rounded severity="secondary" @click="editFloor(slotProps.data)" />
               <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDeleteFloor(slotProps.data)" />
+            </div>
+            <div class="flex items-center gap-2" v-else>
+              <Button icon="pi pi-refresh" text rounded severity="success" @click="handleRestore(slotProps.data)" title="Pulihkan" />
             </div>
           </template>
         </Column>
@@ -102,9 +115,12 @@
                     <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">ID: {{ floorData.id }}</span>
                 </div>
             </div>
-            <div class="flex gap-1">
+            <div class="flex gap-1" v-if="!showTrashed">
                 <Button icon="pi pi-pencil" text rounded severity="secondary" @click="editFloor(floorData)" />
                 <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDeleteFloor(floorData)" />
+            </div>
+            <div class="flex gap-1" v-else>
+                <Button icon="pi pi-refresh" text rounded severity="success" @click="handleRestore(floorData)" />
             </div>
         </div>
       </div>
@@ -212,6 +228,7 @@ const floor        = ref({})
 const submitted    = ref(false)
 const imageFile    = ref(null)
 const globalFilter = ref('')
+const showTrashed  = ref(false)
 
 // Computed
 const filteredFloors = computed(() => {
@@ -233,11 +250,28 @@ watch(globalFilter, (val) => {
   filters.value.global.value = val
 })
 
-onMounted(() => {
-  locationStore.fetchFloors().catch(() => {
+const loadFloors = () => {
+  const action = showTrashed.value ? locationStore.fetchTrashedFloors() : locationStore.fetchFloors()
+  action.catch(() => {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal memuat data lantai', life: 3000 })
   })
-})
+}
+
+const toggleTrashed = () => {
+  showTrashed.value = !showTrashed.value
+  loadFloors()
+}
+
+const handleRestore = async (floorData) => {
+  try {
+    await locationStore.restoreFloor(floorData.id)
+    toast.add({ severity: 'success', summary: 'Dipulihkan', detail: 'Data lantai berhasil dipulihkan', life: 3000 })
+  } catch {
+    toast.add({ severity: 'error', summary: 'Gagal', detail: 'Tidak dapat memulihkan data lantai', life: 4000 })
+  }
+}
+
+onMounted(loadFloors)
 
 const openNew = () => {
   floor.value = {}

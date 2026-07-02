@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Archive;
+use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 
@@ -181,12 +182,12 @@ class ArchiveService
         return $archive->load(['floor', 'room', 'cabinet', 'cabinetSlot']);
     }
 
-    public function getLocationHistories(array $filters = []): LengthAwarePaginator
+    public function getLocationHistories(User $user, array $filters = []): LengthAwarePaginator
     {
         return ArchiveLocationLog::query()
             ->with([
-                'archive', 
-                'movedBy', 
+                'archive',
+                'movedBy',
                 'oldFloor', 'oldRoom', 'oldCabinet', 'oldCabinetSlot',
                 'newFloor', 'newRoom', 'newCabinet', 'newCabinetSlot'
             ])
@@ -198,6 +199,7 @@ class ArchiveService
             })
             ->when($filters['date_from'] ?? null, fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
             ->when($filters['date_to'] ?? null, fn ($q, $date) => $q->whereDate('created_at', '<=', $date))
+            ->whereHas('archive', fn ($q) => $q->visibleInHistoryTo($user))
             ->orderByDesc('created_at')
             ->paginate(15);
     }

@@ -60,4 +60,17 @@ class FloorController extends Controller
 
         return response()->noContent();
     }
+
+    public function trashed()
+    {
+        return FloorResource::collection(Floor::onlyTrashed()->latest()->get());
+    }
+
+    public function restore(int $id)
+    {
+        $floor = Floor::onlyTrashed()->findOrFail($id);
+        $floor->restore();
+
+        return new FloorResource($floor);
+    }
 }

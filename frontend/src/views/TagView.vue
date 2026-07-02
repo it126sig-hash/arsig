@@ -6,7 +6,24 @@
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800">Manajemen Tag (Hashtag)</h1>
                 <p class="text-xs md:text-sm text-slate-500 mt-1">Kelola tag untuk pencarian arsip.</p>
             </div>
-            <Button label="Tambah Tag" icon="pi pi-plus" @click="openCreate" class="w-full md:w-auto !rounded-xl shadow-md" />
+            <div class="flex gap-2 w-full md:w-auto">
+                <Button
+                    v-if="authStore.canModule('tags', 'delete')"
+                    :label="showTrashed ? 'Tampilkan Aktif' : 'Tampilkan Terhapus'"
+                    :icon="showTrashed ? 'pi pi-list' : 'pi pi-trash'"
+                    severity="secondary"
+                    outlined
+                    @click="toggleTrashed"
+                    class="w-1/2 md:w-auto !rounded-xl"
+                />
+                <Button
+                    v-if="authStore.canModule('tags', 'create') && !showTrashed"
+                    label="Tambah Tag"
+                    icon="pi pi-plus"
+                    @click="openCreate"
+                    class="w-1/2 md:w-auto !rounded-xl shadow-md"
+                />
+            </div>
         </div>
 
         <!-- Data Table Card -->
@@ -75,9 +92,12 @@
                 </Column>
                 <Column header="Aksi" style="width: 140px">
                     <template #body="{ data }">
-                        <div class="flex gap-2">
-                            <Button icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(data)" />
-                            <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(data)" />
+                        <div class="flex gap-2" v-if="!showTrashed">
+                            <Button v-if="authStore.canModule('tags', 'update')" icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(data)" />
+                            <Button v-if="authStore.canModule('tags', 'delete')" icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(data)" />
+                        </div>
+                        <div class="flex gap-2" v-else>
+                            <Button icon="pi pi-refresh" text rounded severity="success" @click="handleRestore(data)" title="Pulihkan" />
                         </div>
                     </template>
                 </Column>
@@ -103,9 +123,12 @@
                                 <span class="text-[10px] text-slate-400">Dibuat: {{ formatDate(tag.created_at) }}</span>
                             </div>
                         </div>
-                        <div class="flex gap-1 self-start">
-                             <Button icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(tag)" />
-                             <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(tag)" />
+                        <div class="flex gap-1 self-start" v-if="!showTrashed">
+                             <Button v-if="authStore.canModule('tags', 'update')" icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(tag)" />
+                             <Button v-if="authStore.canModule('tags', 'delete')" icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(tag)" />
+                        </div>
+                        <div class="flex gap-1 self-start" v-else>
+                             <Button icon="pi pi-refresh" text rounded severity="success" @click="handleRestore(tag)" />
                         </div>
                     </div>
                 </div>
@@ -168,7 +191,8 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { FilterMatchMode } from '@primevue/core/api'
-import { fetchTags, createTag, updateTag, deleteTag } from '@/api/tagApi'
+import { fetchTags, createTag, updateTag, deleteTag, fetchTrashedTags, restoreTag } from '@/api/tagApi'
+import { useAuthStore } from '@/store/auth'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import DataTable from 'primevue/datatable'
@@ -184,6 +208,7 @@ import Toast from 'primevue/toast'
 
 const toast = useToast()
 const confirm = useConfirm()
+const authStore = useAuthStore()
 
 // Mobile detection
 const windowWidth = ref(window.innerWidth)
@@ -194,6 +219,7 @@ const isMobile = computed(() => windowWidth.value < 768)
 
 const tags = ref([])
 const isLoading = ref(false)
+const showTrashed = ref(false)
 const showDialog = ref(false)
 const isSaving = ref(false)
 const isEditing = ref(false)
@@ -223,7 +249,7 @@ const formatDate = (dateStr) => {
 const loadTags = async () => {
     isLoading.value = true
     try {
-        const res = await fetchTags()
+        const res = showTrashed.value ? await fetchTrashedTags() : await fetchTags()
         if (res.data.success) {
             tags.value = res.data.data
         }
@@ -231,6 +257,28 @@ const loadTags = async () => {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal memuat data tag', life: 3000 })
     } finally {
         isLoading.value = false
+    }
+}
+
+const toggleTrashed = () => {
+    showTrashed.value = !showTrashed.value
+    loadTags()
+}
+
+const handleRestore = async (tag) => {
+    try {
+        const res = await restoreTag(tag.id)
+        if (res.data.success) {
+            toast.add({ severity: 'success', summary: 'Dipulihkan', detail: res.data.message, life: 3000 })
+            await loadTags()
+        }
+    } catch (e) {
+        toast.add({
+            severity: 'error',
+            summary: 'Gagal',
+            detail: e.response?.data?.message || 'Tidak dapat memulihkan tag.',
+            life: 4000
+        })
     }
 }
 

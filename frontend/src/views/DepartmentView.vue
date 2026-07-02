@@ -6,7 +6,17 @@
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800">Manajemen Departemen</h1>
                 <p class="text-xs md:text-sm text-slate-500 mt-1">Kelola data departemen dalam sistem.</p>
             </div>
-            <Button label="Tambah Departemen" icon="pi pi-plus" @click="openCreate" class="w-full md:w-auto !rounded-xl shadow-md" />
+            <div class="flex gap-2 w-full md:w-auto">
+                <Button
+                    :label="showTrashed ? 'Tampilkan Aktif' : 'Tampilkan Terhapus'"
+                    :icon="showTrashed ? 'pi pi-list' : 'pi pi-trash'"
+                    severity="secondary"
+                    outlined
+                    @click="toggleTrashed"
+                    class="w-1/2 md:w-auto !rounded-xl"
+                />
+                <Button label="Tambah Departemen" icon="pi pi-plus" @click="openCreate" class="w-1/2 md:w-auto !rounded-xl shadow-md" v-if="!showTrashed" />
+            </div>
         </div>
 
         <!-- Data Table Card -->
@@ -81,9 +91,12 @@
                 </Column>
                 <Column header="Aksi" style="width: 140px">
                     <template #body="{ data }">
-                        <div class="flex gap-2">
+                        <div class="flex gap-2" v-if="!showTrashed">
                             <Button icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(data)" />
                             <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(data)" />
+                        </div>
+                        <div class="flex gap-2" v-else>
+                            <Button icon="pi pi-refresh" text rounded severity="success" @click="handleRestore(data)" title="Pulihkan" />
                         </div>
                     </template>
                 </Column>
@@ -111,9 +124,12 @@
                     </div>
                     
                     <!-- Actions Row -->
-                    <div class="flex gap-2 border-t border-slate-50 pt-2">
+                    <div class="flex gap-2 border-t border-slate-50 pt-2" v-if="!showTrashed">
                         <Button label="Edit" icon="pi pi-pencil" size="small" text severity="secondary" class="flex-1 !bg-slate-50 !rounded-lg" @click="openEdit(dept)" />
                         <Button label="Hapus" icon="pi pi-trash" size="small" text severity="danger" class="flex-1 !bg-red-50 !rounded-lg" @click="confirmDelete(dept)" />
+                    </div>
+                    <div class="flex gap-2 border-t border-slate-50 pt-2" v-else>
+                        <Button label="Pulihkan" icon="pi pi-refresh" size="small" text severity="success" class="flex-1 !bg-green-50 !rounded-lg" @click="handleRestore(dept)" />
                     </div>
                 </div>
             </div>
@@ -192,7 +208,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { FilterMatchMode } from '@primevue/core/api'
-import { fetchDepartments, createDepartment, updateDepartment, deleteDepartment } from '@/api/departmentApi'
+import { fetchDepartments, createDepartment, updateDepartment, deleteDepartment, fetchTrashedDepartments, restoreDepartment } from '@/api/departmentApi'
 import { fetchUsers } from '@/api/userApi'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
@@ -221,6 +237,7 @@ const isMobile = computed(() => windowWidth.value < 768)
 const departments = ref([])
 const userOptions = ref([])
 const isLoading = ref(false)
+const showTrashed = ref(false)
 const showDialog = ref(false)
 const isSaving = ref(false)
 const isEditing = ref(false)
@@ -250,7 +267,7 @@ const formatDate = (dateStr) => {
 const loadDepartments = async () => {
     isLoading.value = true
     try {
-        const res = await fetchDepartments()
+        const res = showTrashed.value ? await fetchTrashedDepartments() : await fetchDepartments()
         if (res.data.success) {
             departments.value = res.data.data
         }
@@ -258,6 +275,28 @@ const loadDepartments = async () => {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal memuat data departemen', life: 3000 })
     } finally {
         isLoading.value = false
+    }
+}
+
+const toggleTrashed = () => {
+    showTrashed.value = !showTrashed.value
+    loadDepartments()
+}
+
+const handleRestore = async (dept) => {
+    try {
+        const res = await restoreDepartment(dept.id)
+        if (res.data.success) {
+            toast.add({ severity: 'success', summary: 'Dipulihkan', detail: res.data.message, life: 3000 })
+            await loadDepartments()
+        }
+    } catch (e) {
+        toast.add({
+            severity: 'error',
+            summary: 'Gagal',
+            detail: e.response?.data?.message || 'Tidak dapat memulihkan departemen.',
+            life: 4000
+        })
     }
 }
 

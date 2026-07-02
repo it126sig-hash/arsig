@@ -40,4 +40,17 @@ class DepartmentService
 
         return $department->delete();
     }
+
+    public function trashed(): Collection
+    {
+        return Department::onlyTrashed()->orderBy('name')->get();
+    }
+
+    public function restore(int $id): Department
+    {
+        $department = Department::onlyTrashed()->findOrFail($id);
+        $department->restore();
+
+        return $department->load('heads');
+    }
 }

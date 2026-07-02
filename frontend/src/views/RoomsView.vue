@@ -7,7 +7,17 @@
         <h1 class="text-xl md:text-2xl font-bold text-slate-800">Ruangan (Rooms)</h1>
         <p class="text-xs md:text-sm text-slate-500 mt-1">Kelola data ruangan per lantai gedung</p>
       </div>
-      <Button label="Tambah Ruangan" icon="pi pi-plus" @click="openNew" class="w-full md:w-auto !rounded-xl shadow-md" />
+      <div class="flex gap-2 w-full md:w-auto">
+        <Button
+          :label="showTrashed ? 'Tampilkan Aktif' : 'Tampilkan Terhapus'"
+          :icon="showTrashed ? 'pi pi-list' : 'pi pi-trash'"
+          severity="secondary"
+          outlined
+          @click="toggleTrashed"
+          class="w-1/2 md:w-auto !rounded-xl"
+        />
+        <Button label="Tambah Ruangan" icon="pi pi-plus" @click="openNew" class="w-1/2 md:w-auto !rounded-xl shadow-md" v-if="!showTrashed" />
+      </div>
     </div>
 
     <!-- DataTable Card -->
@@ -76,9 +86,12 @@
         </Column>
         <Column header="Aksi" style="width: 120px;">
           <template #body="slotProps">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2" v-if="!showTrashed">
               <Button icon="pi pi-pencil" text rounded severity="secondary" @click="editRoom(slotProps.data)" />
               <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDeleteRoom(slotProps.data)" />
+            </div>
+            <div class="flex items-center gap-2" v-else>
+              <Button icon="pi pi-refresh" text rounded severity="success" @click="handleRestore(slotProps.data)" title="Pulihkan" />
             </div>
           </template>
         </Column>
@@ -102,9 +115,12 @@
                         <span class="text-[10px] font-bold text-blue-600 uppercase">{{ data.floor?.name }}</span>
                     </div>
                 </div>
-                <div class="flex gap-1">
+                <div class="flex gap-1" v-if="!showTrashed">
                     <Button icon="pi pi-pencil" text rounded severity="secondary" @click="editRoom(data)" />
                     <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDeleteRoom(data)" />
+                </div>
+                <div class="flex gap-1" v-else>
+                    <Button icon="pi pi-refresh" text rounded severity="success" @click="handleRestore(data)" />
                 </div>
             </div>
             <p v-if="data.keterangan" class="text-[10px] text-slate-500 line-clamp-1">{{ data.keterangan }}</p>
@@ -245,6 +261,7 @@ const submitted    = ref(false)
 const pointsText   = ref('[]')
 const pointsError  = ref('')
 const globalFilter = ref('')
+const showTrashed  = ref(false)
 
 const filteredRooms = computed(() => {
     if (!globalFilter.value) return locationStore.rooms
@@ -259,13 +276,30 @@ const filteredRooms = computed(() => {
 const filters = ref({ global: { value: null, matchMode: FilterMatchMode.CONTAINS } })
 watch(globalFilter, (val) => { filters.value.global.value = val })
 
-onMounted(async () => {
+const loadRooms = async () => {
   try {
-    await Promise.all([locationStore.fetchFloors(), locationStore.fetchRooms()])
+    const roomsAction = showTrashed.value ? locationStore.fetchTrashedRooms() : locationStore.fetchRooms()
+    await Promise.all([locationStore.fetchFloors(), roomsAction])
   } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal memuat data', life: 3000 })
   }
-})
+}
+
+const toggleTrashed = () => {
+  showTrashed.value = !showTrashed.value
+  loadRooms()
+}
+
+const handleRestore = async (data) => {
+  try {
+    await locationStore.restoreRoom(data.id)
+    toast.add({ severity: 'success', summary: 'Dipulihkan', detail: 'Data ruangan berhasil dipulihkan', life: 3000 })
+  } catch {
+    toast.add({ severity: 'error', summary: 'Gagal', detail: 'Tidak dapat memulihkan data ruangan', life: 4000 })
+  }
+}
+
+onMounted(loadRooms)
 
 const selectedFloorImageUrl = computed(() => {
   if (!room.value.floor_id) return ''

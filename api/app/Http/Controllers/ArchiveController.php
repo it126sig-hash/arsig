@@ -79,6 +79,7 @@ class ArchiveController extends BaseController
         \App\Models\ArchiveDownloadLog::create([
             'archive_id' => $archive->id,
             'user_id' => $downloader->id,
+            'action' => 'download',
             'created_at' => now(),
         ]);
 
@@ -88,9 +89,23 @@ class ArchiveController extends BaseController
 
         $extension = pathinfo($archive->file_path, PATHINFO_EXTENSION);
         return \Illuminate\Support\Facades\Storage::disk('local')->download(
-            $archive->file_path, 
+            $archive->file_path,
             $archive->name . ($extension ? '.' . $extension : '')
         );
+    }
+
+    public function logView(Archive $archive): JsonResponse
+    {
+        $this->authorize('view', $archive);
+
+        \App\Models\ArchiveDownloadLog::create([
+            'archive_id' => $archive->id,
+            'user_id' => Auth::id(),
+            'action' => 'view',
+            'created_at' => now(),
+        ]);
+
+        return $this->successResponse(null, 'Riwayat lihat detail tercatat.');
     }
 
     public function preview(Archive $archive)

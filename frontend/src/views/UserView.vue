@@ -62,7 +62,7 @@
                         </span>
                     </template>
                 </Column>
-                <Column header="Aksi" style="width: 140px">
+                <Column header="Aksi" style="width: 180px">
                     <template #body="{ data }">
                         <div class="flex gap-2">
                             <Button
@@ -70,6 +70,12 @@
                                 class="p-button-sm p-button-outlined"
                                 v-tooltip.top="'Edit'"
                                 @click="openEdit(data)"
+                            />
+                            <Button
+                                icon="pi pi-lock-open"
+                                class="p-button-sm p-button-outlined p-button-info"
+                                v-tooltip.top="'Izin Khusus'"
+                                @click="openPermDialog(data)"
                             />
                             <Button
                                 icon="pi pi-trash"
@@ -117,6 +123,7 @@
                     </div>
                     <div class="flex gap-1">
                         <Button icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(user)" />
+                        <Button icon="pi pi-lock-open" text rounded severity="info" @click="openPermDialog(user)" />
                         <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(user)" />
                     </div>
                 </div>
@@ -249,6 +256,72 @@
             </template>
         </Dialog>
 
+        <!-- Dialog: Izin Khusus -->
+        <Dialog
+            v-model:visible="showPermDialog"
+            :modal="true"
+            class="w-full max-w-3xl"
+            :maximized="isMobile"
+            :showHeader="true"
+        >
+            <template #header>
+                <div class="flex flex-col gap-0.5">
+                    <h3 class="text-base md:text-lg font-bold text-slate-800">
+                        Izin Khusus — {{ permUser?.name }}
+                    </h3>
+                    <p class="text-xs text-slate-400">
+                        Role: <span class="font-semibold uppercase">{{ permUser?.role }}</span>. Override di bawah akan menggantikan izin role.
+                    </p>
+                </div>
+            </template>
+
+            <div v-if="permLoading" class="py-10 text-center text-slate-400">Memuat izin...</div>
+            <div v-else class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-50 text-xs text-slate-500">
+                            <th class="text-left px-4 py-2 font-semibold text-slate-700">Modul</th>
+                            <th class="text-center px-3 py-2">View</th>
+                            <th class="text-center px-3 py-2">Create</th>
+                            <th class="text-center px-3 py-2">Update</th>
+                            <th class="text-center px-3 py-2">Delete</th>
+                            <th class="text-center px-3 py-2">Custom</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="mod in permModules" :key="mod.key" class="border-b border-slate-100 hover:bg-slate-50">
+                            <td class="px-4 py-2.5 font-medium text-slate-800">{{ mod.label }}</td>
+                            <td v-for="action in permActions" :key="action" class="text-center px-3 py-2">
+                                <Checkbox v-model="permMatrix[mod.key][action]" binary />
+                            </td>
+                            <td class="text-center px-3 py-2">
+                                <span v-if="permMatrix[mod.key].is_custom" class="inline-block w-2 h-2 rounded-full bg-blue-500" title="Custom"></span>
+                                <span v-else class="inline-block w-2 h-2 rounded-full bg-slate-200" title="Default role"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <template #footer>
+                <div class="flex items-center justify-between gap-2 p-2 md:p-0">
+                    <Button
+                        label="Reset ke Default Role"
+                        icon="pi pi-refresh"
+                        severity="secondary"
+                        outlined
+                        :loading="permSaving"
+                        @click="handleResetPermissions"
+                        class="!rounded-xl"
+                    />
+                    <div class="flex gap-2">
+                        <Button label="Batal" icon="pi pi-times" text severity="secondary" @click="showPermDialog = false" class="hidden md:flex" />
+                        <Button label="Simpan" icon="pi pi-check" :loading="permSaving" @click="savePermissions" class="!rounded-xl px-6" />
+                    </div>
+                </div>
+            </template>
+        </Dialog>
+
         <!-- Confirm Dialog -->
         <ConfirmDialog />
         <Toast />
@@ -259,11 +332,13 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { fetchUsers, createUser, updateUser, deleteUser } from '@/api/userApi'
 import { fetchDepartments } from '@/api/departmentApi'
+import { getUserPermissions, updateUserPermissions, resetUserPermissions } from '@/api/userPermissionApi'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
+import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
@@ -450,6 +525,85 @@ const confirmDelete = (user) => {
             }
         }
     })
+}
+
+// --- Izin Khusus ---
+const permModules = [
+  { key: 'companies', label: 'Perusahaan (PT)' },
+  { key: 'departments', label: 'Departemen' },
+  { key: 'floors', label: 'Floors (Lantai)' },
+  { key: 'rooms', label: 'Rooms (Ruangan)' },
+  { key: 'cabinets', label: 'Cabinets (Lemari)' },
+  { key: 'cabinet_slots', label: 'Cabinet Slots' },
+  { key: 'categories', label: 'Kategori' },
+  { key: 'tags', label: 'Tag (Hashtag)' },
+  { key: 'users', label: 'User' },
+]
+const permActions = ['can_view', 'can_create', 'can_update', 'can_delete']
+const emptyModuleRow = () => ({ can_view: false, can_create: false, can_update: false, can_delete: false, is_custom: false })
+
+const showPermDialog = ref(false)
+const permUser = ref(null)
+const permLoading = ref(false)
+const permSaving = ref(false)
+const permMatrix = reactive(Object.fromEntries(permModules.map(m => [m.key, emptyModuleRow()])))
+
+const openPermDialog = async (user) => {
+  permUser.value = user
+  permModules.forEach(m => Object.assign(permMatrix[m.key], emptyModuleRow()))
+  showPermDialog.value = true
+  permLoading.value = true
+  try {
+    const res = await getUserPermissions(user.id)
+    for (const row of res.data.data || []) {
+      if (permMatrix[row.module]) {
+        Object.assign(permMatrix[row.module], {
+          can_view: !!row.can_view,
+          can_create: !!row.can_create,
+          can_update: !!row.can_update,
+          can_delete: !!row.can_delete,
+          is_custom: !!row.is_custom,
+        })
+      }
+    }
+  } catch {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal memuat izin user.', life: 3000 })
+  } finally {
+    permLoading.value = false
+  }
+}
+
+const savePermissions = async () => {
+  permSaving.value = true
+  try {
+    const permissions = permModules.map(m => ({
+      module: m.key,
+      can_view: permMatrix[m.key].can_view,
+      can_create: permMatrix[m.key].can_create,
+      can_update: permMatrix[m.key].can_update,
+      can_delete: permMatrix[m.key].can_delete,
+    }))
+    await updateUserPermissions(permUser.value.id, permissions)
+    toast.add({ severity: 'success', summary: 'Sukses', detail: 'Izin khusus berhasil disimpan.', life: 3000 })
+    showPermDialog.value = false
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Gagal', detail: e.response?.data?.message || 'Tidak dapat menyimpan izin.', life: 4000 })
+  } finally {
+    permSaving.value = false
+  }
+}
+
+const handleResetPermissions = async () => {
+  permSaving.value = true
+  try {
+    await resetUserPermissions(permUser.value.id)
+    toast.add({ severity: 'success', summary: 'Direset', detail: 'Izin dikembalikan ke default role.', life: 3000 })
+    showPermDialog.value = false
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Gagal', detail: e.response?.data?.message || 'Tidak dapat mereset izin.', life: 4000 })
+  } finally {
+    permSaving.value = false
+  }
 }
 
 onMounted(async () => {

@@ -473,7 +473,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { previewArchive, downloadArchive, requestOtp, verifyOtp, fetchArchiveLocationHistories } from '@/api/archiveApi'
+import { previewArchive, downloadArchive, requestOtp, verifyOtp, fetchArchiveLocationHistories, logArchiveView } from '@/api/archiveApi'
 import { checkinArchive, getCheckoutHistory } from '@/api/archiveCheckoutApi'
 import { useAuthStore } from '@/store/auth'
 import { useToast } from 'primevue/usetoast'
@@ -512,6 +512,12 @@ const confirm = useConfirm()
 const visible = computed({
     get: () => props.modelValue,
     set: (val) => emit('update:modelValue', val)
+})
+
+watch(visible, (val) => {
+    if (val && props.archive?.id) {
+        logArchiveView(props.archive.id).catch(() => {})
+    }
 })
 
 const viewMode = ref('preview') // 'preview' | 'location' | 'history'

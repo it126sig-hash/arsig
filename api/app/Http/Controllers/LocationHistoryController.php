@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use App\Services\ArchiveService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LocationHistoryController extends BaseController
 {
@@ -21,7 +22,7 @@ class LocationHistoryController extends BaseController
             'date_to' => $request->string('date_to')->toString() ?: null,
         ];
 
-        $histories = $this->archiveService->getLocationHistories($filters);
+        $histories = $this->archiveService->getLocationHistories(Auth::user(), $filters);
 
         return $this->successResponse($histories, 'Riwayat lokasi berhasil diambil.');
     }

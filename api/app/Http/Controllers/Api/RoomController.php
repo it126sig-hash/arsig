@@ -48,4 +48,17 @@ class RoomController extends Controller
 
         return response()->noContent();
     }
+
+    public function trashed()
+    {
+        return RoomResource::collection(Room::onlyTrashed()->with('floor')->latest()->get());
+    }
+
+    public function restore(int $id)
+    {
+        $room = Room::onlyTrashed()->findOrFail($id);
+        $room->restore();
+
+        return new RoomResource($room->load('floor'));
+    }
 }

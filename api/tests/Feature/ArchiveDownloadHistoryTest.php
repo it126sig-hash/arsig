@@ -20,48 +20,128 @@ class ArchiveDownloadHistoryTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_non_confidential_download_is_visible_to_any_authenticated_user(): void
+    public function test_user_only_sees_history_of_archives_they_are_pic_of(): void
     {
         $department = Department::create(['name' => 'Legal']);
         $pic = User::factory()->create(['department_id' => $department->id, 'role' => 'user', 'level' => 'supervisor']);
-        $downloader = User::factory()->create(['role' => 'user', 'level' => 'staff']);
         $bystander = User::factory()->create(['role' => 'user', 'level' => 'staff']);
+        $downloader = User::factory()->create(['role' => 'user', 'level' => 'staff']);
         $archive = $this->createArchive($pic, ['is_confidential' => false]);
 
-        ArchiveDownloadLog::create(['archive_id' => $archive->id, 'user_id' => $downloader->id, 'created_at' => now()]);
+        ArchiveDownloadLog::create(['archive_id' => $archive->id, 'user_id' => $downloader->id, 'action' => 'download', 'created_at' => now()]);
 
         Sanctum::actingAs($bystander);
         $this->getJson('/api/v1/archive-downloads/history')
             ->assertOk()
-            ->assertJsonCount(1, 'data');
-    }
-
-    public function test_confidential_download_is_only_visible_to_pic_and_department_head(): void
-    {
-        $department = Department::create(['name' => 'Finance']);
-        $departmentHead = User::factory()->create(['department_id' => $department->id, 'role' => 'user', 'level' => 'manager']);
-        $department->heads()->attach($departmentHead->id);
-        $pic = User::factory()->create(['department_id' => $department->id, 'role' => 'user', 'level' => 'supervisor']);
-        $downloader = User::factory()->create(['role' => 'user', 'level' => 'staff']);
-        $outsider = User::factory()->create(['role' => 'user', 'level' => 'staff']);
-        $archive = $this->createArchive($pic, ['is_confidential' => true]);
-
-        ArchiveDownloadLog::create(['archive_id' => $archive->id, 'user_id' => $downloader->id, 'created_at' => now()]);
-
-        Sanctum::actingAs($outsider);
-        $this->getJson('/api/v1/archive-downloads/history')
-            ->assertOk()
-            ->assertJsonCount(0, 'data');
+            ->assertJsonCount(0, 'data.data');
 
         Sanctum::actingAs($pic);
         $this->getJson('/api/v1/archive-downloads/history')
             ->assertOk()
-            ->assertJsonCount(1, 'data');
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.total', 1);
+    }
+
+    public function test_department_head_sees_own_pic_archives_plus_archives_uploaded_by_their_department(): void
+    {
+        $department = Department::create(['name' => 'Finance']);
+        $otherDepartment = Department::create(['name' => 'Legal']);
+        $departmentHead = User::factory()->create(['department_id' => $department->id, 'role' => 'user', 'level' => 'manager']);
+        $department->heads()->attach($departmentHead->id);
+
+        $deptMember = User::factory()->create(['department_id' => $department->id, 'role' => 'user', 'level' => 'staff']);
+        $outsidePic = User::factory()->create(['department_id' => $otherDepartment->id, 'role' => 'user', 'level' => 'supervisor']);
+        $downloader = User::factory()->create(['role' => 'user', 'level' => 'staff']);
+
+        // Archive uploaded by a department member (PIC is someone outside the department) — visible via "uploaded by department" rule.
+        $uploadedByDept = $this->createArchive($outsidePic, ['created_by' => $deptMember->id, 'is_confidential' => false]);
+
+        // Archive where the department head is themselves PIC, uploaded by someone outside the department — visible via "PIC = self" rule.
+        $ownPic = $this->createArchive($departmentHead, ['created_by' => $outsidePic->id, 'is_confidential' => false]);
+
+        // Unrelated archive — PIC outside dept, uploaded by someone outside dept.
+        $unrelated = $this->createArchive($outsidePic, ['created_by' => $outsidePic->id, 'is_confidential' => false]);
+
+        ArchiveDownloadLog::create(['archive_id' => $uploadedByDept->id, 'user_id' => $downloader->id, 'action' => 'download', 'created_at' => now()]);
+        ArchiveDownloadLog::create(['archive_id' => $ownPic->id, 'user_id' => $downloader->id, 'action' => 'download', 'created_at' => now()]);
+        ArchiveDownloadLog::create(['archive_id' => $unrelated->id, 'user_id' => $downloader->id, 'action' => 'download', 'created_at' => now()]);
 
         Sanctum::actingAs($departmentHead);
+        $response = $this->getJson('/api/v1/archive-downloads/history')->assertOk();
+        $response->assertJsonCount(2, 'data.data');
+
+        $archiveIds = collect($response->json('data.data'))->pluck('archive_id')->sort()->values();
+        $this->assertEquals(collect([$uploadedByDept->id, $ownPic->id])->sort()->values(), $archiveIds);
+    }
+
+    public function test_admin_sees_all_history(): void
+    {
+        $department = Department::create(['name' => 'Legal']);
+        $pic = User::factory()->create(['department_id' => $department->id, 'role' => 'user', 'level' => 'supervisor']);
+        $admin = User::factory()->create(['role' => 'admin', 'level' => 'staff']);
+        $downloader = User::factory()->create(['role' => 'user', 'level' => 'staff']);
+        $archive = $this->createArchive($pic, ['is_confidential' => true]);
+
+        ArchiveDownloadLog::create(['archive_id' => $archive->id, 'user_id' => $downloader->id, 'action' => 'download', 'created_at' => now()]);
+
+        Sanctum::actingAs($admin);
         $this->getJson('/api/v1/archive-downloads/history')
             ->assertOk()
-            ->assertJsonCount(1, 'data');
+            ->assertJsonCount(1, 'data.data');
+    }
+
+    public function test_filters_narrow_results_by_date_user_pic_department_and_confidentiality(): void
+    {
+        $departmentA = Department::create(['name' => 'Finance']);
+        $departmentB = Department::create(['name' => 'Legal']);
+        $picA = User::factory()->create(['department_id' => $departmentA->id, 'role' => 'user', 'level' => 'supervisor']);
+        $picB = User::factory()->create(['department_id' => $departmentB->id, 'role' => 'user', 'level' => 'supervisor']);
+        $downloaderA = User::factory()->create(['role' => 'user', 'level' => 'staff']);
+        $downloaderB = User::factory()->create(['role' => 'user', 'level' => 'staff']);
+        $admin = User::factory()->create(['role' => 'admin', 'level' => 'staff']);
+
+        $archiveA = $this->createArchive($picA, ['is_confidential' => false]);
+        $archiveB = $this->createArchive($picB, ['is_confidential' => true]);
+
+        ArchiveDownloadLog::create([
+            'archive_id' => $archiveA->id,
+            'user_id' => $downloaderA->id,
+            'action' => 'download',
+            'created_at' => now()->subDays(10),
+        ]);
+        ArchiveDownloadLog::create([
+            'archive_id' => $archiveB->id,
+            'user_id' => $downloaderB->id,
+            'action' => 'view',
+            'created_at' => now(),
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        $this->getJson('/api/v1/archive-downloads/history?date_from=' . now()->subDay()->toDateString())
+            ->assertOk()
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.archive_id', $archiveB->id);
+
+        $this->getJson('/api/v1/archive-downloads/history?user_id=' . $downloaderA->id)
+            ->assertOk()
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.user_id', $downloaderA->id);
+
+        $this->getJson('/api/v1/archive-downloads/history?pic_user_id=' . $picB->id)
+            ->assertOk()
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.archive_id', $archiveB->id);
+
+        $this->getJson('/api/v1/archive-downloads/history?department_id=' . $departmentA->id)
+            ->assertOk()
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.archive_id', $archiveA->id);
+
+        $this->getJson('/api/v1/archive-downloads/history?is_confidential=1')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.archive_id', $archiveB->id);
     }
 
     private function createArchive(User $pic, array $overrides = []): Archive

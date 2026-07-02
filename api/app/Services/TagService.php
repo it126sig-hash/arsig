@@ -29,4 +29,17 @@ class TagService
     {
         return $tag->delete();
     }
+
+    public function trashed(): Collection
+    {
+        return Tag::onlyTrashed()->with('creator:id,name')->orderBy('nama')->get();
+    }
+
+    public function restore(int $id): Tag
+    {
+        $tag = Tag::onlyTrashed()->findOrFail($id);
+        $tag->restore();
+
+        return $tag->load('creator:id,name');
+    }
 }

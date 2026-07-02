@@ -28,6 +28,10 @@ class UserService
             unset($data['password']);
         }
 
+        if (array_key_exists('role', $data) && $user->role !== $data['role']) {
+            \App\Models\UserPermission::where('user_id', $user->id)->delete();
+        }
+
         return $user->update($data);
     }
 

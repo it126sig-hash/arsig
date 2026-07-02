@@ -46,6 +46,19 @@ class CategoryService
         return $category->delete();
     }
 
+    public function trashed(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Category::onlyTrashed()->orderBy('name')->get();
+    }
+
+    public function restore(int $id): Category
+    {
+        $category = Category::onlyTrashed()->findOrFail($id);
+        $category->restore();
+
+        return $category;
+    }
+
     private function formatTree(Collection $grouped, ?int $parentId = null): array
     {
         $key = $parentId === null ? 'root' : (string) $parentId;

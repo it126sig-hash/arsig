@@ -82,6 +82,22 @@ export const useLocationStore = defineStore('location', {
         this.loading = false
       }
     },
+    async fetchTrashedFloors() {
+      this.loading = true
+      try {
+        const response = await api.get('/floors/trashed')
+        this.floors = response.data.data
+      } catch (err) {
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+    async restoreFloor(id) {
+      const response = await api.post(`/floors/${id}/restore`)
+      this.floors = this.floors.filter(f => f.id !== id)
+      return response.data
+    },
 
     // --- Rooms ---
     async fetchRooms() {
@@ -134,6 +150,22 @@ export const useLocationStore = defineStore('location', {
       } finally {
         this.loading = false
       }
+    },
+    async fetchTrashedRooms() {
+      this.loading = true
+      try {
+        const response = await api.get('/rooms/trashed')
+        this.rooms = response.data.data
+      } catch (err) {
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+    async restoreRoom(id) {
+      const response = await api.post(`/rooms/${id}/restore`)
+      this.rooms = this.rooms.filter(r => r.id !== id)
+      return response.data
     },
 
     // --- Cabinets ---
@@ -188,6 +220,22 @@ export const useLocationStore = defineStore('location', {
         this.loading = false
       }
     },
+    async fetchTrashedCabinets() {
+      this.loading = true
+      try {
+        const response = await api.get('/cabinets/trashed')
+        this.cabinets = response.data.data
+      } catch (err) {
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+    async restoreCabinet(id) {
+      const response = await api.post(`/cabinets/${id}/restore`)
+      this.cabinets = this.cabinets.filter(c => c.id !== id)
+      return response.data
+    },
 
     // --- Cabinet Slots ---
     async fetchCabinetSlots(cabinetId = null) {
@@ -240,6 +288,22 @@ export const useLocationStore = defineStore('location', {
       } finally {
         this.loading = false
       }
+    },
+    async fetchTrashedCabinetSlots() {
+      this.loading = true
+      try {
+        const response = await api.get('/cabinet-slots/trashed')
+        this.cabinetSlots = response.data.data
+      } catch (err) {
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+    async restoreCabinetSlot(id) {
+      const response = await api.post(`/cabinet-slots/${id}/restore`)
+      this.cabinetSlots = this.cabinetSlots.filter(c => c.id !== id)
+      return response.data
     }
   }
 })

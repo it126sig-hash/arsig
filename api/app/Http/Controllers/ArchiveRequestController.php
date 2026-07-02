@@ -29,7 +29,16 @@ class ArchiveRequestController extends BaseController
 
     public function downloadHistory(Request $request): JsonResponse
     {
-        $history = $this->service->listDownloadHistory(Auth::user());
+        $filters = [
+            'date_from' => $request->string('date_from')->toString() ?: null,
+            'date_to' => $request->string('date_to')->toString() ?: null,
+            'user_id' => $request->integer('user_id') ?: null,
+            'pic_user_id' => $request->integer('pic_user_id') ?: null,
+            'department_id' => $request->integer('department_id') ?: null,
+            'is_confidential' => $request->has('is_confidential') ? $request->boolean('is_confidential') : null,
+        ];
+
+        $history = $this->service->listDownloadHistory(Auth::user(), $filters);
         return $this->successResponse($history, 'Riwayat download berhasil diambil.');
     }
 

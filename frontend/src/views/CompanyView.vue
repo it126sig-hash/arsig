@@ -6,7 +6,17 @@
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800">Manajemen PT</h1>
                 <p class="text-xs md:text-sm text-slate-500 mt-1">Kelola data perusahaan / PT yang terdaftar.</p>
             </div>
-            <Button label="Tambah PT" icon="pi pi-plus" @click="openCreate" class="w-full md:w-auto !rounded-xl shadow-md" />
+            <div class="flex gap-2 w-full md:w-auto">
+                <Button
+                    :label="showTrashed ? 'Tampilkan Aktif' : 'Tampilkan Terhapus'"
+                    :icon="showTrashed ? 'pi pi-list' : 'pi pi-trash'"
+                    severity="secondary"
+                    outlined
+                    @click="toggleTrashed"
+                    class="w-1/2 md:w-auto !rounded-xl"
+                />
+                <Button label="Tambah PT" icon="pi pi-plus" @click="openCreate" class="w-1/2 md:w-auto !rounded-xl shadow-md" v-if="!showTrashed" />
+            </div>
         </div>
 
         <!-- Data Table (Desktop) / List (Mobile) -->
@@ -44,9 +54,12 @@
                 </Column>
                 <Column header="Aksi" style="width: 140px">
                     <template #body="{ data }">
-                        <div class="flex gap-2">
+                        <div class="flex gap-2" v-if="!showTrashed">
                             <Button icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(data)" />
                             <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(data)" />
+                        </div>
+                        <div class="flex gap-2" v-else>
+                            <Button icon="pi pi-refresh" text rounded severity="success" @click="handleRestore(data)" title="Pulihkan" />
                         </div>
                     </template>
                 </Column>
@@ -66,9 +79,12 @@
                         <span class="text-sm font-bold text-slate-800">{{ company.name }}</span>
                         <span class="text-[10px] text-slate-400 mt-0.5 truncate max-w-[200px]">{{ company.description || 'Tanpa deskripsi' }}</span>
                     </div>
-                    <div class="flex gap-1">
+                    <div class="flex gap-1" v-if="!showTrashed">
                         <Button icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(company)" />
                         <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(company)" />
+                    </div>
+                    <div class="flex gap-1" v-else>
+                        <Button icon="pi pi-refresh" text rounded severity="success" @click="handleRestore(company)" />
                     </div>
                 </div>
             </div>
@@ -142,7 +158,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
-import { fetchCompanies, createCompany, updateCompany, deleteCompany } from '@/api/companyApi'
+import { fetchCompanies, createCompany, updateCompany, deleteCompany, fetchTrashedCompanies, restoreCompany } from '@/api/companyApi'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import DataTable from 'primevue/datatable'
@@ -160,6 +176,7 @@ const confirm = useConfirm()
 
 const companies = ref([])
 const isLoading = ref(false)
+const showTrashed = ref(false)
 const showDialog = ref(false)
 const isSaving = ref(false)
 const isEditing = ref(false)
@@ -183,7 +200,7 @@ const formatDate = (dateStr) => {
 const loadCompanies = async () => {
     isLoading.value = true
     try {
-        const res = await fetchCompanies()
+        const res = showTrashed.value ? await fetchTrashedCompanies() : await fetchCompanies()
         if (res.data.success) {
             companies.value = res.data.data
         }
@@ -191,6 +208,28 @@ const loadCompanies = async () => {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal memuat data perusahaan', life: 3000 })
     } finally {
         isLoading.value = false
+    }
+}
+
+const toggleTrashed = () => {
+    showTrashed.value = !showTrashed.value
+    loadCompanies()
+}
+
+const handleRestore = async (company) => {
+    try {
+        const res = await restoreCompany(company.id)
+        if (res.data.success) {
+            toast.add({ severity: 'success', summary: 'Dipulihkan', detail: res.data.message, life: 3000 })
+            await loadCompanies()
+        }
+    } catch (e) {
+        toast.add({
+            severity: 'error',
+            summary: 'Gagal',
+            detail: e.response?.data?.message || 'Tidak dapat memulihkan perusahaan.',
+            life: 4000
+        })
     }
 }
 

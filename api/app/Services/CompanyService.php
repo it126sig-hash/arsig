@@ -31,4 +31,17 @@ class CompanyService
 
         return $company->delete();
     }
+
+    public function trashed(): Collection
+    {
+        return Company::onlyTrashed()->orderBy('name')->get();
+    }
+
+    public function restore(int $id): Company
+    {
+        $company = Company::onlyTrashed()->findOrFail($id);
+        $company->restore();
+
+        return $company;
+    }
 }

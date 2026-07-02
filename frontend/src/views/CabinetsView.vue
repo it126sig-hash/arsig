@@ -7,7 +7,17 @@
         <h1 class="text-xl md:text-2xl font-bold text-slate-800">Lemari (Cabinets)</h1>
         <p class="text-xs md:text-sm text-slate-500 mt-1">Kelola data lemari arsip dalam ruangan</p>
       </div>
-      <Button label="Tambah Lemari" icon="pi pi-plus" @click="openNew" class="w-full md:w-auto !rounded-xl shadow-md" />
+      <div class="flex gap-2 w-full md:w-auto">
+        <Button
+          :label="showTrashed ? 'Tampilkan Aktif' : 'Tampilkan Terhapus'"
+          :icon="showTrashed ? 'pi pi-list' : 'pi pi-trash'"
+          severity="secondary"
+          outlined
+          @click="toggleTrashed"
+          class="w-1/2 md:w-auto !rounded-xl"
+        />
+        <Button label="Tambah Lemari" icon="pi pi-plus" @click="openNew" class="w-1/2 md:w-auto !rounded-xl shadow-md" v-if="!showTrashed" />
+      </div>
     </div>
 
     <!-- DataTable Card -->
@@ -78,9 +88,12 @@
         </Column>
         <Column header="Aksi" style="width: 120px;">
           <template #body="slotProps">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2" v-if="!showTrashed">
               <Button icon="pi pi-pencil" text rounded severity="secondary" @click="editCabinet(slotProps.data)" />
               <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDeleteCabinet(slotProps.data)" />
+            </div>
+            <div class="flex items-center gap-2" v-else>
+              <Button icon="pi pi-refresh" text rounded severity="success" @click="handleRestore(slotProps.data)" title="Pulihkan" />
             </div>
           </template>
         </Column>
@@ -106,9 +119,12 @@
                         <span class="text-[10px] text-slate-400 font-bold uppercase">{{ data.room?.floor?.name }}</span>
                     </div>
                 </div>
-                <div class="flex gap-1">
+                <div class="flex gap-1" v-if="!showTrashed">
                     <Button icon="pi pi-pencil" text rounded severity="secondary" @click="editCabinet(data)" />
                     <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDeleteCabinet(data)" />
+                </div>
+                <div class="flex gap-1" v-else>
+                    <Button icon="pi pi-refresh" text rounded severity="success" @click="handleRestore(data)" />
                 </div>
             </div>
             <div class="flex items-center gap-2">
@@ -268,6 +284,7 @@ const cabinetDialog = ref(false)
 const cabinet       = ref({ needs_coordinate_review: false })
 const submitted     = ref(false)
 const globalFilter  = ref('')
+const showTrashed   = ref(false)
 
 const filteredCabinets = computed(() => {
     if (!globalFilter.value) return locationStore.cabinets
@@ -330,13 +347,30 @@ const formatDoorCount = (dc) => {
   return `${parts[0]} × ${parts[1]} = ${total} pintu`
 }
 
-onMounted(async () => {
+const loadCabinets = async () => {
   try {
-    await Promise.all([locationStore.fetchFloors(), locationStore.fetchRooms(), locationStore.fetchCabinets()])
+    const cabinetsAction = showTrashed.value ? locationStore.fetchTrashedCabinets() : locationStore.fetchCabinets()
+    await Promise.all([locationStore.fetchFloors(), locationStore.fetchRooms(), cabinetsAction])
   } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal memuat data', life: 3000 })
   }
-})
+}
+
+const toggleTrashed = () => {
+  showTrashed.value = !showTrashed.value
+  loadCabinets()
+}
+
+const handleRestore = async (data) => {
+  try {
+    await locationStore.restoreCabinet(data.id)
+    toast.add({ severity: 'success', summary: 'Dipulihkan', detail: 'Data lemari berhasil dipulihkan', life: 3000 })
+  } catch {
+    toast.add({ severity: 'error', summary: 'Gagal', detail: 'Tidak dapat memulihkan data lemari', life: 4000 })
+  }
+}
+
+onMounted(loadCabinets)
 
 const openNew    = () => { cabinet.value = { needs_coordinate_review: false, points: [] }; submitted.value = false; cabinetDialog.value = true }
 const hideDialog = () => { cabinetDialog.value = false; submitted.value = false }

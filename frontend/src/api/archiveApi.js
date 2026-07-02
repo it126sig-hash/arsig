@@ -52,3 +52,7 @@ export function fetchArchiveLocationHistories(id, params = {}) {
 export function moveArchiveLocation(id, data) {
     return api.post(`/archives/${id}/move-location`, data)
 }
+
+export function logArchiveView(id) {
+    return api.post(`/archives/${id}/log-view`)
+}

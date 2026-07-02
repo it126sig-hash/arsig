@@ -41,4 +41,15 @@ class CompanyController extends BaseController
             return $this->errorResponse($e->getMessage());
         }
     }
+
+    public function trashed(): JsonResponse
+    {
+        return $this->successResponse($this->service->trashed());
+    }
+
+    public function restore(int $id): JsonResponse
+    {
+        $company = $this->service->restore($id);
+        return $this->successResponse($company, 'Perusahaan berhasil dipulihkan.');
+    }
 }
