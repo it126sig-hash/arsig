@@ -22,20 +22,46 @@
 
     <!-- Cabinet Selector for Door Grid -->
     <div v-if="!showTrashed" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
-      <div class="flex items-center gap-4">
-        <label class="text-sm font-semibold text-slate-700 whitespace-nowrap">Pilih Lemari:</label>
-        <Dropdown
-          v-model="selectedCabinetId"
-          :options="locationStore.cabinets"
-          optionLabel="name"
-          optionValue="id"
-          placeholder="Pilih lemari untuk melihat visualisasi pintu..."
-          class="w-full max-w-md"
-        >
-          <template #option="slotProps">
-            <span>{{ slotProps.option.name }} <span class="text-slate-400 text-xs">({{ slotProps.option.room?.name }})</span></span>
-          </template>
-        </Dropdown>
+      <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <div class="flex flex-col gap-1.5 w-full md:w-64">
+          <label class="text-sm font-semibold text-slate-700">Lantai</label>
+          <Dropdown
+            v-model="selectedFloorId"
+            :options="locationStore.floors"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Pilih lantai..."
+            class="w-full"
+          />
+        </div>
+        <div class="flex flex-col gap-1.5 w-full md:w-64">
+          <label class="text-sm font-semibold text-slate-700">Ruangan</label>
+          <Dropdown
+            v-model="selectedRoomId"
+            :options="filteredRooms"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Pilih ruangan..."
+            :disabled="!selectedFloorId"
+            class="w-full"
+          />
+        </div>
+        <div class="flex flex-col gap-1.5 w-full md:w-64">
+          <label class="text-sm font-semibold text-slate-700">Lemari</label>
+          <Dropdown
+            v-model="selectedCabinetId"
+            :options="filteredCabinets"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Pilih lemari..."
+            :disabled="!selectedRoomId"
+            class="w-full"
+          >
+            <template #option="slotProps">
+              <span>{{ slotProps.option.name }} <span class="text-slate-400 text-xs">({{ slotProps.option.room?.name }})</span></span>
+            </template>
+          </Dropdown>
+        </div>
       </div>
 
       <!-- Door Grid Visualization -->
@@ -395,6 +421,8 @@ const slot             = ref({})
 const submitted        = ref(false)
 const globalFilter     = ref('')
 const showTrashed      = ref(false)
+const selectedFloorId  = ref(null)
+const selectedRoomId   = ref(null)
 const selectedCabinetId = ref(null)
 const users            = ref([])
 const tags             = ref([])
@@ -418,6 +446,14 @@ const filteredSlots = computed(() => {
         s.keterangan?.toLowerCase().includes(q)
     )
 })
+
+const filteredRooms = computed(() =>
+  selectedFloorId.value ? locationStore.rooms.filter(r => r.floor_id === selectedFloorId.value) : []
+)
+
+const filteredCabinets = computed(() =>
+  selectedRoomId.value ? locationStore.cabinets.filter(c => c.room_id === selectedRoomId.value) : []
+)
 
 const selectedCabinet = computed(() => {
   if (!selectedCabinetId.value) return null
@@ -449,7 +485,9 @@ const statusLabel = (status) => {
 
 onMounted(async () => {
   try {
-    const [, usersRes, tagsRes] = await Promise.all([
+    const [, , , usersRes, tagsRes] = await Promise.all([
+      locationStore.fetchFloors(),
+      locationStore.fetchRooms(),
       locationStore.fetchCabinets(),
       fetchUsers(),
       fetchTags()
@@ -460,6 +498,9 @@ onMounted(async () => {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal memuat data', life: 3000 })
   }
 })
+
+watch(selectedFloorId, () => { selectedRoomId.value = null; selectedCabinetId.value = null })
+watch(selectedRoomId, () => { selectedCabinetId.value = null })
 
 watch(selectedCabinetId, async (cabinetId) => {
   if (showTrashed.value) return
