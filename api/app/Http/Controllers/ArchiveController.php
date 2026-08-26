@@ -226,4 +226,31 @@ class ArchiveController extends BaseController
 
         return $this->successResponse($histories, 'Riwayat lokasi arsip berhasil diambil.');
     }
+
+    public function toggleStatus(Archive $archive): JsonResponse
+    {
+        $this->authorize('update', $archive);
+
+        $updated = $this->service->toggleStatus($archive);
+
+        return $this->successResponse($updated, 'Status arsip berhasil diubah.');
+    }
+
+    public function moveCategory(Request $request, Archive $archive): JsonResponse
+    {
+        $this->authorize('update', $archive);
+
+        $request->validate([
+            'company_id' => 'required|exists:companies,id',
+            'category_id' => 'required|exists:categories,id',
+        ]);
+
+        $updated = $this->service->moveCategory(
+            $archive,
+            $request->integer('company_id'),
+            $request->integer('category_id')
+        );
+
+        return $this->successResponse($updated, 'Kategori arsip berhasil dipindahkan.');
+    }
 }

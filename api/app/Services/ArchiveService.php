@@ -23,7 +23,8 @@ class ArchiveService
         array $tagIds = [],
         ?bool $filterExpiring = null,
         ?bool $filterBorrowed = null,
-        ?bool $filterInCabinet = null
+        ?bool $filterInCabinet = null,
+        ?string $status = 'active'
     ) {
         $archives = Archive::query()
             ->with(['tags', 'accessDepartments', 'accessUsers', 'category', 'company', 'pic.department.heads', 'floor', 'room', 'cabinet', 'cabinetSlot', 'lastCheckout'])
@@ -51,6 +52,7 @@ class ArchiveService
             ->when(!empty($tagIds), function ($query) use ($tagIds) {
                 $query->whereHas('tags', fn ($t) => $t->whereIn('tags.id', $tagIds));
             })
+            ->when($status !== 'all', fn ($q) => $q->where('status', $status))
             ->orderByDesc('issue_date')
             ->orderByDesc('id')
             ->get();
@@ -202,5 +204,24 @@ class ArchiveService
             ->whereHas('archive', fn ($q) => $q->visibleInHistoryTo($user))
             ->orderByDesc('created_at')
             ->paginate(15);
+    }
+
+    public function toggleStatus(Archive $archive): Archive
+    {
+        $archive->update([
+            'status' => $archive->status === 'active' ? 'inactive' : 'active'
+        ]);
+
+        return $archive->refresh();
+    }
+
+    public function moveCategory(Archive $archive, int $companyId, int $categoryId): Archive
+    {
+        $archive->update([
+            'company_id' => $companyId,
+            'category_id' => $categoryId
+        ]);
+
+        return $archive->load(['category', 'company']);
     }
 }

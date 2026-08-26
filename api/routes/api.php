@@ -95,6 +95,8 @@ Route::prefix('v1')->group(function () {
         Route::post('archives/{archive}/log-view', [\App\Http\Controllers\ArchiveController::class, 'logView']);
         Route::post('archives/{archive}/request-otp', [\App\Http\Controllers\ArchiveController::class, 'requestOtp']);
         Route::post('archives/{archive}/verify-otp', [\App\Http\Controllers\ArchiveController::class, 'verifyOtp']);
+        Route::post('archives/{archive}/toggle-status', [\App\Http\Controllers\ArchiveController::class, 'toggleStatus']);
+        Route::post('archives/{archive}/move-category', [\App\Http\Controllers\ArchiveController::class, 'moveCategory']);
 
         // Archive Access Requests (for PIC/Admin)
         Route::get('archive-requests', [\App\Http\Controllers\ArchiveRequestController::class, 'index']);

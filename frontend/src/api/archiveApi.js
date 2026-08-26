@@ -56,3 +56,11 @@ export function moveArchiveLocation(id, data) {
 export function logArchiveView(id) {
     return api.post(`/archives/${id}/log-view`)
 }
+
+export function toggleArchiveStatus(id) {
+    return api.post(`/archives/${id}/toggle-status`)
+}
+
+export function moveArchiveCategory(id, data) {
+    return api.post(`/archives/${id}/move-category`, data)
+}

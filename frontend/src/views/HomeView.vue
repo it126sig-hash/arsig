@@ -350,7 +350,7 @@
     <ArchiveEditDialog v-if="editDialog" :visible="editDialog" :archive="selectedArchive" @update:visible="editDialog = $event" @edit-success="onEditSuccess" />
     
     <MoveLocationDialog v-model="moveLocationDialog" :archive="selectedArchive" @moved="onMoveSuccess" />
-    
+    <MoveCategoryDialog v-model="moveCategoryDialog" :archive="selectedArchive" @moved="onMoveCategorySuccess" />
     <CheckoutDialog v-model="checkoutDialog" :archive="selectedArchive" @checked-out="onCheckoutSuccess" />
     
     <ConfirmDialog />
@@ -409,7 +409,7 @@
 
 <script setup>
 import { ref, onMounted, reactive, computed } from 'vue'
-import { fetchArchives, downloadArchive as downloadApi, requestOtp, verifyOtp } from '@/api/archiveApi'
+import { fetchArchives, downloadArchive as downloadApi, requestOtp, verifyOtp, toggleArchiveStatus } from '@/api/archiveApi'
 import { fetchCompanies } from '@/api/companyApi'
 import { fetchCategoryTree } from '@/api/categoryApi'
 import { fetchTags } from '@/api/tagApi'
@@ -433,6 +433,7 @@ import Toast from 'primevue/toast'
 import ArchiveDetailModal from '@/components/ArchiveDetailModal.vue'
 import ArchiveEditDialog from '@/components/ArchiveEditDialog.vue'
 import MoveLocationDialog from '@/components/MoveLocationDialog.vue'
+import MoveCategoryDialog from '@/components/MoveCategoryDialog.vue'
 import CheckoutDialog from '@/components/CheckoutDialog.vue'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { checkinArchive } from '@/api/archiveCheckoutApi'
@@ -473,6 +474,7 @@ const dateRange = ref(null)
 const detailDialog = ref(false)
 const editDialog = ref(false)
 const moveLocationDialog = ref(false)
+const moveCategoryDialog = ref(false)
 const checkoutDialog = ref(false)
 const actionMenu = ref(null)
 const otpPopover = ref(null)
@@ -518,7 +520,14 @@ const actionMenuItems = computed(() => {
     }
 
     if (isPicOrAdmin) {
+        items.unshift({ label: 'Pindah Kategori', icon: 'pi pi-folder-open', command: () => { moveCategoryDialog.value = true } })
         items.unshift({ label: 'Ubah Arsip', icon: 'pi pi-pencil', command: () => { editDialog.value = true } })
+        items.push({ separator: true })
+        items.push({ 
+            label: 'Non-aktifkan Arsip', 
+            icon: 'pi pi-eye-slash', 
+            command: () => { confirmToggleStatus(archive) } 
+        })
     }
 
     return [{ label: 'Opsi Arsip', items }]
@@ -765,6 +774,32 @@ const onMoveSuccess = async () => {
   moveLocationDialog.value = false
   toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Lokasi fisik berhasil diperbarui.', life: 3000 })
   await search()
+}
+
+const onMoveCategorySuccess = async () => {
+  moveCategoryDialog.value = false
+  toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Kategori arsip berhasil dipindahkan.', life: 3000 })
+  await search()
+}
+
+const confirmToggleStatus = (archive) => {
+  confirm.require({
+    message: 'Apakah Anda yakin ingin menonaktifkan arsip ini? Arsip tidak akan muncul di pencarian utama.',
+    header: 'Konfirmasi Non-aktifkan',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Ya, Non-aktifkan',
+    rejectLabel: 'Batal',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        await toggleArchiveStatus(archive.id)
+        toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Arsip berhasil dinonaktifkan.', life: 3000 })
+        await search()
+      } catch (err) {
+        toast.add({ severity: 'error', summary: 'Gagal', detail: err.response?.data?.message || 'Gagal menonaktifkan arsip.', life: 3000 })
+      }
+    }
+  })
 }
 
 const onCheckoutSuccess = async () => {
