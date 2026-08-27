@@ -80,15 +80,8 @@ const handleLogin = async () => {
             <label for="login-email">Email</label>
             <div class="control-wrap">
               <i class="pi pi-envelope" aria-hidden="true"></i>
-              <InputText
-                id="login-email"
-                v-model="email"
-                type="email"
-                placeholder="nama@arsig.id"
-                required
-                autocomplete="email"
-                class="login-control"
-              />
+              <InputText id="login-email" v-model="email" type="email" placeholder="nama@arsig.id" required
+                autocomplete="email" class="login-control" />
             </div>
           </div>
 
@@ -96,22 +89,14 @@ const handleLogin = async () => {
             <label for="login-password">Password</label>
             <div class="control-wrap control-wrap--password">
               <i class="pi pi-lock" aria-hidden="true"></i>
-              <Password
-                id="login-password"
-                v-model="password"
-                placeholder="Masukkan password"
-                :feedback="false"
-                toggleMask
-                autocomplete="current-password"
-                inputClass="login-control login-control--password"
-                class="password-control"
-                :pt="{
+              <Password id="login-password" v-model="password" placeholder="Masukkan password" :feedback="false"
+                toggleMask autocomplete="current-password" inputClass="login-control login-control--password"
+                class="password-control" :pt="{
                   root: { class: 'password-root' },
                   pcInput: { root: { class: 'login-control login-control--password' } },
                   input: { class: 'login-control login-control--password' },
                   panel: { style: 'display: none;' }
-                }"
-              />
+                }" />
             </div>
           </div>
 
@@ -120,18 +105,11 @@ const handleLogin = async () => {
             <span>{{ error }}</span>
           </div>
 
-          <Button
-            id="login-submit"
-            type="submit"
-            label="Masuk"
-            icon="pi pi-arrow-right"
-            iconPos="right"
-            :loading="auth.loading"
-            class="submit-button"
-          />
+          <Button id="login-submit" type="submit" label="Masuk" icon="pi pi-arrow-right" iconPos="right"
+            :loading="auth.loading" class="submit-button" />
         </form>
 
-        <p class="form-footnote">ARSIG v3.0</p>
+        <p class="form-footnote">ARSIG v0.5</p>
       </div>
     </section>
   </main>
@@ -425,7 +403,7 @@ const handleLogin = async () => {
   min-width: 0;
 }
 
-.control-wrap > .pi {
+.control-wrap>.pi {
   position: absolute;
   top: 50%;
   left: 16px;

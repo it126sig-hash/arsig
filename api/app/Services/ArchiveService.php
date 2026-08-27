@@ -209,7 +209,7 @@ class ArchiveService
     public function toggleStatus(Archive $archive): Archive
     {
         $archive->update([
-            'status' => $archive->status === 'active' ? 'inactive' : 'active'
+            'status' => $archive->status === 'active' ? 'archived' : 'active'
         ]);
 
         return $archive->refresh();
